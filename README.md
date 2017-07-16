@@ -2,6 +2,8 @@
 
 An extension for Visual Studio Code to preview Graphviz (DOT) files.
 
+![Graphviz Preview screenshot](screenshot.png)
+
 ## Roadmap
 
 - Add an icon.
