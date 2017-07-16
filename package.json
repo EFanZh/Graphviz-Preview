@@ -1,17 +1,20 @@
 {
     "name": "graphviz-preview",
-    "displayName": "Graphviz Preview",
-    "description": "Preview Graphviz files.",
-    "version": "0.1.0",
+    "version": "0.0.1",
     "publisher": "EFanZh",
     "engines": {
         "vscode": "^1.14.1"
     },
+    "license": "SEE LICENSE IN LICENSE",
+    "displayName": "Graphviz Preview",
+    "description": "Preview Graphviz (DOT) files.",
     "categories": [
         "Languages"
     ],
-    "activationEvents": [
-        "onCommand:graphviz.showPreview"
+    "keywords": [
+        "dot",
+        "graphviz",
+        "preview"
     ],
     "main": "./out/src/extension",
     "contributes": {
@@ -37,17 +40,20 @@
             }
         }
     },
-    "scripts": {
-        "vscode:prepublish": "tsc -p ./",
-        "compile": "tsc -watch -p ./",
-        "postinstall": "node ./node_modules/vscode/bin/install",
-        "test": "node ./node_modules/vscode/bin/test"
-    },
+    "activationEvents": [
+        "onCommand:graphviz.showPreview"
+    ],
     "devDependencies": {
         "@types/node": "^6.0.83",
         "tslint-language-service": "^0.9.6",
         "typescript": "^2.4.1",
         "vscode": "^1.1.4"
+    },
+    "scripts": {
+        "vscode:prepublish": "tsc -p ./",
+        "compile": "tsc -watch -p ./",
+        "postinstall": "node ./node_modules/vscode/bin/install",
+        "test": "node ./node_modules/vscode/bin/test"
     },
     "repository": {
         "type": "git",
