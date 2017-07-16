@@ -2,7 +2,7 @@
     "name": "graphviz-preview",
     "displayName": "Graphviz Preview",
     "description": "Preview Graphviz files.",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "publisher": "EFanZh",
     "engines": {
         "vscode": "^1.14.1"
@@ -48,5 +48,9 @@
         "tslint-language-service": "^0.9.6",
         "typescript": "^2.4.1",
         "vscode": "^1.1.4"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/EFanZh/Graphviz-Preview"
     }
 }
