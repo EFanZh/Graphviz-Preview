@@ -6,7 +6,6 @@ An extension for Visual Studio Code to preview Graphviz (DOT) files.
 
 ## Roadmap
 
-- Add an icon.
 - Add border and shadow to indicate graph border.
 - Let user save the generated graph.
 - Report error if the document is invalid.
