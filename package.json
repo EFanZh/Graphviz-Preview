@@ -55,7 +55,7 @@
         "postinstall": "node ./node_modules/vscode/bin/install",
         "test": "node ./node_modules/vscode/bin/test"
     },
-    "icon": "logo.png",
+    "icon": "icon.png",
     "repository": {
         "type": "git",
         "url": "https://github.com/EFanZh/Graphviz-Preview"
