@@ -1,0 +1,4 @@
+.vscode
+.vscodeignore
+node_modules
+out
