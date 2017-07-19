@@ -81,15 +81,14 @@ function wrapSvgText(svgText: string): string
 
             #main
             {
-                align-items: center;
                 display: flex;
                 flex: 1;
-                justify-content: center;
                 overflow: auto;
             }
 
             .zoom-identity {
                 flex: none;
+                margin: auto;
             }
 
             .zoom-fit {
@@ -98,6 +97,7 @@ function wrapSvgText(svgText: string): string
             }
 
             .zoom-fit-100-percent {
+                margin: auto;
                 max-height: 100%;
                 max-width: 100%;
             }
@@ -141,7 +141,7 @@ function wrapSvgText(svgText: string): string
             </div>
         </header>
         <main id="main">${svgText}</main>
-    <body>
+    </body>
 </html>
 `;
 }

@@ -13,5 +13,4 @@ An extension for Visual Studio Code to preview Graphviz (DOT) files.
 ## Known issues
 
 - The zoom option resets when the preview updates.
-- 100% zooming mode can’t reveal all graph.
 - After saving an untitled file, the preview becomes invalid.
