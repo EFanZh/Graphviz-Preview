@@ -56,6 +56,7 @@ function wrapSvgText(svgText: string): string
     return `<!DOCTYPE html>
 <html>
     <head>
+        <title>Graphviz Preview</title>
         <style>
             html, body
             {
