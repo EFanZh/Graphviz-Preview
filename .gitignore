@@ -1,4 +1,3 @@
-.vscode
-.vscodeignore
-node_modules
-out
+/.vscode-test/
+/node_modules/
+/out/

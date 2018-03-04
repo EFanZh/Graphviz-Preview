@@ -7,37 +7,27 @@ import * as vscode from "vscode";
 const extensionId = "graphviz-preview";
 const previewCommand = "graphviz.showPreview";
 const previewScheme = "graphviz-preview";
+const previewBaseUri = vscode.Uri.parse(previewScheme + "://preview");
 
 // Utility functions.
 
-function getDotProgram(): string
-{
+function getDotProgram(): string {
     const configuration = vscode.workspace.getConfiguration(extensionId);
-    const dotPath = configuration.get<string>("dotPath");
+    const dotPath = configuration.get<null | string>("dotPath");
 
-    if (dotPath === null)
-    {
+    if (dotPath === undefined || dotPath === null) {
         return "dot";
-    }
-    else
-    {
+    } else {
         return dotPath;
     }
 }
 
-function getGraphvizPreviewUri(sourceUri: vscode.Uri)
-{
-    return (new vscode.Uri()).with({
-        authority: "preview",
-        query: sourceUri.toString(true),
-        scheme: previewScheme
-    });
+function getGraphvizPreviewUri(sourceUri: vscode.Uri) {
+    return previewBaseUri.with({ query: sourceUri.toString(true) });
 }
 
-function getPreviewColumn(editor: vscode.TextEditor)
-{
-    switch (editor.viewColumn)
-    {
+function getPreviewColumn(editor: vscode.TextEditor) {
+    switch (editor.viewColumn) {
         case vscode.ViewColumn.One:
             return vscode.ViewColumn.Two;
 
@@ -46,13 +36,11 @@ function getPreviewColumn(editor: vscode.TextEditor)
     }
 }
 
-function getSourceUri(previewUri: vscode.Uri): vscode.Uri
-{
+function getSourceUri(previewUri: vscode.Uri): vscode.Uri {
     return vscode.Uri.parse(previewUri.query);
 }
 
-function wrapSvgText(svgText: string): string
-{
+function wrapSvgText(svgText: string): string {
     return `<!DOCTYPE html>
 <html>
     <head>
@@ -60,6 +48,7 @@ function wrapSvgText(svgText: string): string
         <style>
             html, body
             {
+                color: black;
                 height: 100%;
             }
 
@@ -87,17 +76,20 @@ function wrapSvgText(svgText: string): string
                 overflow: auto;
             }
 
-            .zoom-identity {
+            .zoom-identity
+            {
                 flex: none;
                 margin: auto;
             }
 
-            .zoom-fit {
+            .zoom-fit
+            {
                 height: 100%;
                 width: 100%;
             }
 
-            .zoom-fit-100-percent {
+            .zoom-fit-100-percent
+            {
                 margin: auto;
                 max-height: 100%;
                 max-width: 100%;
@@ -149,98 +141,73 @@ function wrapSvgText(svgText: string): string
 
 // The preview content provider class.
 
-class GraphvizPreviewContentProvider implements vscode.TextDocumentContentProvider
-{
+class GraphvizPreviewContentProvider implements vscode.TextDocumentContentProvider {
     private onDidChangeEventEmitter = new vscode.EventEmitter<vscode.Uri>();
 
-    public get onDidChange(): vscode.Event<vscode.Uri>
-    {
+    public get onDidChange(): vscode.Event<vscode.Uri> {
         return this.onDidChangeEventEmitter.event;
     }
 
-    public async provideTextDocumentContent(uri: vscode.Uri, token: vscode.CancellationToken): Promise<string>
-    {
+    public async provideTextDocumentContent(uri: vscode.Uri, token: vscode.CancellationToken): Promise<string> {
         const sourceUri = getSourceUri(uri);
         const sourceDocument = await vscode.workspace.openTextDocument(sourceUri);
         const sourceText = sourceDocument.getText();
         const dotProgram = getDotProgram();
 
-        return new Promise<string>((resolve, reject) =>
-        {
+        return new Promise<string>((resolve, reject) => {
             const dotProcess = child_process.execFile(dotProgram,
                 ["-T", "svg"],
-                (error, stdout, stderr) =>
-                {
-                    if (error)
-                    {
-                        const codeProperty = "code";
-
-                        if (error[codeProperty] === "ENOENT")
-                        {
-                            reject(`File not found: ${dotProgram}`);
-                        }
-                        else
-                        {
-                            reject(stderr);
-                        }
-                    }
-                    else
-                    {
+                (error, stdout) => {
+                    if (error) {
+                        reject(error.message);
+                    } else {
                         resolve(wrapSvgText(stdout));
                     }
                 });
 
-            token.onCancellationRequested((_) =>
-            {
-                try
-                {
+            token.onCancellationRequested((_) => {
+                try {
                     dotProcess.kill();
-                }
-                catch (_)
-                {
+                } catch (_) {
                     return;
                 }
             });
 
-            try
-            {
+            try {
                 dotProcess.stdin.end(sourceText);
-            }
-            catch (_)
-            {
+            } catch (_) {
                 return;
             }
         });
     }
 
-    public updatePreview(sourceUri: vscode.Uri)
-    {
+    public updatePreview(sourceUri: vscode.Uri) {
         this.onDidChangeEventEmitter.fire(getGraphvizPreviewUri(sourceUri));
     }
 }
 
 // Extension interfaces.
 
-export function activate(context: vscode.ExtensionContext)
-{
+export function activate(context: vscode.ExtensionContext) {
     const previewContentProvider = new GraphvizPreviewContentProvider();
 
     context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(previewScheme,
         previewContentProvider));
 
-    context.subscriptions.push(vscode.commands.registerCommand(previewCommand, () =>
-    {
+    context.subscriptions.push(vscode.commands.registerCommand(previewCommand, () => {
         const activeTextEditor = vscode.window.activeTextEditor;
 
-        return vscode.commands.executeCommand("vscode.previewHtml",
-            getGraphvizPreviewUri(activeTextEditor.document.uri),
-            getPreviewColumn(activeTextEditor),
-            `Preview '${path.basename(activeTextEditor.document.uri.fsPath)}'`,
-            { allowScripts: true, allowSvgs: true });
+        if (activeTextEditor !== undefined) {
+            vscode.commands.executeCommand(
+                "vscode.previewHtml",
+                getGraphvizPreviewUri(activeTextEditor.document.uri),
+                getPreviewColumn(activeTextEditor),
+                `Preview '${path.basename(activeTextEditor.document.uri.fsPath)}'`,
+                { allowScripts: true, allowSvgs: true });
+        }
     }));
 
-    context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((e) =>
-    {
+    context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((e) => {
         previewContentProvider.updatePreview(e.document.uri);
     }));
 }
