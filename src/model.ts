@@ -61,7 +61,7 @@ class View {
     }
 
     public get availableHeight(): number {
-        return this.height - this.contentHeight * 2;
+        return this.height - this.contentMargin * 2;
     }
 
     public center(): void {
@@ -80,6 +80,7 @@ class View {
 
         this.contentX = x - (x - this.contentX) * ratio;
         this.contentY = y - (y - this.contentY) * ratio;
+        this.zoom = value;
     }
 }
 
@@ -110,7 +111,7 @@ abstract class FixedState implements IViewState {
         if (hasEnoughSpace(contentWidth, contentHeight, availableWidth, availableHeight)) {
             return [
                 View.createCenter(width, height, contentWidth, contentHeight, contentMargin),
-                new Fixed100PercentState(1.0),
+                new FixedPure100PercentState(),
             ];
         } else {
             return [View.createFit(width, height, contentWidth, contentHeight, contentMargin), new FixedNormalState()];
@@ -157,20 +158,25 @@ class Fixed100PercentState extends FixedState {
     }
 }
 
-class FitState implements IViewState {
+class FixedPure100PercentState extends FixedState {
+    public toggleOverview(view: View): IViewState {
+        view.fit();
+
+        return new FitPureState();
+    }
+}
+
+abstract class FitBaseState implements IViewState {
     public static create(
         width: number,
         height: number,
         contentWidth: number,
         contentHeight: number,
-        contentMargin: number): [View, FitState] {
-        return [View.createFit(width, height, contentWidth, contentHeight, contentMargin), new FitState(1.0)];
+        contentMargin: number): [View, FitBaseState] {
+        return [View.createFit(width, height, contentWidth, contentHeight, contentMargin), new FitPureState()];
     }
 
     public readonly zoomMode = ZoomMode.Fit;
-
-    public constructor(private savedZoom: number) {
-    }
 
     public decay(callback: (viewState: IViewState) => void): void {
         callback(new FixedNormalState());
@@ -185,6 +191,14 @@ class FitState implements IViewState {
         return this;
     }
 
+    public abstract toggleOverview(view: View, x: number, y: number): IViewState;
+}
+
+class FitState extends FitBaseState {
+    public constructor(private savedZoom: number) {
+        super()
+    }
+
     public toggleOverview(view: View, x: number, y: number): IViewState {
         view.zoomTo(x, y, this.savedZoom);
 
@@ -192,8 +206,15 @@ class FitState implements IViewState {
     }
 }
 
-abstract class AutoFitState implements IViewState {
+class FitPureState extends FitBaseState {
+    public toggleOverview(view: View, x: number, y: number): IViewState {
+        view.zoomTo(x, y, 1);
 
+        return new FixedPure100PercentState();
+    }
+}
+
+abstract class AutoFitState implements IViewState {
     public static create(
         width: number,
         height: number,
@@ -206,20 +227,17 @@ abstract class AutoFitState implements IViewState {
         if (hasEnoughSpace(contentWidth, contentHeight, availableWidth, availableHeight)) {
             return [
                 View.createCenter(width, height, contentWidth, contentHeight, contentMargin),
-                new AutoFit100PercentState(1.0),
+                new AutoFitPure100PercentState(),
             ];
         } else {
             return [
                 View.createFit(width, height, contentWidth, contentHeight, contentMargin),
-                new AutoFitFitState(1.0),
+                new AutoFitPureFitState(),
             ];
         }
     }
 
     public readonly zoomMode = ZoomMode.AutoFit;
-
-    public constructor(protected savedZoom: number) {
-    }
 
     public abstract decay(callback: (viewState: IViewState) => void): void;
     public abstract resize(view: View, width: number, height: number): IViewState;
@@ -227,8 +245,8 @@ abstract class AutoFitState implements IViewState {
 }
 
 class AutoFit100PercentState extends AutoFitState {
-    public constructor(savedZoom: number) {
-        super(savedZoom);
+    public constructor(private savedZoom: number) {
+        super();
     }
 
     public decay(callback: (viewState: IViewState) => void): void {
@@ -257,9 +275,36 @@ class AutoFit100PercentState extends AutoFitState {
     }
 }
 
+class AutoFitPure100PercentState extends AutoFitState {
+    public decay(callback: (viewState: IViewState) => void): void {
+        callback(new FixedPure100PercentState());
+    }
+
+    public resize(view: View, width: number, height: number): IViewState {
+        view.width = width;
+        view.height = height;
+
+        if (view.contentWidth < view.availableWidth && view.contentHeight < view.availableHeight) {
+            view.center();
+
+            return this;
+        } else {
+            view.fit();
+
+            return new AutoFitPureFitState();
+        }
+    }
+
+    public toggleOverview(view: View): IViewState {
+        view.fit();
+
+        return new FitPureState();
+    }
+}
+
 class AutoFitFitState extends AutoFitState {
-    public constructor(savedZoom: number) {
-        super(savedZoom);
+    public constructor(private savedZoom: number) {
+        super();
     }
 
     public decay(callback: (viewState: IViewState) => void): void {
@@ -285,6 +330,33 @@ class AutoFitFitState extends AutoFitState {
         view.zoomTo(x, y, this.savedZoom);
 
         return new FixedNormalState();
+    }
+}
+
+class AutoFitPureFitState extends AutoFitState {
+    public decay(callback: (viewState: IViewState) => void): void {
+        callback(new FixedNormalState());
+    }
+
+    public resize(view: View, width: number, height: number): IViewState {
+        view.width = width;
+        view.height = height;
+
+        if (view.contentWidth < view.availableWidth && view.contentHeight < view.availableHeight) {
+            view.center();
+
+            return new AutoFitPure100PercentState();
+        } else {
+            view.fit();
+
+            return this;
+        }
+    }
+
+    public toggleOverview(view: View, x: number, y: number): IViewState {
+        view.zoomTo(x, y, 1);
+
+        return new FixedPure100PercentState();
     }
 }
 
@@ -315,7 +387,7 @@ export class Controller {
         contentMargin: number,
         viewEventListener: IViewEventListener,
         zoomStep: number): Controller {
-        const [view, state] = FitState.create(width, height, contentWidth, contentHeight, contentMargin);
+        const [view, state] = FitBaseState.create(width, height, contentWidth, contentHeight, contentMargin);
 
         return new Controller(view, zoomStep, viewEventListener, state);
     }
