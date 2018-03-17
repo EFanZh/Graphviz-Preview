@@ -418,22 +418,44 @@ function checkPureFitState(creator: () => FakeView, recursionDepth: number): voi
 
         checkFit(fakeView);
 
+        // Drag.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.beginDrag(10, 20)(30, 50)),
+            fakeView.x + 20,
+            fakeView.y + 30,
+            fakeView.zoom,
+            recursionDepth - 1)
+
         // Resize.
-        checkPureFitState(makeCreator(creator, (v) => v.resize(640, 480)), recursionDepth - 1);
+        checkPureFitState(
+            makeCreator(creator, (v) => v.resize(fakeView.width * 1.1, fakeView.height * 1.2)),
+            recursionDepth - 1);
+
+        // Resize content.
+        checkPureFitState(
+            makeCreator(creator, (v) => v.resizeContent(fakeView.contentWidth * 1.1, fakeView.contentHeight * 1.2)),
+            recursionDepth - 1);
+
+        // Toggle overview.
+        checkFixedPure100PercentState(
+            makeCreator(creator, (v) => v.toggleOverview(fakeView.x * 1.1, fakeView.y * 1.2)),
+            fakeView.x * (1.1 - 0.1 / fakeView.zoom),
+            fakeView.y * (1.2 - 0.2 / fakeView.zoom),
+            recursionDepth - 1)
 
         // Zoom in.
         checkFixedNormalState(
-            makeCreator(creator, (v) => v.zoomIn(2, 3)),
-            fakeView.x + (fakeView.x - 2) * (fakeView.zoomStep - 1),
-            fakeView.y + (fakeView.y - 3) * (fakeView.zoomStep - 1),
+            makeCreator(creator, (v) => v.zoomIn(fakeView.x * 1.1, fakeView.y * 1.2)),
+            fakeView.x * (1.1 - fakeView.zoomStep * 0.1),
+            fakeView.y * (1.2 - fakeView.zoomStep * 0.2),
             fakeView.zoom * fakeView.zoomStep,
             recursionDepth - 1);
 
         // Zoom out.
         checkFixedNormalState(
-            makeCreator(creator, (v) => v.zoomOut(5, 7)),
-            fakeView.x + (fakeView.x - 5) * ((1 / fakeView.zoomStep) - 1),
-            fakeView.y + (fakeView.y - 7) * ((1 / fakeView.zoomStep) - 1),
+            makeCreator(creator, (v) => v.zoomOut(fakeView.x * 1.1, fakeView.y * 1.2)),
+            fakeView.x * (1.1 - 0.1 / fakeView.zoomStep),
+            fakeView.y * (1.2 - 0.2 / fakeView.zoomStep),
             fakeView.zoom / fakeView.zoomStep,
             recursionDepth - 1);
     }
