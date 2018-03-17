@@ -207,17 +207,17 @@ function checkFixedNormalState(
 
         // Zoom in.
         checkFixedNormalState(
-            makeCreator(creator, (v) => v.zoomIn(2, 3)),
-            fakeView.x + (fakeView.x - 2) * (fakeView.zoomStep - 1),
-            fakeView.y + (fakeView.y - 3) * (fakeView.zoomStep - 1),
+            makeCreator(creator, (v) => v.zoomIn(fakeView.x * 1.1, fakeView.y * 1.2)),
+            fakeView.x * (1.1 - fakeView.zoomStep * 0.1),
+            fakeView.y * (1.2 - fakeView.zoomStep * 0.2),
             fakeView.zoom * fakeView.zoomStep,
             recursionDepth - 1);
 
         // Zoom out.
         checkFixedNormalState(
-            makeCreator(creator, (v) => v.zoomOut(5, 7)),
-            fakeView.x + (fakeView.x - 5) * ((1 / fakeView.zoomStep) - 1),
-            fakeView.y + (fakeView.y - 7) * ((1 / fakeView.zoomStep) - 1),
+            makeCreator(creator, (v) => v.zoomOut(fakeView.x * 1.1, fakeView.y * 1.2)),
+            fakeView.x * (1.1 - 0.1 / fakeView.zoomStep),
+            fakeView.y * (1.2 - 0.2 / fakeView.zoomStep),
             fakeView.zoom / fakeView.zoomStep,
             recursionDepth - 1);
     }
@@ -236,27 +236,46 @@ function checkFixed100PercentState(
         assertAlmostEqual(fakeView.y, expectedY);
         assertAlmostEqual(fakeView.zoom, 1);
 
+        // Drag.
+        checkFixed100PercentState(
+            makeCreator(creator, (v) => v.beginDrag(10, 20)(30, 50)),
+            fakeView.x + 20,
+            fakeView.y + 30,
+            recursionDepth - 1)
+
         // Resize.
         checkFixed100PercentState(
-            makeCreator(creator, (v) => v.resize(640, 480)),
-            expectedX + (640 - fakeView.width) / 2,
-            expectedY + (480 - fakeView.height) / 2,
+            makeCreator(creator, (v) => v.resize(fakeView.width * 1.1, fakeView.height * 1.2)),
+            fakeView.x + fakeView.width * 0.05,
+            fakeView.y + fakeView.height * 0.1,
             recursionDepth - 1);
+
+        // Resize content.
+        checkFixed100PercentState(
+            makeCreator(creator, (v) => v.resizeContent(fakeView.contentWidth * 1.1, fakeView.contentHeight * 1.2)),
+            fakeView.x * 1.1 - fakeView.width * 0.05,
+            fakeView.y * 1.2 - fakeView.height * 0.1,
+            recursionDepth - 1);
+
+        // Toggle overview.
+        checkFitState(
+            makeCreator(creator, (v) => v.toggleOverview(fakeView.x * 1.1, fakeView.y * 1.2)),
+            recursionDepth - 1)
 
         // Zoom in.
         checkFixedNormalState(
-            makeCreator(creator, (v) => v.zoomIn(2, 3)),
-            expectedX + (expectedX - 2) * (fakeView.zoomStep - 1),
-            expectedY + (expectedY - 3) * (fakeView.zoomStep - 1),
+            makeCreator(creator, (v) => v.zoomIn(fakeView.x * 1.1, fakeView.y * 1.2)),
+            fakeView.x * (1.1 - fakeView.zoomStep * 0.1),
+            fakeView.y * (1.2 - fakeView.zoomStep * 0.2),
             fakeView.zoomStep,
             recursionDepth - 1);
 
         // Zoom out.
         checkFixedNormalState(
-            makeCreator(creator, (v) => v.zoomOut(5, 7)),
-            expectedX + (expectedX - 5) * ((1 / fakeView.zoomStep) - 1),
-            expectedY + (expectedY - 7) * ((1 / fakeView.zoomStep) - 1),
-            fakeView.zoom / fakeView.zoomStep,
+            makeCreator(creator, (v) => v.zoomOut(fakeView.x * 1.1, fakeView.y * 1.2)),
+            fakeView.x * (1.1 - 0.1 / fakeView.zoomStep),
+            fakeView.y * (1.2 - 0.2 / fakeView.zoomStep),
+            1 / fakeView.zoomStep,
             recursionDepth - 1);
     }
 }
