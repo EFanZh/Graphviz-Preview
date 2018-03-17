@@ -95,6 +95,7 @@ interface IViewState {
 
     decay(callback: (viewState: IViewState) => void): void;
     resize(view: View, width: number, height: number): IViewState;
+    resizeContent(view: View, width: number, height: number): IViewState;
     toggleOverview(view: View, x: number, y: number): IViewState;
 }
 
@@ -129,6 +130,18 @@ abstract class FixedState implements IViewState {
         view.contentY += (height - view.height) / 2;
         view.width = width;
         view.height = height;
+
+        return this;
+    }
+
+    public resizeContent(view: View, width: number, height: number): IViewState {
+        const xRatio = width / view.contentWidth;
+        const yRatio = height / view.contentHeight;
+
+        view.contentX = view.width * (1 - xRatio) / 2 + view.contentX * xRatio;
+        view.contentY = view.height * (1 - yRatio) / 2 + view.contentY * yRatio;
+        view.contentWidth = width;
+        view.contentHeight = height;
 
         return this;
     }
@@ -191,6 +204,15 @@ abstract class FitBaseState implements IViewState {
         return this;
     }
 
+    public resizeContent(view: View, width: number, height: number): IViewState {
+        view.contentWidth = width;
+        view.contentHeight = height;
+
+        view.fit();
+
+        return this;
+    }
+
     public abstract toggleOverview(view: View, x: number, y: number): IViewState;
 }
 
@@ -241,6 +263,7 @@ abstract class AutoFitState implements IViewState {
 
     public abstract decay(callback: (viewState: IViewState) => void): void;
     public abstract resize(view: View, width: number, height: number): IViewState;
+    public abstract resizeContent(view: View, width: number, height: number): IViewState;
     public abstract toggleOverview(view: View, x: number, y: number): IViewState;
 }
 
@@ -268,6 +291,21 @@ class AutoFit100PercentState extends AutoFitState {
         }
     }
 
+    public resizeContent(view: View, width: number, height: number): IViewState {
+        view.contentWidth = width;
+        view.contentHeight = height;
+
+        if (view.contentWidth < view.availableWidth && view.contentHeight < view.availableHeight) {
+            view.center();
+
+            return this;
+        } else {
+            view.fit();
+
+            return new AutoFitFitState(this.savedZoom);
+        }
+    }
+
     public toggleOverview(view: View): IViewState {
         view.fit();
 
@@ -283,6 +321,21 @@ class AutoFitPure100PercentState extends AutoFitState {
     public resize(view: View, width: number, height: number): IViewState {
         view.width = width;
         view.height = height;
+
+        if (view.contentWidth < view.availableWidth && view.contentHeight < view.availableHeight) {
+            view.center();
+
+            return this;
+        } else {
+            view.fit();
+
+            return new AutoFitPureFitState();
+        }
+    }
+
+    public resizeContent(view: View, width: number, height: number): IViewState {
+        view.contentWidth = width;
+        view.contentHeight = height;
 
         if (view.contentWidth < view.availableWidth && view.contentHeight < view.availableHeight) {
             view.center();
@@ -326,6 +379,21 @@ class AutoFitFitState extends AutoFitState {
         }
     }
 
+    public resizeContent(view: View, width: number, height: number): IViewState {
+        view.contentWidth = width;
+        view.contentHeight = height;
+
+        if (view.contentWidth < view.availableWidth && view.contentHeight < view.availableHeight) {
+            view.center();
+
+            return new AutoFit100PercentState(this.savedZoom);
+        } else {
+            view.fit();
+
+            return this;
+        }
+    }
+
     public toggleOverview(view: View, x: number, y: number): IViewState {
         view.zoomTo(x, y, this.savedZoom);
 
@@ -341,6 +409,21 @@ class AutoFitPureFitState extends AutoFitState {
     public resize(view: View, width: number, height: number): IViewState {
         view.width = width;
         view.height = height;
+
+        if (view.contentWidth < view.availableWidth && view.contentHeight < view.availableHeight) {
+            view.center();
+
+            return new AutoFitPure100PercentState();
+        } else {
+            view.fit();
+
+            return this;
+        }
+    }
+
+    public resizeContent(view: View, width: number, height: number): IViewState {
+        view.contentWidth = width;
+        view.contentHeight = height;
 
         if (view.contentWidth < view.availableWidth && view.contentHeight < view.availableHeight) {
             view.center();
@@ -414,8 +497,31 @@ export class Controller {
         this.notifyZoomingModeChanged();
     }
 
+    public beginDrag(x: number, y: number): (x: number, y: number) => void {
+        const offsetX = this.view.contentX - x;
+        const offsetY = this.view.contentY - y;
+
+        return (x1, y1) => {
+            this.view.contentX = offsetX + x1;
+            this.view.contentY = offsetY + y1;
+
+            this.notifyLayoutChanged();
+
+            this.state.decay((viewState) => {
+                this.state = viewState;
+                this.notifyZoomingModeChanged();
+            });
+        };
+    }
+
     public resize(width: number, height: number): void {
         this.state = this.state.resize(this.view, width, height);
+
+        this.notifyLayoutChanged();
+    }
+
+    public resizeContent(width: number, height: number): void {
+        this.state = this.state.resizeContent(this.view, width, height);
 
         this.notifyLayoutChanged();
     }
@@ -433,23 +539,6 @@ export class Controller {
 
     public zoomOut(x: number, y: number): void {
         this.zoomTo(x, y, this.view.zoom / this.zoomStep);
-    }
-
-    public beginDrag(x: number, y: number): (x: number, y: number) => void {
-        const offsetX = this.view.contentX - x;
-        const offsetY = this.view.contentY - y;
-
-        return (x1, y1) => {
-            this.view.contentX = offsetX + x1;
-            this.view.contentY = offsetY + y1;
-
-            this.notifyLayoutChanged();
-
-            this.state.decay((viewState) => {
-                this.state = viewState;
-                this.notifyZoomingModeChanged();
-            });
-        };
     }
 
     private notifyLayoutChanged(): void {

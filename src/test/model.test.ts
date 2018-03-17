@@ -1,310 +1,537 @@
 import * as assert from "assert";
 import * as model from "../model";
 
-class FakeView implements model.IViewEventListener {
-    public zoomMode: model.ZoomMode = -1;
-    public x: number = -1;
-    public y: number = -1;
-    public zoom: number = -1;
+const floatCheckEpsilon = 1e-12;
+const testRecursionDepth = 5;
 
-    public onZoomModeChanged(zoomMode: model.ZoomMode): void {
-        this.zoomMode = zoomMode;
+class FakeView {
+    private widthValue: number;
+    private heightValue: number;
+    private contentWidthValue: number;
+    private contentHeightValue: number;
+    private contentMarginValue: number;
+    private zoomModeValue: model.ZoomMode = -1;
+    private xValue: number = -1;
+    private yValue: number = -1;
+    private zoomValue: number = -1;
+    private controller: model.Controller;
+
+    constructor(
+        zoomMode: model.ZoomMode,
+        width: number,
+        height: number,
+        contentWidth: number,
+        contentHeight: number,
+        contentMargin: number,
+        public readonly zoomStep: number) {
+
+        this.widthValue = width;
+        this.heightValue = height;
+        this.contentWidthValue = contentWidth;
+        this.contentHeightValue = contentHeight;
+        this.contentMarginValue = contentMargin;
+
+        const self = this;
+
+        const listener = new class implements model.IViewEventListener {
+            public onZoomModeChanged(zoomMode: model.ZoomMode): void {
+                self.zoomModeValue = zoomMode;
+            }
+
+            public onLayoutChanged(x: number, y: number, zoom: number): void {
+                self.xValue = x;
+                self.yValue = y;
+                self.zoomValue = zoom;
+            }
+        };
+
+        switch (zoomMode) {
+            case model.ZoomMode.Fixed:
+                this.controller = model.Controller.createFixed(
+                    width,
+                    height,
+                    contentWidth,
+                    contentHeight,
+                    contentMargin,
+                    listener,
+                    zoomStep);
+                break;
+            case model.ZoomMode.Fit:
+                this.controller = model.Controller.createFit(
+                    width,
+                    height,
+                    contentWidth,
+                    contentHeight,
+                    contentMargin,
+                    listener,
+                    zoomStep);
+                break;
+            default:
+                this.controller = model.Controller.createAutoFit(
+                    width,
+                    height,
+                    contentWidth,
+                    contentHeight,
+                    contentMargin,
+                    listener,
+                    zoomStep);
+                break;
+        }
     }
 
-    public onLayoutChanged(x: number, y: number, zoom: number): void {
-        this.x = x;
-        this.y = y;
-        this.zoom = zoom;
+    public get width(): number {
+        return this.widthValue;
+    }
+
+    public get height(): number {
+        return this.heightValue;
+    }
+
+    public get contentWidth(): number {
+        return this.contentWidthValue;
+    }
+
+    public get contentHeight(): number {
+        return this.contentHeightValue;
+    }
+
+    public get contentMargin(): number {
+        return this.contentMarginValue;
+    }
+
+    public get zoomMode(): model.ZoomMode {
+        return this.zoomModeValue;
+    }
+
+    public get x(): number {
+        return this.xValue;
+    }
+
+    public get y(): number {
+        return this.yValue;
+    }
+
+    public get zoom(): number {
+        return this.zoomValue;
+    }
+
+    public resize(width: number, height: number): void {
+        this.widthValue = width;
+        this.heightValue = height;
+
+        this.controller.resize(width, height);
+    }
+
+    public resizeContent(width: number, height: number): void {
+        this.contentWidthValue = width;
+        this.contentHeightValue = height;
+
+        this.controller.resizeContent(width, height);
+    }
+
+    public toggleOverview(x: number, y: number): void {
+        this.controller.toggleOverview(x, y);
+    }
+
+    public zoomIn(x: number, y: number): void {
+        this.controller.zoomIn(x, y);
+    }
+
+    public zoomOut(x: number, y: number): void {
+        this.controller.zoomOut(x, y);
+    }
+
+    public beginDrag(x: number, y: number): (x: number, y: number) => void {
+        return this.controller.beginDrag(x, y);
     }
 }
 
 function assertAlmostEqual(actual: number, expected: number): void {
-    assert(Math.abs(actual - expected) < 1e-14, `Actual: ${actual}, Expected: ${expected}.`)
+    assert(Math.abs(actual - expected) < floatCheckEpsilon, `Actual: ${actual}, Expected: ${expected}.`)
 }
 
-suite("Fixed Controller", function () {
-    test("Create Fixed Controller - 100%", function () {
-        const fakeView = new FakeView();
+function makeCreator(creator: () => FakeView, action: (fakeView: FakeView) => void) {
+    return () => {
+        const fakeView = creator();
 
-        model.Controller.createFixed(600, 400, 300, 200, 10, fakeView, 1.1);
+        action(fakeView);
+
+        return fakeView;
+    }
+}
+
+function checkFixedNormalState(
+    creator: () => FakeView,
+    expectedX: number,
+    expectedY: number,
+    expectedZoom: number,
+    recursionDepth: number): void {
+    if (recursionDepth > 0) {
+        const fakeView = creator();
 
         assert.equal(fakeView.zoomMode, model.ZoomMode.Fixed);
-        assert.equal(fakeView.x, 150);
-        assert.equal(fakeView.y, 100);
-        assert.equal(fakeView.zoom, 1);
+        assertAlmostEqual(fakeView.x, expectedX);
+        assertAlmostEqual(fakeView.y, expectedY);
+        assertAlmostEqual(fakeView.zoom, expectedZoom);
+
+        // Drag.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.beginDrag(10, 20)(30, 50)),
+            expectedX + 20,
+            expectedY + 30,
+            fakeView.zoom,
+            recursionDepth - 1)
+
+        // Resize.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.resize(fakeView.width * 1.1, fakeView.height * 1.2)),
+            expectedX + fakeView.width * 0.05,
+            expectedY + fakeView.height * 0.1,
+            fakeView.zoom,
+            recursionDepth - 1);
+
+        // Resize content.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.resizeContent(fakeView.contentWidth * 1.1, fakeView.contentHeight * 1.2)),
+            expectedX * 1.1 - fakeView.width * 0.05,
+            expectedY * 1.2 - fakeView.height * 0.1,
+            fakeView.zoom,
+            recursionDepth - 1);
+
+        // Toggle overview.
+
+        // Zoom in.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.zoomIn(2, 3)),
+            expectedX + (expectedX - 2) * (fakeView.zoomStep - 1),
+            expectedY + (expectedY - 3) * (fakeView.zoomStep - 1),
+            fakeView.zoom * fakeView.zoomStep,
+            recursionDepth - 1);
+
+        // Zoom out.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.zoomOut(5, 7)),
+            expectedX + (expectedX - 5) * ((1 / fakeView.zoomStep) - 1),
+            expectedY + (expectedY - 7) * ((1 / fakeView.zoomStep) - 1),
+            fakeView.zoom / fakeView.zoomStep,
+            recursionDepth - 1);
+    }
+}
+
+function checkFixed100PercentState(
+    creator: () => FakeView,
+    expectedX: number,
+    expectedY: number,
+    recursionDepth: number): void {
+    if (recursionDepth > 0) {
+        const fakeView = creator();
+
+        assert.equal(fakeView.zoomMode, model.ZoomMode.Fixed);
+        assertAlmostEqual(fakeView.x, expectedX);
+        assertAlmostEqual(fakeView.y, expectedY);
+        assertAlmostEqual(fakeView.zoom, 1);
+
+        // Resize.
+        checkFixed100PercentState(
+            makeCreator(creator, (v) => v.resize(640, 480)),
+            expectedX + (640 - fakeView.width) / 2,
+            expectedY + (480 - fakeView.height) / 2,
+            recursionDepth - 1);
+
+        // Zoom in.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.zoomIn(2, 3)),
+            expectedX + (expectedX - 2) * (fakeView.zoomStep - 1),
+            expectedY + (expectedY - 3) * (fakeView.zoomStep - 1),
+            fakeView.zoomStep,
+            recursionDepth - 1);
+
+        // Zoom out.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.zoomOut(5, 7)),
+            expectedX + (expectedX - 5) * ((1 / fakeView.zoomStep) - 1),
+            expectedY + (expectedY - 7) * ((1 / fakeView.zoomStep) - 1),
+            fakeView.zoom / fakeView.zoomStep,
+            recursionDepth - 1);
+    }
+}
+
+function checkFixedPure100PercentState(
+    creator: () => FakeView,
+    expectedX: number,
+    expectedY: number,
+    recursionDepth: number): void {
+    if (recursionDepth > 0) {
+        const fakeView = creator();
+
+        assert.equal(fakeView.zoomMode, model.ZoomMode.Fixed);
+        assertAlmostEqual(fakeView.x, expectedX);
+        assertAlmostEqual(fakeView.y, expectedY);
+        assertAlmostEqual(fakeView.zoom, 1);
+
+        // Resize.
+        checkFixedPure100PercentState(
+            makeCreator(creator, (v) => v.resize(640, 480)),
+            expectedX + (640 - fakeView.width) / 2,
+            expectedY + (480 - fakeView.height) / 2,
+            recursionDepth - 1);
+
+        // Zoom in.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.zoomIn(2, 3)),
+            expectedX + (expectedX - 2) * (fakeView.zoomStep - 1),
+            expectedY + (expectedY - 3) * (fakeView.zoomStep - 1),
+            fakeView.zoomStep,
+            recursionDepth - 1);
+
+        // Zoom out.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.zoomOut(5, 7)),
+            expectedX + (expectedX - 5) * ((1 / fakeView.zoomStep) - 1),
+            expectedY + (expectedY - 7) * ((1 / fakeView.zoomStep) - 1),
+            fakeView.zoom / fakeView.zoomStep,
+            recursionDepth - 1);
+    }
+}
+
+function checkFit(fakeView: FakeView): [number, number, number] {
+    const expectedZoom = Math.min(
+        (fakeView.width - fakeView.contentMargin * 2) / fakeView.contentWidth,
+        (fakeView.height - fakeView.contentMargin * 2) / fakeView.contentHeight);
+
+    const expectedX = (fakeView.width - fakeView.contentWidth * expectedZoom) / 2;
+    const expectedY = (fakeView.height - fakeView.contentHeight * expectedZoom) / 2;
+
+    assertAlmostEqual(fakeView.x, expectedX);
+    assertAlmostEqual(fakeView.y, expectedY);
+    assertAlmostEqual(fakeView.zoom, expectedZoom);
+
+    return [expectedX, expectedY, expectedZoom];
+}
+
+function checkFitState(creator: () => FakeView, recursionDepth: number): void {
+    if (recursionDepth > 0) {
+        const fakeView = creator();
+
+        assert.equal(fakeView.zoomMode, model.ZoomMode.Fit);
+
+        const [expectedX, expectedY, expectedZoom] = checkFit(fakeView);
+
+        // Resize.
+        checkFitState(makeCreator(creator, (v) => v.resize(640, 480)), recursionDepth - 1);
+
+        // Zoom in.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.zoomIn(2, 3)),
+            expectedX + (expectedX - 2) * (fakeView.zoomStep - 1),
+            expectedY + (expectedY - 3) * (fakeView.zoomStep - 1),
+            expectedZoom * fakeView.zoomStep,
+            recursionDepth - 1);
+
+        // Zoom out.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.zoomOut(5, 7)),
+            expectedX + (expectedX - 5) * ((1 / fakeView.zoomStep) - 1),
+            expectedY + (expectedY - 7) * ((1 / fakeView.zoomStep) - 1),
+            fakeView.zoom / fakeView.zoomStep,
+            recursionDepth - 1);
+    }
+}
+
+function checkPureFitState(creator: () => FakeView, recursionDepth: number): void {
+    if (recursionDepth > 0) {
+        const fakeView = creator();
+
+        assert.equal(fakeView.zoomMode, model.ZoomMode.Fit);
+
+        const [expectedX, expectedY, expectedZoom] = checkFit(fakeView);
+
+        // Resize.
+        checkPureFitState(makeCreator(creator, (v) => v.resize(640, 480)), recursionDepth - 1);
+
+        // Zoom in.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.zoomIn(2, 3)),
+            expectedX + (expectedX - 2) * (fakeView.zoomStep - 1),
+            expectedY + (expectedY - 3) * (fakeView.zoomStep - 1),
+            expectedZoom * fakeView.zoomStep,
+            recursionDepth - 1);
+
+        // Zoom out.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.zoomOut(5, 7)),
+            expectedX + (expectedX - 5) * ((1 / fakeView.zoomStep) - 1),
+            expectedY + (expectedY - 7) * ((1 / fakeView.zoomStep) - 1),
+            fakeView.zoom / fakeView.zoomStep,
+            recursionDepth - 1);
+    }
+}
+
+function checkAutoFit100PercentState(
+    creator: () => FakeView,
+    expectedX: number,
+    expectedY: number,
+    recursionDepth: number): void {
+    if (recursionDepth > 0) {
+        const fakeView = creator();
+
+        assert.equal(fakeView.zoomMode, model.ZoomMode.AutoFit);
+        assertAlmostEqual(fakeView.x, expectedX);
+        assertAlmostEqual(fakeView.y, expectedY);
+        assertAlmostEqual(fakeView.zoom, 1);
+
+        // Zoom in.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.zoomIn(2, 3)),
+            expectedX + (expectedX - 2) * (fakeView.zoomStep - 1),
+            expectedY + (expectedY - 3) * (fakeView.zoomStep - 1),
+            fakeView.zoomStep,
+            recursionDepth - 1);
+    }
+}
+
+function checkAutoFitPure100PercentState(
+    creator: () => FakeView,
+    expectedX: number,
+    expectedY: number,
+    recursionDepth: number): void {
+    if (recursionDepth > 0) {
+        const fakeView = creator();
+
+        assert.equal(fakeView.zoomMode, model.ZoomMode.AutoFit);
+        assertAlmostEqual(fakeView.x, expectedX);
+        assertAlmostEqual(fakeView.y, expectedY);
+        assertAlmostEqual(fakeView.zoom, 1);
+
+        // Zoom in.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.zoomIn(2, 3)),
+            expectedX + (expectedX - 2) * (fakeView.zoomStep - 1),
+            expectedY + (expectedY - 3) * (fakeView.zoomStep - 1),
+            fakeView.zoomStep,
+            recursionDepth - 1);
+    }
+}
+
+function checkAutoFitFitState(
+    creator: () => FakeView,
+    recursionDepth: number): void {
+    if (recursionDepth > 0) {
+        const fakeView = creator();
+
+        assert.equal(fakeView.zoomMode, model.ZoomMode.AutoFit);
+
+        const [expectedX, expectedY, expectedZoom] = checkFit(fakeView);
+
+        // Zoom in.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.zoomIn(2, 3)),
+            expectedX + (expectedX - 2) * (fakeView.zoomStep - 1),
+            expectedY + (expectedY - 3) * (fakeView.zoomStep - 1),
+            expectedZoom * fakeView.zoomStep,
+            recursionDepth - 1);
+    }
+}
+
+function checkAutoFitPureFitState(
+    creator: () => FakeView,
+    recursionDepth: number): void {
+    if (recursionDepth > 0) {
+        const fakeView = creator();
+
+        assert.equal(fakeView.zoomMode, model.ZoomMode.AutoFit);
+
+        const [expectedX, expectedY, expectedZoom] = checkFit(fakeView);
+
+        // Zoom in.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.zoomIn(2, 3)),
+            expectedX + (expectedX - 2) * (fakeView.zoomStep - 1),
+            expectedY + (expectedY - 3) * (fakeView.zoomStep - 1),
+            expectedZoom * fakeView.zoomStep,
+            recursionDepth - 1);
+    }
+}
+
+suite("Model", function () {
+    test("Fixed Controller - 100%", function () {
+        checkFixedPure100PercentState(
+            () => new FakeView(model.ZoomMode.Fixed, 600, 400, 300, 200, 10, 1.1),
+            150,
+            100,
+            testRecursionDepth
+        )
     });
 
     test("Create Fixed Controller - Corner", function () {
-        const fakeView = new FakeView();
-
-        model.Controller.createFixed(600, 400, 580, 380, 10, fakeView, 1.1);
-
-        assert.equal(fakeView.zoomMode, model.ZoomMode.Fixed);
-        assert.equal(fakeView.x, 10);
-        assert.equal(fakeView.y, 10);
-        assert.equal(fakeView.zoom, 1);
+        checkFixedNormalState(
+            () => new FakeView(model.ZoomMode.Fixed, 600, 400, 580, 380, 10, 1.1),
+            10,
+            10,
+            1,
+            testRecursionDepth
+        )
     });
 
     test("Create Fixed Controller - Fit Horizontal", function () {
-        const fakeView = new FakeView();
-
-        model.Controller.createFixed(600, 400, 581, 380, 10, fakeView, 1.1);
-
-        const expectedZoom = 580 / 581;
-
-        assert.equal(fakeView.zoomMode, model.ZoomMode.Fixed);
-        assert.equal(fakeView.x, 10);
-        assert.equal(fakeView.y, (400 - 380 * expectedZoom) / 2);
-        assert.equal(fakeView.zoom, expectedZoom);
+        checkFixedNormalState(
+            () => new FakeView(model.ZoomMode.Fixed, 600, 400, 581, 380, 10, 1.1),
+            10,
+            6000 / 581,
+            580 / 581,
+            testRecursionDepth
+        )
     });
 
     test("Create Fixed Controller - Fit Vertical", function () {
-        const fakeView = new FakeView();
-
-        model.Controller.createFixed(600, 400, 580, 381, 10, fakeView, 1.1);
-
-        const expectedZoom = 380 / 381;
-
-        assert.equal(fakeView.zoomMode, model.ZoomMode.Fixed);
-        assert.equal(fakeView.x, (600 - 580 * expectedZoom) / 2);
-        assert.equal(fakeView.y, 10);
-        assert.equal(fakeView.zoom, expectedZoom);
+        checkFixedNormalState(
+            () => new FakeView(model.ZoomMode.Fixed, 600, 400, 580, 381, 10, 1.1),
+            4100 / 381,
+            10,
+            380 / 381,
+            testRecursionDepth
+        )
     });
 
-    test("Create Fixed Controller - Zoom in", function () {
-        const fakeView = new FakeView();
-        const controller = model.Controller.createFixed(600, 400, 200, 200, 10, fakeView, 1.1);
-
-        assert.equal(fakeView.zoomMode, model.ZoomMode.Fixed);
-        assert.equal(fakeView.x, 200);
-        assert.equal(fakeView.y, 100);
-        assert.equal(fakeView.zoom, 1);
-
-        controller.zoomIn(250, 140);
-
-        assert.equal(fakeView.zoomMode, model.ZoomMode.Fixed);
-        assert.equal(fakeView.x, 195);
-        assert.equal(fakeView.y, 96);
-        assert.equal(fakeView.zoom, 1.1);
-    });
-
-    test("Create Fixed Controller - Zoom out", function () {
-        const fakeView = new FakeView();
-        const controller = model.Controller.createFixed(600, 400, 200, 200, 10, fakeView, 1.1);
-
-        assert.equal(fakeView.zoomMode, model.ZoomMode.Fixed);
-        assert.equal(fakeView.x, 200);
-        assert.equal(fakeView.y, 100);
-        assert.equal(fakeView.zoom, 1);
-
-        controller.zoomOut(250, 140);
-
-        assert.equal(fakeView.zoomMode, model.ZoomMode.Fixed);
-        assert.equal(fakeView.x, 200 + 50 * (1 - 1 / 1.1));
-        assert.equal(fakeView.y, 100 + 40 * (1 - 1 / 1.1));
-        assert.equal(fakeView.zoom, 1 / 1.1);
-    });
-
-    test("Create Fixed Controller - 100% - Toggle Overview", function () {
-        const fakeView = new FakeView();
-        const controller = model.Controller.createFixed(600, 400, 200, 200, 10, fakeView, 1.1);
-
-        assert.equal(fakeView.zoomMode, model.ZoomMode.Fixed);
-        assert.equal(fakeView.x, 200);
-        assert.equal(fakeView.y, 100);
-        assert.equal(fakeView.zoom, 1);
-
-        controller.toggleOverview(17, 23); // 100% -> Fit.
-
-        assert.equal(fakeView.zoomMode, model.ZoomMode.Fit);
-        assert.equal(fakeView.x, 110);
-        assert.equal(fakeView.y, 10);
-        assert.equal(fakeView.zoom, 1.9);
-
-        controller.toggleOverview(130, 20); // Fit -> 100%.
-
-        assert.equal(fakeView.zoomMode, model.ZoomMode.Fixed);
-        assert.equal(fakeView.x, 110 + 20 * (1 - 1 / 1.9));
-        assert.equal(fakeView.y, 10 + 10 * (1 - 1 / 1.9));
-        assert.equal(fakeView.zoom, 1);
-
-        controller.toggleOverview(23, 29); // 100% -> Fit.
-
-        assert.equal(fakeView.zoomMode, model.ZoomMode.Fit);
-        assert.equal(fakeView.x, 110);
-        assert.equal(fakeView.y, 10);
-        assert.equal(fakeView.zoom, 1.9);
-    });
-});
-
-suite("Fit Controller", function () {
     test("Create Fit Controller - Upscaling - Fit Horizontal", function () {
-        const fakeView = new FakeView();
-
-        model.Controller.createFit(600, 400, 100, 10, 10, fakeView, 1.1);
-
-        const expectedZoom = 5.8;
-
-        assert.equal(fakeView.zoomMode, model.ZoomMode.Fit);
-        assert.equal(fakeView.x, 10);
-        assert.equal(fakeView.y, (400 - 10 * expectedZoom) / 2);
-        assert.equal(fakeView.zoom, expectedZoom);
+        checkPureFitState(() => new FakeView(model.ZoomMode.Fit, 600, 400, 100, 10, 10, 1.1), testRecursionDepth);
     });
 
     test("Create Fit Controller - Upscaling - Fit Vertical", function () {
-        const fakeView = new FakeView();
-
-        model.Controller.createFit(600, 400, 10, 100, 10, fakeView, 1.1);
-
-        const expectedZoom = 3.8;
-
-        assert.equal(fakeView.zoomMode, model.ZoomMode.Fit);
-        assert.equal(fakeView.x, (600 - 10 * expectedZoom) / 2);
-        assert.equal(fakeView.y, 10);
-        assert.equal(fakeView.zoom, expectedZoom);
+        checkPureFitState(() => new FakeView(model.ZoomMode.Fit, 600, 400, 10, 100, 10, 1.1), testRecursionDepth);
     });
 
     test("Create Fit Controller - Downscaling - Fit Horizontal", function () {
-        const fakeView = new FakeView();
-
-        model.Controller.createFit(600, 400, 1000, 100, 10, fakeView, 1.1);
-
-        const expectedZoom = 0.58;
-
-        assert.equal(fakeView.zoomMode, model.ZoomMode.Fit);
-        assert.equal(fakeView.x, 10);
-        assert.equal(fakeView.y, (400 - 100 * expectedZoom) / 2);
-        assert.equal(fakeView.zoom, expectedZoom);
+        checkPureFitState(() => new FakeView(model.ZoomMode.Fit, 600, 400, 1000, 100, 10, 1.1), testRecursionDepth);
     });
 
     test("Create Fit Controller - Downscaling - Fit Vertical", function () {
-        const fakeView = new FakeView();
-
-        model.Controller.createFit(600, 400, 100, 1000, 10, fakeView, 1.1);
-
-        const expectedZoom = 0.38;
-
-        assert.equal(fakeView.zoomMode, model.ZoomMode.Fit);
-        assert.equal(fakeView.x, (600 - 100 * expectedZoom) / 2);
-        assert.equal(fakeView.y, 10);
-        assert.equal(fakeView.zoom, expectedZoom);
+        checkPureFitState(() => new FakeView(model.ZoomMode.Fit, 600, 400, 100, 1000, 10, 1.1), testRecursionDepth);
     });
 
-    test("Create Fit Controller - Zoom in", function () {
-        const fakeView = new FakeView();
-        const controller = model.Controller.createFit(600, 400, 200, 200, 10, fakeView, 1.1);
-
-        assert.equal(fakeView.zoomMode, model.ZoomMode.Fit);
-        assert.equal(fakeView.x, 110);
-        assert.equal(fakeView.y, 10);
-        assert.equal(fakeView.zoom, 1.9);
-
-        controller.zoomIn(120, 30);
-
-        assert.equal(fakeView.zoomMode, model.ZoomMode.Fixed);
-        assert.equal(fakeView.x, 109);
-        assertAlmostEqual(fakeView.y, 8);
-        assertAlmostEqual(fakeView.zoom, 2.09);
-    });
-
-    test("Create Fit Controller - Zoom out", function () {
-        const fakeView = new FakeView();
-        const controller = model.Controller.createFit(600, 400, 200, 200, 10, fakeView, 1.1);
-
-        assert.equal(fakeView.zoomMode, model.ZoomMode.Fit);
-        assert.equal(fakeView.x, 110);
-        assert.equal(fakeView.y, 10);
-        assert.equal(fakeView.zoom, 1.9);
-
-        controller.zoomOut(120, 30);
-
-        assert.equal(fakeView.zoomMode, model.ZoomMode.Fixed);
-        assert.equal(fakeView.x, 110 + 10 * (1 - 1 / 1.1));
-        assertAlmostEqual(fakeView.y, 10 + 20 * (1 - 1 / 1.1));
-        assertAlmostEqual(fakeView.zoom, 19 / 11);
-    });
-});
-
-suite("AutoFit Controller", function () {
     test("Create AutoFit Controller - 100%", function () {
-        const fakeView = new FakeView();
-
-        model.Controller.createAutoFit(600, 400, 300, 200, 10, fakeView, 1.1);
-
-        assert.equal(fakeView.zoomMode, model.ZoomMode.AutoFit);
-        assert.equal(fakeView.x, 150);
-        assert.equal(fakeView.y, 100);
-        assert.equal(fakeView.zoom, 1);
+        checkAutoFitPure100PercentState(
+            () => new FakeView(model.ZoomMode.AutoFit, 600, 400, 300, 200, 10, 1.1),
+            150,
+            100,
+            testRecursionDepth);
     });
 
     test("Create AutoFit Controller - Corner", function () {
-        const fakeView = new FakeView();
-
-        model.Controller.createAutoFit(600, 400, 580, 380, 10, fakeView, 1.1);
-
-        assert.equal(fakeView.zoomMode, model.ZoomMode.AutoFit);
-        assert.equal(fakeView.x, 10);
-        assert.equal(fakeView.y, 10);
-        assert.equal(fakeView.zoom, 1);
+        checkAutoFitPureFitState(
+            () => new FakeView(model.ZoomMode.AutoFit, 600, 400, 580, 380, 10, 1.1),
+            testRecursionDepth);
     });
 
     test("Create AutoFit Controller - Fit Horizontal", function () {
-        const fakeView = new FakeView();
-
-        model.Controller.createAutoFit(600, 400, 581, 380, 10, fakeView, 1.1);
-
-        const expectedZoom = 580 / 581;
-
-        assert.equal(fakeView.zoomMode, model.ZoomMode.AutoFit);
-        assert.equal(fakeView.x, 10);
-        assert.equal(fakeView.y, (400 - 380 * expectedZoom) / 2);
-        assert.equal(fakeView.zoom, expectedZoom);
+        checkAutoFitPureFitState(
+            () => new FakeView(model.ZoomMode.AutoFit, 600, 400, 581, 380, 10, 1.1),
+            testRecursionDepth);
     });
 
     test("Create AutoFit Controller - Fit Vertical", function () {
-        const fakeView = new FakeView();
-
-        model.Controller.createAutoFit(600, 400, 580, 381, 10, fakeView, 1.1);
-
-        const expectedZoom = 380 / 381;
-
-        assert.equal(fakeView.zoomMode, model.ZoomMode.AutoFit);
-        assert.equal(fakeView.x, (600 - 580 * expectedZoom) / 2);
-        assert.equal(fakeView.y, 10);
-        assert.equal(fakeView.zoom, expectedZoom);
-    });
-
-    test("Create AutoFit Controller - Zoom in", function () {
-        const fakeView = new FakeView();
-        const controller = model.Controller.createAutoFit(600, 400, 200, 200, 10, fakeView, 1.1);
-
-        assert.equal(fakeView.zoomMode, model.ZoomMode.AutoFit);
-        assert.equal(fakeView.x, 200);
-        assert.equal(fakeView.y, 100);
-        assert.equal(fakeView.zoom, 1);
-
-        controller.zoomIn(250, 140);
-
-        assert.equal(fakeView.zoomMode, model.ZoomMode.Fixed);
-        assert.equal(fakeView.x, 195);
-        assert.equal(fakeView.y, 96);
-        assert.equal(fakeView.zoom, 1.1);
-    });
-
-    test("Create AutoFit Controller - Zoom out", function () {
-        const fakeView = new FakeView();
-        const controller = model.Controller.createAutoFit(600, 400, 200, 200, 10, fakeView, 1.1);
-
-        assert.equal(fakeView.zoomMode, model.ZoomMode.AutoFit);
-        assert.equal(fakeView.x, 200);
-        assert.equal(fakeView.y, 100);
-        assert.equal(fakeView.zoom, 1);
-
-        controller.zoomOut(250, 140);
-
-        assert.equal(fakeView.zoomMode, model.ZoomMode.Fixed);
-        assert.equal(fakeView.x, 200 + 50 * (1 - 1 / 1.1));
-        assert.equal(fakeView.y, 100 + 40 * (1 - 1 / 1.1));
-        assert.equal(fakeView.zoom, 1 / 1.1);
+        checkAutoFitPureFitState(
+            () => new FakeView(model.ZoomMode.AutoFit, 600, 400, 580, 381, 10, 1.1),
+            testRecursionDepth);
     });
 });
