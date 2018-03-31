@@ -10,73 +10,52 @@ class FakeView {
     private contentWidthValue: number;
     private contentHeightValue: number;
     private contentMarginValue: number;
-    private zoomModeValue: model.ZoomMode = -1;
-    private xValue: number = -1;
-    private yValue: number = -1;
+    private contentXValue: number = -1;
+    private contentYValue: number = -1;
     private zoomValue: number = -1;
+    private zoomModeValue: model.ZoomMode = model.ZoomMode.Fixed;
     private controller: model.Controller;
 
     constructor(
-        zoomMode: model.ZoomMode,
         width: number,
         height: number,
         contentWidth: number,
         contentHeight: number,
         contentMargin: number,
-        public readonly zoomStep: number) {
-
+        public readonly zoomStep: number,
+        zoomMode: model.ZoomMode
+    ) {
         this.widthValue = width;
         this.heightValue = height;
         this.contentWidthValue = contentWidth;
         this.contentHeightValue = contentHeight;
         this.contentMarginValue = contentMargin;
 
-        const self = this;
+        const viewEventListener = new class implements model.IViewEventListener {
+            constructor(private fakeView: FakeView) {
+            }
 
-        const listener = new class implements model.IViewEventListener {
-            public onZoomModeChanged(zoomMode: model.ZoomMode): void {
-                self.zoomModeValue = zoomMode;
+            public onZoomModeChanged(zoomMode1: model.ZoomMode): void {
+                this.fakeView.zoomModeValue = zoomMode1;
             }
 
             public onLayoutChanged(x: number, y: number, zoom: number): void {
-                self.xValue = x;
-                self.yValue = y;
-                self.zoomValue = zoom;
+                this.fakeView.contentXValue = x;
+                this.fakeView.contentYValue = y;
+                this.fakeView.zoomValue = zoom;
             }
-        };
+        }(this);
 
-        switch (zoomMode) {
-            case model.ZoomMode.Fixed:
-                this.controller = model.Controller.createFixed(
-                    width,
-                    height,
-                    contentWidth,
-                    contentHeight,
-                    contentMargin,
-                    listener,
-                    zoomStep);
-                break;
-            case model.ZoomMode.Fit:
-                this.controller = model.Controller.createFit(
-                    width,
-                    height,
-                    contentWidth,
-                    contentHeight,
-                    contentMargin,
-                    listener,
-                    zoomStep);
-                break;
-            default:
-                this.controller = model.Controller.createAutoFit(
-                    width,
-                    height,
-                    contentWidth,
-                    contentHeight,
-                    contentMargin,
-                    listener,
-                    zoomStep);
-                break;
-        }
+        this.controller = new model.Controller(
+            width,
+            height,
+            contentWidth,
+            contentHeight,
+            contentMargin,
+            viewEventListener,
+            zoomStep,
+            zoomMode
+        );
     }
 
     public get width(): number {
@@ -99,20 +78,24 @@ class FakeView {
         return this.contentMarginValue;
     }
 
-    public get zoomMode(): model.ZoomMode {
-        return this.zoomModeValue;
+    public get contentX(): number {
+        return this.contentXValue;
     }
 
-    public get x(): number {
-        return this.xValue;
-    }
-
-    public get y(): number {
-        return this.yValue;
+    public get contentY(): number {
+        return this.contentYValue;
     }
 
     public get zoom(): number {
         return this.zoomValue;
+    }
+
+    public get zoomMode(): model.ZoomMode {
+        return this.zoomModeValue;
+    }
+
+    public beginDrag(x: number, y: number): (x: number, y: number) => void {
+        return this.controller.beginDrag(x, y);
     }
 
     public resize(width: number, height: number): void {
@@ -129,6 +112,10 @@ class FakeView {
         this.controller.resizeContent(width, height);
     }
 
+    public setZoomMode(zoomMode: model.ZoomMode): void {
+        this.controller.setZoomMode(zoomMode);
+    }
+
     public toggleOverview(x: number, y: number): void {
         this.controller.toggleOverview(x, y);
     }
@@ -141,23 +128,69 @@ class FakeView {
         this.controller.zoomOut(x, y);
     }
 
-    public beginDrag(x: number, y: number): (x: number, y: number) => void {
-        return this.controller.beginDrag(x, y);
+    public get hasEnoughSpace(): boolean {
+        const contentMargin = this.contentMargin * 2;
+
+        return this.contentWidth < this.width - contentMargin && this.contentHeight < this.height - contentMargin;
+    }
+
+    public hasEnoughSpaceWithSize(width: number, height: number): boolean {
+        const contentMargin = this.contentMargin * 2;
+
+        return this.contentWidth < width - contentMargin && this.contentHeight < height - contentMargin;
+    }
+
+    public hasEnoughSpaceWithContentSize(width: number, height: number): boolean {
+        const contentMargin = this.contentMargin * 2;
+
+        return width < this.width - contentMargin && height < this.height - contentMargin;
     }
 }
 
-function assertAlmostEqual(actual: number, expected: number): void {
-    assert(Math.abs(actual - expected) < floatCheckEpsilon, `Actual: ${actual}, Expected: ${expected}.`)
+function assertEqual(actual: number, expected: number): void {
+    if (!(Math.abs(actual - expected) < floatCheckEpsilon)) {
+        // !!!!!!!!!!!!!!!! For break point.
+        assert(Math.abs(actual - expected) < floatCheckEpsilon, `Actual: ${actual}, Expected: ${expected}.`);
+    }
+
+    assert.equal(actual, expected);
 }
 
-function makeCreator(creator: () => FakeView, action: (fakeView: FakeView) => void) {
+function assertAlmostEqual(actual: number, expected: number): void {
+    if (!(Math.abs(actual - expected) < floatCheckEpsilon)) {
+        // !!!!!!!!!!!!!!!! For break point.
+        assert(Math.abs(actual - expected) < floatCheckEpsilon, `Actual: ${actual}, Expected: ${expected}.`);
+    }
+
+    assert(Math.abs(actual - expected) < floatCheckEpsilon, `Actual: ${actual}, Expected: ${expected}.`);
+}
+
+function makeCreator(creator: () => FakeView, action: (fakeView: FakeView) => void): () => FakeView {
     return () => {
         const fakeView = creator();
 
         action(fakeView);
 
         return fakeView;
-    }
+    };
+}
+
+type SavedState = (creator: () => FakeView, recursionDepth: number) => void;
+
+function saveState(
+    referenceViewCreator: () => FakeView,
+    checker: (creator: () => FakeView, contentX: number, contentY: number, zoom: number, recursionDepth: number) => void
+): SavedState {
+    const referenceView = referenceViewCreator();
+
+    return (creator: () => FakeView, recursionDepth: number) => {
+        const fakeView = creator();
+
+        referenceView.resize(fakeView.width, fakeView.height);
+        referenceView.resizeContent(fakeView.contentWidth, fakeView.contentHeight);
+
+        checker(creator, referenceView.contentX, referenceView.contentY, referenceView.zoom, recursionDepth);
+    };
 }
 
 function checkFixedNormalState(
@@ -165,62 +198,106 @@ function checkFixedNormalState(
     expectedX: number,
     expectedY: number,
     expectedZoom: number,
-    recursionDepth: number): void {
+    recursionDepth: number
+): void {
     if (recursionDepth > 0) {
+        --recursionDepth;
+
         const fakeView = creator();
 
-        assert.equal(fakeView.zoomMode, model.ZoomMode.Fixed);
-        assertAlmostEqual(fakeView.x, expectedX);
-        assertAlmostEqual(fakeView.y, expectedY);
+        assertEqual(fakeView.zoomMode, model.ZoomMode.Fixed);
+        assertAlmostEqual(fakeView.contentX, expectedX);
+        assertAlmostEqual(fakeView.contentY, expectedY);
         assertAlmostEqual(fakeView.zoom, expectedZoom);
 
         // Drag.
         checkFixedNormalState(
             makeCreator(creator, (v) => v.beginDrag(10, 20)(30, 50)),
-            fakeView.x + 20,
-            fakeView.y + 30,
+            fakeView.contentX + 20,
+            fakeView.contentY + 30,
             fakeView.zoom,
-            recursionDepth - 1)
+            recursionDepth
+        );
 
         // Resize.
         checkFixedNormalState(
             makeCreator(creator, (v) => v.resize(fakeView.width * 1.1, fakeView.height * 1.2)),
-            fakeView.x + fakeView.width * 0.05,
-            fakeView.y + fakeView.height * 0.1,
+            fakeView.contentX + fakeView.width * 0.05,
+            fakeView.contentY + fakeView.height * 0.1,
             fakeView.zoom,
-            recursionDepth - 1);
+            recursionDepth
+        );
 
         // Resize content.
         checkFixedNormalState(
             makeCreator(creator, (v) => v.resizeContent(fakeView.contentWidth * 1.1, fakeView.contentHeight * 1.2)),
-            fakeView.x * 1.1 - fakeView.width * 0.05,
-            fakeView.y * 1.2 - fakeView.height * 0.1,
+            fakeView.contentX * 1.1 - fakeView.width * 0.05,
+            fakeView.contentY * 1.2 - fakeView.height * 0.1,
             fakeView.zoom,
-            recursionDepth - 1);
+            recursionDepth
+        );
+
+        const savedState = saveState(creator, (c, x, y, z, d) => checkFixedNormalState(c, x, y, z, d));
+
+        // Set Zoom Mode.
+        {
+            // Fixed.
+            checkFixedNormalState(
+                makeCreator(creator, (v) => v.setZoomMode(model.ZoomMode.Fixed)),
+                fakeView.contentX,
+                fakeView.contentY,
+                fakeView.zoom,
+                recursionDepth
+            );
+
+            // Fit.
+            checkFitStateWithSavedStateAndZoom(
+                makeCreator(creator, (v) => v.setZoomMode(model.ZoomMode.Fit)),
+                savedState,
+                fakeView.zoom,
+                recursionDepth
+            );
+
+            // Auto Fit.
+            {
+                const checker = fakeView.hasEnoughSpace ?
+                    checkAutoFit100PercentStateWithSavedStateAndZoom :
+                    checkAutoFitFitStateWithSavedStateAndZoom;
+
+                checker(
+                    makeCreator(creator, (v) => v.setZoomMode(model.ZoomMode.AutoFit)),
+                    savedState,
+                    fakeView.zoom,
+                    recursionDepth
+                );
+            }
+        }
 
         // Toggle overview.
-        checkFixed100PercentState(
-            makeCreator(creator, (v) => v.toggleOverview(fakeView.x * 1.1, fakeView.y * 1.2)),
-            fakeView.x * (1.1 - 0.1 / fakeView.zoom),
-            fakeView.y * (1.2 - 0.2 / fakeView.zoom),
+        checkFitStateWithSavedStateAndZoom(
+            makeCreator(creator, (v) => v.toggleOverview(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            savedState,
             fakeView.zoom,
-            recursionDepth - 1)
+            recursionDepth
+        );
 
         // Zoom in.
         checkFixedNormalState(
-            makeCreator(creator, (v) => v.zoomIn(fakeView.x * 1.1, fakeView.y * 1.2)),
-            fakeView.x * (1.1 - fakeView.zoomStep * 0.1),
-            fakeView.y * (1.2 - fakeView.zoomStep * 0.2),
+            makeCreator(creator, (v) => v.zoomIn(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            fakeView.contentX * (1.1 - fakeView.zoomStep * 0.1),
+            fakeView.contentY * (1.2 - fakeView.zoomStep * 0.2),
             fakeView.zoom * fakeView.zoomStep,
-            recursionDepth - 1);
+            recursionDepth
+        );
 
         // Zoom out.
         checkFixedNormalState(
-            makeCreator(creator, (v) => v.zoomOut(fakeView.x * 1.1, fakeView.y * 1.2)),
-            fakeView.x * (1.1 - 0.1 / fakeView.zoomStep),
-            fakeView.y * (1.2 - 0.2 / fakeView.zoomStep),
+            makeCreator(creator, (v) => v.zoomOut(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            fakeView.contentX * (1.1 - 0.1 / fakeView.zoomStep),
+            fakeView.contentY * (1.2 - 0.2 / fakeView.zoomStep),
             fakeView.zoom / fakeView.zoomStep,
-            recursionDepth - 1);
+            recursionDepth
+        );
     }
 }
 
@@ -228,404 +305,1420 @@ function checkFixed100PercentState(
     creator: () => FakeView,
     expectedX: number,
     expectedY: number,
-    savedZoom: number,
-    recursionDepth: number): void {
+    recursionDepth: number
+): void {
     if (recursionDepth > 0) {
+        --recursionDepth;
+
         const fakeView = creator();
 
-        assert.equal(fakeView.zoomMode, model.ZoomMode.Fixed);
-        assertAlmostEqual(fakeView.x, expectedX);
-        assertAlmostEqual(fakeView.y, expectedY);
+        assertEqual(fakeView.zoomMode, model.ZoomMode.Fixed);
+        assertAlmostEqual(fakeView.contentX, expectedX);
+        assertAlmostEqual(fakeView.contentY, expectedY);
         assertAlmostEqual(fakeView.zoom, 1);
 
         // Drag.
         checkFixed100PercentState(
             makeCreator(creator, (v) => v.beginDrag(10, 20)(30, 50)),
-            fakeView.x + 20,
-            fakeView.y + 30,
-            savedZoom,
-            recursionDepth - 1)
+            fakeView.contentX + 20,
+            fakeView.contentY + 30,
+            recursionDepth
+        );
 
         // Resize.
         checkFixed100PercentState(
             makeCreator(creator, (v) => v.resize(fakeView.width * 1.1, fakeView.height * 1.2)),
-            fakeView.x + fakeView.width * 0.05,
-            fakeView.y + fakeView.height * 0.1,
-            savedZoom,
-            recursionDepth - 1);
+            fakeView.contentX + fakeView.width * 0.05,
+            fakeView.contentY + fakeView.height * 0.1,
+            recursionDepth
+        );
 
         // Resize content.
         checkFixed100PercentState(
             makeCreator(creator, (v) => v.resizeContent(fakeView.contentWidth * 1.1, fakeView.contentHeight * 1.2)),
-            fakeView.x * 1.1 - fakeView.width * 0.05,
-            fakeView.y * 1.2 - fakeView.height * 0.1,
-            savedZoom,
-            recursionDepth - 1);
+            fakeView.contentX * 1.1 - fakeView.width * 0.05,
+            fakeView.contentY * 1.2 - fakeView.height * 0.1,
+            recursionDepth
+        );
+
+        const savedState = saveState(creator, (c, x, y, _, d) => checkFixed100PercentState(c, x, y, d));
+
+        // Set Zoom Mode.
+        {
+            // Fixed.
+            checkFixed100PercentState(
+                makeCreator(creator, (v) => v.setZoomMode(model.ZoomMode.Fixed)),
+                fakeView.contentX,
+                fakeView.contentY,
+                recursionDepth
+            );
+
+            // Fit.
+            checkFitStateWithSavedState(
+                makeCreator(creator, (v) => v.setZoomMode(model.ZoomMode.Fit)),
+                savedState,
+                recursionDepth
+            );
+
+            // Auto Fit.
+            {
+                const checker = fakeView.hasEnoughSpace ?
+                    checkAutoFit100PercentStateWithSavedState :
+                    checkAutoFitFitStateWithSavedState;
+
+                checker(makeCreator(creator, (v) => v.setZoomMode(model.ZoomMode.AutoFit)), savedState, recursionDepth);
+            }
+        }
 
         // Toggle overview.
-        checkFitState(
-            makeCreator(creator, (v) => v.toggleOverview(fakeView.x * 1.1, fakeView.y * 1.2)),
-            savedZoom,
-            recursionDepth - 1)
+        checkFitStateWithSavedState(
+            makeCreator(creator, (v) => v.toggleOverview(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            savedState,
+            recursionDepth
+        );
 
         // Zoom in.
         checkFixedNormalState(
-            makeCreator(creator, (v) => v.zoomIn(fakeView.x * 1.1, fakeView.y * 1.2)),
-            fakeView.x * (1.1 - fakeView.zoomStep * 0.1),
-            fakeView.y * (1.2 - fakeView.zoomStep * 0.2),
+            makeCreator(creator, (v) => v.zoomIn(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            fakeView.contentX * (1.1 - fakeView.zoomStep * 0.1),
+            fakeView.contentY * (1.2 - fakeView.zoomStep * 0.2),
             fakeView.zoomStep,
-            recursionDepth - 1);
+            recursionDepth
+        );
 
         // Zoom out.
         checkFixedNormalState(
-            makeCreator(creator, (v) => v.zoomOut(fakeView.x * 1.1, fakeView.y * 1.2)),
-            fakeView.x * (1.1 - 0.1 / fakeView.zoomStep),
-            fakeView.y * (1.2 - 0.2 / fakeView.zoomStep),
+            makeCreator(creator, (v) => v.zoomOut(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            fakeView.contentX * (1.1 - 0.1 / fakeView.zoomStep),
+            fakeView.contentY * (1.2 - 0.2 / fakeView.zoomStep),
             1 / fakeView.zoomStep,
-            recursionDepth - 1);
+            recursionDepth
+        );
     }
 }
 
-function checkFixedPure100PercentState(
+function checkFixed100PercentStateWithSavedZoom(
     creator: () => FakeView,
     expectedX: number,
     expectedY: number,
-    recursionDepth: number): void {
+    savedZoom: number,
+    recursionDepth: number
+): void {
     if (recursionDepth > 0) {
+        --recursionDepth;
+
         const fakeView = creator();
 
-        assert.equal(fakeView.zoomMode, model.ZoomMode.Fixed);
-        assertAlmostEqual(fakeView.x, expectedX);
-        assertAlmostEqual(fakeView.y, expectedY);
+        assertEqual(fakeView.zoomMode, model.ZoomMode.Fixed);
+        assertAlmostEqual(fakeView.contentX, expectedX);
+        assertAlmostEqual(fakeView.contentY, expectedY);
         assertAlmostEqual(fakeView.zoom, 1);
 
         // Drag.
-        checkFixedPure100PercentState(
+        checkFixed100PercentStateWithSavedZoom(
             makeCreator(creator, (v) => v.beginDrag(10, 20)(30, 50)),
-            fakeView.x + 20,
-            fakeView.y + 30,
-            recursionDepth - 1)
+            fakeView.contentX + 20,
+            fakeView.contentY + 30,
+            savedZoom,
+            recursionDepth
+        );
 
         // Resize.
-        checkFixedPure100PercentState(
+        checkFixed100PercentStateWithSavedZoom(
             makeCreator(creator, (v) => v.resize(fakeView.width * 1.1, fakeView.height * 1.2)),
-            fakeView.x + fakeView.width * 0.05,
-            fakeView.y + fakeView.height * 0.1,
-            recursionDepth - 1);
+            fakeView.contentX + fakeView.width * 0.05,
+            fakeView.contentY + fakeView.height * 0.1,
+            savedZoom,
+            recursionDepth
+        );
 
         // Resize content.
-        checkFixedPure100PercentState(
+        checkFixed100PercentStateWithSavedZoom(
             makeCreator(creator, (v) => v.resizeContent(fakeView.contentWidth * 1.1, fakeView.contentHeight * 1.2)),
-            fakeView.x * 1.1 - fakeView.width * 0.05,
-            fakeView.y * 1.2 - fakeView.height * 0.1,
-            recursionDepth - 1);
+            fakeView.contentX * 1.1 - fakeView.width * 0.05,
+            fakeView.contentY * 1.2 - fakeView.height * 0.1,
+            savedZoom,
+            recursionDepth
+        );
+
+        const savedState = saveState(
+            creator,
+            (c, x, y, _, d) => checkFixed100PercentStateWithSavedZoom(c, x, y, savedZoom, d)
+        );
+
+        // Set Zoom Mode.
+        {
+            // Fixed.
+            checkFixed100PercentStateWithSavedZoom(
+                makeCreator(creator, (v) => v.setZoomMode(model.ZoomMode.Fixed)),
+                fakeView.contentX,
+                fakeView.contentY,
+                savedZoom,
+                recursionDepth
+            );
+
+            // Fit.
+            checkFitStateWithSavedStateAndZoom(
+                makeCreator(creator, (v) => v.setZoomMode(model.ZoomMode.Fit)),
+                savedState,
+                savedZoom,
+                recursionDepth
+            );
+
+            // Auto Fit.
+            {
+                const checker = fakeView.hasEnoughSpace ?
+                    checkAutoFit100PercentStateWithSavedStateAndZoom :
+                    checkAutoFitFitStateWithSavedStateAndZoom;
+
+                checker(
+                    makeCreator(creator, (v) => v.setZoomMode(model.ZoomMode.AutoFit)),
+                    savedState,
+                    fakeView.zoom,
+                    recursionDepth
+                );
+            }
+        }
 
         // Toggle overview.
-        checkPureFitState(
-            makeCreator(creator, (v) => v.toggleOverview(fakeView.x * 1.1, fakeView.y * 1.2)),
-            recursionDepth - 1)
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.toggleOverview(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            fakeView.contentX * (1.1 - savedZoom * 0.1),
+            fakeView.contentY * (1.2 - savedZoom * 0.2),
+            savedZoom,
+            recursionDepth
+        );
 
         // Zoom in.
         checkFixedNormalState(
-            makeCreator(creator, (v) => v.zoomIn(fakeView.x * 1.1, fakeView.y * 1.2)),
-            fakeView.x * (1.1 - fakeView.zoomStep * 0.1),
-            fakeView.y * (1.2 - fakeView.zoomStep * 0.2),
+            makeCreator(creator, (v) => v.zoomIn(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            fakeView.contentX * (1.1 - fakeView.zoomStep * 0.1),
+            fakeView.contentY * (1.2 - fakeView.zoomStep * 0.2),
             fakeView.zoomStep,
-            recursionDepth - 1);
+            recursionDepth
+        );
 
         // Zoom out.
         checkFixedNormalState(
-            makeCreator(creator, (v) => v.zoomOut(fakeView.x * 1.1, fakeView.y * 1.2)),
-            fakeView.x * (1.1 - 0.1 / fakeView.zoomStep),
-            fakeView.y * (1.2 - 0.2 / fakeView.zoomStep),
+            makeCreator(creator, (v) => v.zoomOut(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            fakeView.contentX * (1.1 - 0.1 / fakeView.zoomStep),
+            fakeView.contentY * (1.2 - 0.2 / fakeView.zoomStep),
             1 / fakeView.zoomStep,
-            recursionDepth - 1);
+            recursionDepth
+        );
     }
 }
 
 function checkFit(fakeView: FakeView): void {
     const expectedZoom = Math.min(
         (fakeView.width - fakeView.contentMargin * 2) / fakeView.contentWidth,
-        (fakeView.height - fakeView.contentMargin * 2) / fakeView.contentHeight);
+        (fakeView.height - fakeView.contentMargin * 2) / fakeView.contentHeight
+    );
 
     const expectedX = (fakeView.width - fakeView.contentWidth * expectedZoom) / 2;
     const expectedY = (fakeView.height - fakeView.contentHeight * expectedZoom) / 2;
 
-    assertAlmostEqual(fakeView.x, expectedX);
-    assertAlmostEqual(fakeView.y, expectedY);
+    assertAlmostEqual(fakeView.contentX, expectedX);
+    assertAlmostEqual(fakeView.contentY, expectedY);
     assertAlmostEqual(fakeView.zoom, expectedZoom);
 }
 
-function checkFitState(creator: () => FakeView, savedZoom: number, recursionDepth: number): void {
+function checkInitialFixedState(creator: () => FakeView, fakeView: FakeView, recursionDepth: number): void {
+    if (fakeView.hasEnoughSpace) {
+        checkFixed100PercentState(
+            creator,
+            (fakeView.width - fakeView.contentWidth) / 2,
+            (fakeView.height - fakeView.contentHeight) / 2,
+            recursionDepth
+        );
+    } else {
+        const contentMargin = fakeView.contentMargin * 2;
+        const zoom = Math.min(
+            (fakeView.width - contentMargin) / fakeView.contentWidth,
+            (fakeView.height - contentMargin) / fakeView.contentHeight
+        );
+
+        checkFixedNormalState(
+            creator,
+            (fakeView.width - fakeView.contentWidth * zoom) / 2,
+            (fakeView.height - fakeView.contentHeight * zoom) / 2,
+            zoom,
+            recursionDepth
+        );
+    }
+}
+
+function checkFitState(creator: () => FakeView, recursionDepth: number): void {
     if (recursionDepth > 0) {
+        --recursionDepth;
+
         const fakeView = creator();
 
-        assert.equal(fakeView.zoomMode, model.ZoomMode.Fit);
+        assertEqual(fakeView.zoomMode, model.ZoomMode.Fit);
 
         checkFit(fakeView);
 
         // Drag.
         checkFixedNormalState(
             makeCreator(creator, (v) => v.beginDrag(10, 20)(30, 50)),
-            fakeView.x + 20,
-            fakeView.y + 30,
+            fakeView.contentX + 20,
+            fakeView.contentY + 30,
             fakeView.zoom,
-            recursionDepth - 1)
+            recursionDepth
+        );
 
         // Resize.
         checkFitState(
             makeCreator(creator, (v) => v.resize(fakeView.width * 1.1, fakeView.height * 1.2)),
-            savedZoom,
-            recursionDepth - 1);
+            recursionDepth
+        );
 
         // Resize content.
         checkFitState(
             makeCreator(creator, (v) => v.resizeContent(fakeView.contentWidth * 1.1, fakeView.contentHeight * 1.2)),
-            savedZoom,
-            recursionDepth - 1);
+            recursionDepth
+        );
+
+        // Set Zoom Mode.
+        {
+            // Fixed.
+            checkInitialFixedState(
+                makeCreator(creator, (v) => v.setZoomMode(model.ZoomMode.Fixed)),
+                fakeView,
+                recursionDepth
+            );
+
+            // Fit.
+            checkFitState(makeCreator(creator, (v) => v.setZoomMode(model.ZoomMode.Fit)), recursionDepth);
+
+            // Auto Fit.
+            {
+                const checker = fakeView.hasEnoughSpace ? checkAutoFit100PercentState : checkAutoFitFitState;
+
+                checker(makeCreator(creator, (v) => v.setZoomMode(model.ZoomMode.AutoFit)), recursionDepth);
+            }
+        }
 
         // Toggle overview.
-        checkFixedNormalState(
-            makeCreator(creator, (v) => v.toggleOverview(fakeView.x * 1.1, fakeView.y * 1.2)),
-            fakeView.x * (1.1 - savedZoom / fakeView.zoom * 0.1),
-            fakeView.y * (1.2 - savedZoom / fakeView.zoom * 0.2),
-            savedZoom,
-            recursionDepth - 1)
+        checkFixed100PercentState(
+            makeCreator(creator, (v) => v.toggleOverview(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            fakeView.contentX * (1.1 - 0.1 / fakeView.zoom),
+            fakeView.contentY * (1.2 - 0.2 / fakeView.zoom),
+            recursionDepth
+        );
 
         // Zoom in.
         checkFixedNormalState(
-            makeCreator(creator, (v) => v.zoomIn(fakeView.x * 1.1, fakeView.y * 1.2)),
-            fakeView.x * (1.1 - fakeView.zoomStep * 0.1),
-            fakeView.y * (1.2 - fakeView.zoomStep * 0.2),
+            makeCreator(creator, (v) => v.zoomIn(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            fakeView.contentX * (1.1 - fakeView.zoomStep * 0.1),
+            fakeView.contentY * (1.2 - fakeView.zoomStep * 0.2),
             fakeView.zoom * fakeView.zoomStep,
-            recursionDepth - 1);
+            recursionDepth
+        );
 
         // Zoom out.
         checkFixedNormalState(
-            makeCreator(creator, (v) => v.zoomOut(fakeView.x * 1.1, fakeView.y * 1.2)),
-            fakeView.x * (1.1 - 0.1 / fakeView.zoomStep),
-            fakeView.y * (1.2 - 0.2 / fakeView.zoomStep),
+            makeCreator(creator, (v) => v.zoomOut(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            fakeView.contentX * (1.1 - 0.1 / fakeView.zoomStep),
+            fakeView.contentY * (1.2 - 0.2 / fakeView.zoomStep),
             fakeView.zoom / fakeView.zoomStep,
-            recursionDepth - 1);
+            recursionDepth
+        );
     }
 }
 
-function checkPureFitState(creator: () => FakeView, recursionDepth: number): void {
+function checkFitStateWithSavedState(creator: () => FakeView, savedState: SavedState, recursionDepth: number): void {
     if (recursionDepth > 0) {
+        --recursionDepth;
+
         const fakeView = creator();
 
-        assert.equal(fakeView.zoomMode, model.ZoomMode.Fit);
+        assertEqual(fakeView.zoomMode, model.ZoomMode.Fit);
 
         checkFit(fakeView);
 
         // Drag.
         checkFixedNormalState(
             makeCreator(creator, (v) => v.beginDrag(10, 20)(30, 50)),
-            fakeView.x + 20,
-            fakeView.y + 30,
+            fakeView.contentX + 20,
+            fakeView.contentY + 30,
             fakeView.zoom,
-            recursionDepth - 1)
+            recursionDepth
+        );
 
         // Resize.
-        checkPureFitState(
+        checkFitStateWithSavedState(
             makeCreator(creator, (v) => v.resize(fakeView.width * 1.1, fakeView.height * 1.2)),
-            recursionDepth - 1);
+            savedState,
+            recursionDepth
+        );
+
+        // Set Zoom Mode.
+        {
+            // Fixed.
+            savedState(makeCreator(creator, (v) => v.setZoomMode(model.ZoomMode.Fixed)), recursionDepth);
+
+            // Fit.
+            checkFitStateWithSavedState(
+                makeCreator(creator, (v) => v.setZoomMode(model.ZoomMode.Fit)),
+                savedState,
+                recursionDepth
+            );
+
+            // Auto Fit.
+            {
+                const checker = fakeView.hasEnoughSpace ?
+                    checkAutoFit100PercentStateWithSavedState :
+                    checkAutoFitFitStateWithSavedState;
+
+                checker(makeCreator(creator, (v) => v.setZoomMode(model.ZoomMode.AutoFit)), savedState, recursionDepth);
+            }
+        }
 
         // Resize content.
-        checkPureFitState(
+        checkFitStateWithSavedState(
             makeCreator(creator, (v) => v.resizeContent(fakeView.contentWidth * 1.1, fakeView.contentHeight * 1.2)),
-            recursionDepth - 1);
+            savedState,
+            recursionDepth
+        );
 
         // Toggle overview.
-        checkFixedPure100PercentState(
-            makeCreator(creator, (v) => v.toggleOverview(fakeView.x * 1.1, fakeView.y * 1.2)),
-            fakeView.x * (1.1 - 0.1 / fakeView.zoom),
-            fakeView.y * (1.2 - 0.2 / fakeView.zoom),
-            recursionDepth - 1)
+        checkFixed100PercentState(
+            makeCreator(creator, (v) => v.toggleOverview(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            fakeView.contentX * (1.1 - 0.1 / fakeView.zoom),
+            fakeView.contentY * (1.2 - 0.2 / fakeView.zoom),
+            recursionDepth
+        );
 
         // Zoom in.
         checkFixedNormalState(
-            makeCreator(creator, (v) => v.zoomIn(fakeView.x * 1.1, fakeView.y * 1.2)),
-            fakeView.x * (1.1 - fakeView.zoomStep * 0.1),
-            fakeView.y * (1.2 - fakeView.zoomStep * 0.2),
+            makeCreator(creator, (v) => v.zoomIn(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            fakeView.contentX * (1.1 - fakeView.zoomStep * 0.1),
+            fakeView.contentY * (1.2 - fakeView.zoomStep * 0.2),
             fakeView.zoom * fakeView.zoomStep,
-            recursionDepth - 1);
+            recursionDepth
+        );
 
         // Zoom out.
         checkFixedNormalState(
-            makeCreator(creator, (v) => v.zoomOut(fakeView.x * 1.1, fakeView.y * 1.2)),
-            fakeView.x * (1.1 - 0.1 / fakeView.zoomStep),
-            fakeView.y * (1.2 - 0.2 / fakeView.zoomStep),
+            makeCreator(creator, (v) => v.zoomOut(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            fakeView.contentX * (1.1 - 0.1 / fakeView.zoomStep),
+            fakeView.contentY * (1.2 - 0.2 / fakeView.zoomStep),
             fakeView.zoom / fakeView.zoomStep,
-            recursionDepth - 1);
+            recursionDepth
+        );
     }
 }
 
-function checkAutoFit100PercentState(
+function checkFitStateWithSavedStateAndZoom(
     creator: () => FakeView,
-    expectedX: number,
-    expectedY: number,
-    recursionDepth: number): void {
+    savedState: SavedState,
+    savedZoom: number,
+    recursionDepth: number
+): void {
     if (recursionDepth > 0) {
+        --recursionDepth;
+
         const fakeView = creator();
 
-        assert.equal(fakeView.zoomMode, model.ZoomMode.AutoFit);
-        assertAlmostEqual(fakeView.x, expectedX);
-        assertAlmostEqual(fakeView.y, expectedY);
-        assertAlmostEqual(fakeView.zoom, 1);
-
-        // Zoom in.
-        checkFixedNormalState(
-            makeCreator(creator, (v) => v.zoomIn(2, 3)),
-            expectedX + (expectedX - 2) * (fakeView.zoomStep - 1),
-            expectedY + (expectedY - 3) * (fakeView.zoomStep - 1),
-            fakeView.zoomStep,
-            recursionDepth - 1);
-    }
-}
-
-function checkAutoFitPure100PercentState(
-    creator: () => FakeView,
-    expectedX: number,
-    expectedY: number,
-    recursionDepth: number): void {
-    if (recursionDepth > 0) {
-        const fakeView = creator();
-
-        assert.equal(fakeView.zoomMode, model.ZoomMode.AutoFit);
-        assertAlmostEqual(fakeView.x, expectedX);
-        assertAlmostEqual(fakeView.y, expectedY);
-        assertAlmostEqual(fakeView.zoom, 1);
-
-        // Zoom in.
-        checkFixedNormalState(
-            makeCreator(creator, (v) => v.zoomIn(2, 3)),
-            expectedX + (expectedX - 2) * (fakeView.zoomStep - 1),
-            expectedY + (expectedY - 3) * (fakeView.zoomStep - 1),
-            fakeView.zoomStep,
-            recursionDepth - 1);
-    }
-}
-
-function checkAutoFitFitState(
-    creator: () => FakeView,
-    recursionDepth: number): void {
-    if (recursionDepth > 0) {
-        const fakeView = creator();
-
-        assert.equal(fakeView.zoomMode, model.ZoomMode.AutoFit);
+        assertEqual(fakeView.zoomMode, model.ZoomMode.Fit);
 
         checkFit(fakeView);
 
+        // Drag.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.beginDrag(10, 20)(30, 50)),
+            fakeView.contentX + 20,
+            fakeView.contentY + 30,
+            fakeView.zoom,
+            recursionDepth
+        );
+
+        // Resize.
+        checkFitStateWithSavedStateAndZoom(
+            makeCreator(creator, (v) => v.resize(fakeView.width * 1.1, fakeView.height * 1.2)),
+            savedState,
+            savedZoom,
+            recursionDepth
+        );
+
+        // Resize content.
+        checkFitStateWithSavedStateAndZoom(
+            makeCreator(creator, (v) => v.resizeContent(fakeView.contentWidth * 1.1, fakeView.contentHeight * 1.2)),
+            savedState,
+            savedZoom,
+            recursionDepth
+        );
+
+        // Set Zoom Mode.
+        {
+            // Fixed.
+            savedState(makeCreator(creator, (v) => v.setZoomMode(model.ZoomMode.Fixed)), recursionDepth);
+
+            // Fit.
+            checkFitStateWithSavedStateAndZoom(
+                makeCreator(creator, (v) => v.setZoomMode(model.ZoomMode.Fit)),
+                savedState,
+                savedZoom,
+                recursionDepth
+            );
+
+            // Auto Fit.
+            {
+                const checker = fakeView.hasEnoughSpace ?
+                    checkAutoFit100PercentStateWithSavedStateAndZoom :
+                    checkAutoFitFitStateWithSavedStateAndZoom;
+
+                checker(
+                    makeCreator(creator, (v) => v.setZoomMode(model.ZoomMode.AutoFit)),
+                    savedState,
+                    savedZoom,
+                    recursionDepth
+                );
+            }
+        }
+
+        // Toggle overview.
+        checkFixed100PercentStateWithSavedZoom(
+            makeCreator(creator, (v) => v.toggleOverview(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            fakeView.contentX * (1.1 - 0.1 / fakeView.zoom),
+            fakeView.contentY * (1.2 - 0.2 / fakeView.zoom),
+            savedZoom,
+            recursionDepth
+        );
+
         // Zoom in.
         checkFixedNormalState(
-            makeCreator(creator, (v) => v.zoomIn(2, 3)),
-            fakeView.x + (fakeView.x - 2) * (fakeView.zoomStep - 1),
-            fakeView.y + (fakeView.y - 3) * (fakeView.zoomStep - 1),
+            makeCreator(creator, (v) => v.zoomIn(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            fakeView.contentX * (1.1 - fakeView.zoomStep * 0.1),
+            fakeView.contentY * (1.2 - fakeView.zoomStep * 0.2),
             fakeView.zoom * fakeView.zoomStep,
-            recursionDepth - 1);
+            recursionDepth
+        );
+
+        // Zoom out.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.zoomOut(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            fakeView.contentX * (1.1 - 0.1 / fakeView.zoomStep),
+            fakeView.contentY * (1.2 - 0.2 / fakeView.zoomStep),
+            fakeView.zoom / fakeView.zoomStep,
+            recursionDepth
+        );
     }
 }
 
-function checkAutoFitPureFitState(
-    creator: () => FakeView,
-    recursionDepth: number): void {
+function checkFitStateWithSavedZoom(creator: () => FakeView, savedZoom: number, recursionDepth: number): void {
     if (recursionDepth > 0) {
+        --recursionDepth;
+
         const fakeView = creator();
 
-        assert.equal(fakeView.zoomMode, model.ZoomMode.AutoFit);
+        assertEqual(fakeView.zoomMode, model.ZoomMode.Fit);
 
         checkFit(fakeView);
 
+        // Drag.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.beginDrag(10, 20)(30, 50)),
+            fakeView.contentX + 20,
+            fakeView.contentY + 30,
+            fakeView.zoom,
+            recursionDepth
+        );
+
+        // Resize.
+        checkFitStateWithSavedZoom(
+            makeCreator(creator, (v) => v.resize(fakeView.width * 1.1, fakeView.height * 1.2)),
+            savedZoom,
+            recursionDepth
+        );
+
+        // Resize content.
+        checkFitStateWithSavedZoom(
+            makeCreator(creator, (v) => v.resizeContent(fakeView.contentWidth * 1.1, fakeView.contentHeight * 1.2)),
+            savedZoom,
+            recursionDepth
+        );
+
+        // Set Zoom Mode.
+        {
+            // !!!!!!!!!!!!!!!!!!!!!!!!!!
+        }
+
+        // Toggle overview.
+        checkFixed100PercentStateWithSavedZoom(
+            makeCreator(creator, (v) => v.toggleOverview(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            fakeView.contentX * (1.1 - 0.1 / fakeView.zoom),
+            fakeView.contentY * (1.2 - 0.2 / fakeView.zoom),
+            savedZoom,
+            recursionDepth
+        );
+
         // Zoom in.
         checkFixedNormalState(
-            makeCreator(creator, (v) => v.zoomIn(2, 3)),
-            fakeView.x + (fakeView.x - 2) * (fakeView.zoomStep - 1),
-            fakeView.y + (fakeView.y - 3) * (fakeView.zoomStep - 1),
+            makeCreator(creator, (v) => v.zoomIn(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            fakeView.contentX * (1.1 - fakeView.zoomStep * 0.1),
+            fakeView.contentY * (1.2 - fakeView.zoomStep * 0.2),
             fakeView.zoom * fakeView.zoomStep,
-            recursionDepth - 1);
+            recursionDepth
+        );
+
+        // Zoom out.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.zoomOut(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            fakeView.contentX * (1.1 - 0.1 / fakeView.zoomStep),
+            fakeView.contentY * (1.2 - 0.2 / fakeView.zoomStep),
+            fakeView.zoom / fakeView.zoomStep,
+            recursionDepth
+        );
     }
 }
 
-suite("Model", function () {
-    test("Fixed Controller - 100%", function () {
-        checkFixedPure100PercentState(
-            () => new FakeView(model.ZoomMode.Fixed, 600, 400, 300, 200, 10, 1.1),
+function checkIdentityCenter(fakeView: FakeView): void {
+    assertAlmostEqual(fakeView.contentX, (fakeView.width - fakeView.contentWidth) / 2);
+    assertAlmostEqual(fakeView.contentY, (fakeView.height - fakeView.contentHeight) / 2);
+    assertEqual(fakeView.zoom, 1);
+}
+
+function checkAutoFit100PercentState(creator: () => FakeView, recursionDepth: number): void {
+    if (recursionDepth > 0) {
+        --recursionDepth;
+
+        const fakeView = creator();
+
+        assertEqual(fakeView.zoomMode, model.ZoomMode.AutoFit);
+        checkIdentityCenter(fakeView);
+
+        // Drag.
+        checkFixed100PercentState(
+            makeCreator(creator, (v) => v.beginDrag(10, 20)(30, 50)),
+            fakeView.contentX + 20,
+            fakeView.contentY + 30,
+            recursionDepth
+        );
+
+        // Resize.
+        {
+            const newWidth = fakeView.width * 1.1;
+            const newHeight = fakeView.height * 1.2;
+
+            const checker = fakeView.hasEnoughSpaceWithSize(newWidth, newHeight) ?
+                checkAutoFit100PercentState :
+                checkAutoFitFitState;
+
+            checker(makeCreator(creator, (v) => v.resize(newWidth, newHeight)), recursionDepth);
+        }
+
+        // Resize content.
+        {
+            const newContentWidth = fakeView.contentWidth * 1.1;
+            const newContentHeight = fakeView.contentHeight * 1.2;
+
+            const checker = fakeView.hasEnoughSpaceWithContentSize(newContentWidth, newContentHeight) ?
+                checkAutoFit100PercentState :
+                checkAutoFitFitState;
+
+            checker(makeCreator(creator, (v) => v.resizeContent(newContentWidth, newContentHeight)), recursionDepth);
+        }
+
+        // Set Zoom Mode.
+        {
+            // Fixed.
+            checkFixed100PercentState(
+                makeCreator(creator, (v) => v.setZoomMode(model.ZoomMode.Fixed)),
+                fakeView.contentX,
+                fakeView.contentY,
+                recursionDepth
+            );
+
+            // Fit.
+            checkFitState(makeCreator(creator, (v) => v.setZoomMode(model.ZoomMode.Fit)), recursionDepth);
+
+            // Auto Fit.
+            {
+                checkAutoFit100PercentState(
+                    makeCreator(creator, (v) => v.setZoomMode(model.ZoomMode.AutoFit)),
+                    recursionDepth
+                );
+            }
+        }
+
+        // Toggle overview.
+        checkFitState(
+            makeCreator(creator, (v) => v.toggleOverview(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            recursionDepth
+        );
+
+        // Zoom in.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.zoomIn(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            fakeView.contentX * (1.1 - fakeView.zoomStep * 0.1),
+            fakeView.contentY * (1.2 - fakeView.zoomStep * 0.2),
+            fakeView.zoom * fakeView.zoomStep,
+            recursionDepth
+        );
+
+        // Zoom out.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.zoomOut(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            fakeView.contentX * (1.1 - 0.1 / fakeView.zoomStep),
+            fakeView.contentY * (1.2 - 0.2 / fakeView.zoomStep),
+            fakeView.zoom / fakeView.zoomStep,
+            recursionDepth
+        );
+    }
+}
+
+function checkAutoFit100PercentStateWithSavedState(
+    creator: () => FakeView,
+    savedState: SavedState,
+    recursionDepth: number
+): void {
+    if (recursionDepth > 0) {
+        --recursionDepth;
+
+        const fakeView = creator();
+
+        assertEqual(fakeView.zoomMode, model.ZoomMode.AutoFit);
+        checkIdentityCenter(fakeView);
+
+        // Drag.
+        checkFixed100PercentState(
+            makeCreator(creator, (v) => v.beginDrag(10, 20)(30, 50)),
+            fakeView.contentX + 20,
+            fakeView.contentY + 30,
+            recursionDepth
+        );
+
+        // Resize.
+        {
+            const newWidth = fakeView.width * 1.1;
+            const newHeight = fakeView.height * 1.2;
+
+            const checker = fakeView.hasEnoughSpaceWithSize(newWidth, newHeight) ?
+                checkAutoFit100PercentStateWithSavedState :
+                checkAutoFitFitStateWithSavedState;
+
+            checker(makeCreator(creator, (v) => v.resize(newWidth, newHeight)), savedState, recursionDepth);
+        }
+
+        // Resize content.
+        {
+            const newContentWidth = fakeView.contentWidth * 1.1;
+            const newContentHeight = fakeView.contentHeight * 1.2;
+
+            const checker = fakeView.hasEnoughSpaceWithContentSize(newContentWidth, newContentHeight) ?
+                checkAutoFit100PercentStateWithSavedState :
+                checkAutoFitFitStateWithSavedState;
+
+            checker(
+                makeCreator(creator, (v) => v.resizeContent(newContentWidth, newContentHeight)),
+                savedState,
+                recursionDepth
+            );
+        }
+
+        // Set Zoom Mode.
+        {
+            // Fixed.
+            savedState(makeCreator(creator, (v) => v.setZoomMode(model.ZoomMode.Fixed)), recursionDepth);
+
+            // Fit.
+            checkFitStateWithSavedState(
+                makeCreator(creator, (v) => v.setZoomMode(model.ZoomMode.Fit)),
+                savedState,
+                recursionDepth
+            );
+
+            // Auto Fit.
+            {
+                checkAutoFit100PercentStateWithSavedState(
+                    makeCreator(creator, (v) => v.setZoomMode(model.ZoomMode.AutoFit)),
+                    savedState,
+                    recursionDepth
+                );
+            }
+        }
+
+        // Toggle overview.
+        checkFitStateWithSavedState(
+            makeCreator(creator, (v) => v.toggleOverview(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            savedState,
+            recursionDepth
+        );
+
+        // Zoom in.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.zoomIn(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            fakeView.contentX * (1.1 - fakeView.zoomStep * 0.1),
+            fakeView.contentY * (1.2 - fakeView.zoomStep * 0.2),
+            fakeView.zoom * fakeView.zoomStep,
+            recursionDepth
+        );
+
+        // Zoom out.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.zoomOut(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            fakeView.contentX * (1.1 - 0.1 / fakeView.zoomStep),
+            fakeView.contentY * (1.2 - 0.2 / fakeView.zoomStep),
+            fakeView.zoom / fakeView.zoomStep,
+            recursionDepth
+        );
+    }
+}
+
+function checkAutoFit100PercentStateWithSavedStateAndZoom(
+    creator: () => FakeView,
+    savedState: SavedState,
+    savedZoom: number,
+    recursionDepth: number
+): void {
+    if (recursionDepth > 0) {
+        --recursionDepth;
+
+        const fakeView = creator();
+
+        assertEqual(fakeView.zoomMode, model.ZoomMode.AutoFit);
+        checkIdentityCenter(fakeView);
+
+        // Drag.
+        checkFixed100PercentStateWithSavedZoom(
+            makeCreator(creator, (v) => v.beginDrag(10, 20)(30, 50)),
+            fakeView.contentX + 20,
+            fakeView.contentY + 30,
+            savedZoom,
+            recursionDepth
+        );
+
+        // Resize.
+        {
+            const newWidth = fakeView.width * 1.1;
+            const newHeight = fakeView.height * 1.2;
+
+            const checker = fakeView.hasEnoughSpaceWithSize(newWidth, newHeight) ?
+                checkAutoFit100PercentStateWithSavedStateAndZoom :
+                checkAutoFitFitStateWithSavedStateAndZoom;
+
+            checker(makeCreator(creator, (v) => v.resize(newWidth, newHeight)), savedState, savedZoom, recursionDepth);
+        }
+
+        // Resize content.
+        {
+            const newContentWidth = fakeView.contentWidth * 1.1;
+            const newContentHeight = fakeView.contentHeight * 1.2;
+
+            const checker = fakeView.hasEnoughSpaceWithContentSize(newContentWidth, newContentHeight) ?
+                checkAutoFit100PercentStateWithSavedStateAndZoom :
+                checkAutoFitFitStateWithSavedStateAndZoom;
+
+            checker(
+                makeCreator(creator, (v) => v.resizeContent(newContentWidth, newContentHeight)),
+                savedState,
+                savedZoom,
+                recursionDepth
+            );
+        }
+
+        // Set Zoom Mode.
+        {
+            // Fixed.
+            savedState(makeCreator(creator, (v) => v.setZoomMode(model.ZoomMode.Fixed)), recursionDepth);
+
+            // Fit.
+            checkFitStateWithSavedStateAndZoom(
+                makeCreator(creator, (v) => v.setZoomMode(model.ZoomMode.Fit)),
+                savedState,
+                savedZoom,
+                recursionDepth
+            );
+
+            // Auto Fit.
+            {
+                checkAutoFit100PercentStateWithSavedStateAndZoom(
+                    makeCreator(creator, (v) => v.setZoomMode(model.ZoomMode.AutoFit)),
+                    savedState,
+                    savedZoom,
+                    recursionDepth
+                );
+            }
+        }
+
+        // Toggle overview.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.toggleOverview(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            fakeView.contentX * (1.1 - savedZoom * 0.1),
+            fakeView.contentY * (1.2 - savedZoom * 0.2),
+            savedZoom,
+            recursionDepth
+        );
+
+        // Zoom in.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.zoomIn(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            fakeView.contentX * (1.1 - fakeView.zoomStep * 0.1),
+            fakeView.contentY * (1.2 - fakeView.zoomStep * 0.2),
+            fakeView.zoom * fakeView.zoomStep,
+            recursionDepth
+        );
+
+        // Zoom out.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.zoomOut(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            fakeView.contentX * (1.1 - 0.1 / fakeView.zoomStep),
+            fakeView.contentY * (1.2 - 0.2 / fakeView.zoomStep),
+            fakeView.zoom / fakeView.zoomStep,
+            recursionDepth
+        );
+    }
+}
+
+function checkAutoFit100PercentStateWithSavedZoom(
+    creator: () => FakeView,
+    savedZoom: number,
+    recursionDepth: number
+): void {
+    if (recursionDepth > 0) {
+        --recursionDepth;
+
+        const fakeView = creator();
+
+        assertEqual(fakeView.zoomMode, model.ZoomMode.AutoFit);
+        checkIdentityCenter(fakeView);
+
+        // Drag.
+        checkFixed100PercentStateWithSavedZoom(
+            makeCreator(creator, (v) => v.beginDrag(10, 20)(30, 50)),
+            fakeView.contentX + 20,
+            fakeView.contentY + 30,
+            savedZoom,
+            recursionDepth
+        );
+
+        // Resize.
+        {
+            const newWidth = fakeView.width * 1.1;
+            const newHeight = fakeView.height * 1.2;
+
+            const checker = fakeView.hasEnoughSpaceWithSize(newWidth, newHeight) ?
+                checkAutoFit100PercentStateWithSavedZoom :
+                checkAutoFitFitStateWithSavedZoom;
+
+            checker(makeCreator(creator, (v) => v.resize(newWidth, newHeight)), savedZoom, recursionDepth);
+        }
+
+        // Resize content.
+        {
+            const newContentWidth = fakeView.contentWidth * 1.1;
+            const newContentHeight = fakeView.contentHeight * 1.2;
+
+            const checker = fakeView.hasEnoughSpaceWithContentSize(newContentWidth, newContentHeight) ?
+                checkAutoFit100PercentStateWithSavedZoom :
+                checkAutoFitFitStateWithSavedZoom;
+
+            checker(
+                makeCreator(creator, (v) => v.resizeContent(newContentWidth, newContentHeight)),
+                savedZoom,
+                recursionDepth
+            );
+        }
+
+        // Set Zoom Mode.
+        {
+            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        }
+
+        // Toggle overview.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.toggleOverview(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            fakeView.contentX * (1.1 - savedZoom * 0.1),
+            fakeView.contentY * (1.2 - savedZoom * 0.2),
+            savedZoom,
+            recursionDepth
+        );
+
+        // Zoom in.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.zoomIn(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            fakeView.contentX * (1.1 - fakeView.zoomStep * 0.1),
+            fakeView.contentY * (1.2 - fakeView.zoomStep * 0.2),
+            fakeView.zoom * fakeView.zoomStep,
+            recursionDepth
+        );
+
+        // Zoom out.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.zoomOut(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            fakeView.contentX * (1.1 - 0.1 / fakeView.zoomStep),
+            fakeView.contentY * (1.2 - 0.2 / fakeView.zoomStep),
+            fakeView.zoom / fakeView.zoomStep,
+            recursionDepth
+        );
+    }
+}
+
+// AutoFitFitState.
+
+function checkAutoFitFitState(creator: () => FakeView, recursionDepth: number): void {
+    if (recursionDepth > 0) {
+        --recursionDepth;
+
+        const fakeView = creator();
+
+        assertEqual(fakeView.zoomMode, model.ZoomMode.AutoFit);
+        checkFit(fakeView);
+
+        // Drag.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.beginDrag(10, 20)(30, 50)),
+            fakeView.contentX + 20,
+            fakeView.contentY + 30,
+            fakeView.zoom,
+            recursionDepth
+        );
+
+        // Resize.
+        {
+            const newWidth = fakeView.width / 1.1;
+            const newHeight = fakeView.height / 1.2;
+
+            const checker = fakeView.hasEnoughSpaceWithSize(newWidth, newHeight) ?
+                checkAutoFit100PercentState :
+                checkAutoFitFitState;
+
+            checker(makeCreator(creator, (v) => v.resize(newWidth, newHeight)), recursionDepth);
+        }
+
+        // Resize content.
+        {
+            const newContentWidth = fakeView.contentWidth / 1.1;
+            const newContentHeight = fakeView.contentHeight / 1.2;
+
+            const checker = fakeView.hasEnoughSpaceWithContentSize(newContentWidth, newContentHeight) ?
+                checkAutoFit100PercentState :
+                checkAutoFitFitState;
+
+            checker(
+                makeCreator(creator, (v) => v.resizeContent(newContentWidth, newContentHeight)),
+                recursionDepth
+            );
+        }
+
+        // Set Zoom Mode.
+        {
+            // Fixed.
+            checkFixedNormalState(
+                makeCreator(creator, (v) => v.setZoomMode(model.ZoomMode.Fixed)),
+                fakeView.contentX,
+                fakeView.contentY,
+                fakeView.zoom,
+                recursionDepth
+            );
+
+            // Fit.
+            checkFitState(makeCreator(creator, (v) => v.setZoomMode(model.ZoomMode.Fit)), recursionDepth);
+
+            // Auto Fit.
+            {
+                checkAutoFitFitState(
+                    makeCreator(creator, (v) => v.setZoomMode(model.ZoomMode.AutoFit)),
+                    recursionDepth
+                );
+            }
+        }
+
+        // Toggle overview.
+        checkFixed100PercentState(
+            makeCreator(creator, (v) => v.toggleOverview(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            fakeView.contentX * (1.1 - 0.1 / fakeView.zoom),
+            fakeView.contentY * (1.2 - 0.2 / fakeView.zoom),
+            recursionDepth
+        );
+
+        // Zoom in.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.zoomIn(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            fakeView.contentX * (1.1 - fakeView.zoomStep * 0.1),
+            fakeView.contentY * (1.2 - fakeView.zoomStep * 0.2),
+            fakeView.zoom * fakeView.zoomStep,
+            recursionDepth
+        );
+
+        // Zoom out.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.zoomOut(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            fakeView.contentX * (1.1 - 0.1 / fakeView.zoomStep),
+            fakeView.contentY * (1.2 - 0.2 / fakeView.zoomStep),
+            fakeView.zoom / fakeView.zoomStep,
+            recursionDepth
+        );
+    }
+}
+
+function checkAutoFitFitStateWithSavedState(
+    creator: () => FakeView,
+    savedState: SavedState,
+    recursionDepth: number
+): void {
+    if (recursionDepth > 0) {
+        --recursionDepth;
+
+        const fakeView = creator();
+
+        assertEqual(fakeView.zoomMode, model.ZoomMode.AutoFit);
+        checkFit(fakeView);
+
+        // Drag.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.beginDrag(10, 20)(30, 50)),
+            fakeView.contentX + 20,
+            fakeView.contentY + 30,
+            fakeView.zoom,
+            recursionDepth
+        );
+
+        // Resize.
+        {
+            const newWidth = fakeView.width / 1.1;
+            const newHeight = fakeView.height / 1.2;
+
+            const checker = fakeView.hasEnoughSpaceWithSize(newWidth, newHeight) ?
+                checkAutoFit100PercentStateWithSavedState :
+                checkAutoFitFitStateWithSavedState;
+
+            checker(makeCreator(creator, (v) => v.resize(newWidth, newHeight)), savedState, recursionDepth);
+        }
+
+        // Resize content.
+        {
+            const newContentWidth = fakeView.contentWidth / 1.1;
+            const newContentHeight = fakeView.contentHeight / 1.2;
+
+            const checker = fakeView.hasEnoughSpaceWithContentSize(newContentWidth, newContentHeight) ?
+                checkAutoFit100PercentStateWithSavedState :
+                checkAutoFitFitStateWithSavedState;
+
+            checker(
+                makeCreator(creator, (v) => v.resizeContent(newContentWidth, newContentHeight)),
+                savedState,
+                recursionDepth
+            );
+        }
+
+        // Set Zoom Mode.
+        {
+            // Fixed.
+            savedState(makeCreator(creator, (v) => v.setZoomMode(model.ZoomMode.Fixed)), recursionDepth);
+
+            // Fit.
+            checkFitStateWithSavedState(
+                makeCreator(creator, (v) => v.setZoomMode(model.ZoomMode.Fit)),
+                savedState,
+                recursionDepth
+            );
+
+            // Auto Fit.
+            {
+                checkAutoFitFitStateWithSavedState(
+                    makeCreator(creator, (v) => v.setZoomMode(model.ZoomMode.AutoFit)),
+                    savedState,
+                    recursionDepth
+                );
+            }
+        }
+
+        // Toggle overview.
+        checkFixed100PercentState(
+            makeCreator(creator, (v) => v.toggleOverview(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            fakeView.contentX * (1.1 - 0.1 / fakeView.zoom),
+            fakeView.contentY * (1.2 - 0.2 / fakeView.zoom),
+            recursionDepth
+        );
+
+        // Zoom in.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.zoomIn(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            fakeView.contentX * (1.1 - fakeView.zoomStep * 0.1),
+            fakeView.contentY * (1.2 - fakeView.zoomStep * 0.2),
+            fakeView.zoom * fakeView.zoomStep,
+            recursionDepth
+        );
+
+        // Zoom out.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.zoomOut(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            fakeView.contentX * (1.1 - 0.1 / fakeView.zoomStep),
+            fakeView.contentY * (1.2 - 0.2 / fakeView.zoomStep),
+            fakeView.zoom / fakeView.zoomStep,
+            recursionDepth
+        );
+    }
+}
+
+function checkAutoFitFitStateWithSavedStateAndZoom(
+    creator: () => FakeView,
+    savedState: SavedState,
+    savedZoom: number,
+    recursionDepth: number
+): void {
+    if (recursionDepth > 0) {
+        --recursionDepth;
+
+        const fakeView = creator();
+
+        assertEqual(fakeView.zoomMode, model.ZoomMode.AutoFit);
+        checkFit(fakeView);
+
+        // Drag.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.beginDrag(10, 20)(30, 50)),
+            fakeView.contentX + 20,
+            fakeView.contentY + 30,
+            fakeView.zoom,
+            recursionDepth
+        );
+
+        // Resize.
+        {
+            const newWidth = fakeView.width / 1.1;
+            const newHeight = fakeView.height / 1.2;
+
+            const checker = fakeView.hasEnoughSpaceWithSize(newWidth, newHeight) ?
+                checkAutoFit100PercentStateWithSavedStateAndZoom :
+                checkAutoFitFitStateWithSavedStateAndZoom;
+
+            checker(makeCreator(creator, (v) => v.resize(newWidth, newHeight)), savedState, savedZoom, recursionDepth);
+        }
+
+        // Resize content.
+        {
+            const newContentWidth = fakeView.contentWidth / 1.1;
+            const newContentHeight = fakeView.contentHeight / 1.2;
+
+            const checker = fakeView.hasEnoughSpaceWithContentSize(newContentWidth, newContentHeight) ?
+                checkAutoFit100PercentStateWithSavedStateAndZoom :
+                checkAutoFitFitStateWithSavedStateAndZoom;
+
+            checker(
+                makeCreator(creator, (v) => v.resizeContent(newContentWidth, newContentHeight)),
+                savedState,
+                savedZoom,
+                recursionDepth
+            );
+        }
+
+        // Set Zoom Mode.
+        {
+            // Fixed.
+            savedState(makeCreator(creator, (v) => v.setZoomMode(model.ZoomMode.Fixed)), recursionDepth);
+
+            // Fit.
+            checkFitStateWithSavedStateAndZoom(
+                makeCreator(creator, (v) => v.setZoomMode(model.ZoomMode.Fit)),
+                savedState,
+                savedZoom,
+                recursionDepth
+            );
+
+            // Auto Fit.
+            {
+                checkAutoFitFitStateWithSavedStateAndZoom(
+                    makeCreator(creator, (v) => v.setZoomMode(model.ZoomMode.AutoFit)),
+                    savedState,
+                    savedZoom,
+                    recursionDepth
+                );
+            }
+        }
+
+        // Toggle overview.
+        checkFixed100PercentStateWithSavedZoom(
+            makeCreator(creator, (v) => v.toggleOverview(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            fakeView.contentX * (1.1 - 0.1 / fakeView.zoom),
+            fakeView.contentY * (1.2 - 0.2 / fakeView.zoom),
+            savedZoom,
+            recursionDepth
+        );
+
+        // Zoom in.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.zoomIn(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            fakeView.contentX * (1.1 - fakeView.zoomStep * 0.1),
+            fakeView.contentY * (1.2 - fakeView.zoomStep * 0.2),
+            fakeView.zoom * fakeView.zoomStep,
+            recursionDepth
+        );
+
+        // Zoom out.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.zoomOut(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            fakeView.contentX * (1.1 - 0.1 / fakeView.zoomStep),
+            fakeView.contentY * (1.2 - 0.2 / fakeView.zoomStep),
+            fakeView.zoom / fakeView.zoomStep,
+            recursionDepth
+        );
+    }
+}
+
+function checkAutoFitFitStateWithSavedZoom(
+    creator: () => FakeView,
+    savedZoom: number,
+    recursionDepth: number
+): void {
+    if (recursionDepth > 0) {
+        --recursionDepth;
+
+        const fakeView = creator();
+
+        assertEqual(fakeView.zoomMode, model.ZoomMode.AutoFit);
+        checkFit(fakeView);
+
+        // Drag.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.beginDrag(10, 20)(30, 50)),
+            fakeView.contentX + 20,
+            fakeView.contentY + 30,
+            fakeView.zoom,
+            recursionDepth
+        );
+
+        // Resize.
+        {
+            const newWidth = fakeView.width * 1.1;
+            const newHeight = fakeView.height * 1.2;
+
+            const checker = fakeView.hasEnoughSpaceWithSize(newWidth, newHeight) ?
+                checkAutoFit100PercentStateWithSavedZoom :
+                checkAutoFitFitStateWithSavedZoom;
+
+            checker(makeCreator(creator, (v) => v.resize(newWidth, newHeight)), savedZoom, recursionDepth);
+        }
+
+        // Resize content.
+        {
+            const newContentWidth = fakeView.contentWidth / 1.1;
+            const newContentHeight = fakeView.contentHeight / 1.2;
+
+            const checker = fakeView.hasEnoughSpaceWithContentSize(newContentWidth, newContentHeight) ?
+                checkAutoFit100PercentStateWithSavedZoom :
+                checkAutoFitFitStateWithSavedZoom;
+
+            checker(
+                makeCreator(creator, (v) => v.resizeContent(newContentWidth, newContentHeight)),
+                savedZoom,
+                recursionDepth
+            );
+        }
+
+        // Toggle overview.
+        checkFixed100PercentStateWithSavedZoom(
+            makeCreator(creator, (v) => v.toggleOverview(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            fakeView.contentX * (1.1 - 0.1 / fakeView.zoom),
+            fakeView.contentY * (1.2 - 0.2 / fakeView.zoom),
+            savedZoom,
+            recursionDepth
+        );
+
+        // Zoom in.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.zoomIn(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            fakeView.contentX * (1.1 - fakeView.zoomStep * 0.1),
+            fakeView.contentY * (1.2 - fakeView.zoomStep * 0.2),
+            fakeView.zoom * fakeView.zoomStep,
+            recursionDepth
+        );
+
+        // Zoom out.
+        checkFixedNormalState(
+            makeCreator(creator, (v) => v.zoomOut(fakeView.contentX * 1.1, fakeView.contentY * 1.2)),
+            fakeView.contentX * (1.1 - 0.1 / fakeView.zoomStep),
+            fakeView.contentY * (1.2 - 0.2 / fakeView.zoomStep),
+            fakeView.zoom / fakeView.zoomStep,
+            recursionDepth
+        );
+    }
+}
+
+suite("Model", function (): void {
+    test("Fixed Controller - 100%", function (): void {
+        checkFixed100PercentState(
+            () => new FakeView(600, 400, 300, 200, 10, 1.1, model.ZoomMode.Fixed),
             150,
             100,
             testRecursionDepth
-        )
+        );
     });
 
-    test("Create Fixed Controller - Corner", function () {
+    test("Create Fixed Controller - Corner", function (): void {
         checkFixedNormalState(
-            () => new FakeView(model.ZoomMode.Fixed, 600, 400, 580, 380, 10, 1.1),
+            () => new FakeView(600, 400, 580, 380, 10, 1.1, model.ZoomMode.Fixed),
             10,
             10,
             1,
             testRecursionDepth
-        )
+        );
     });
 
-    test("Create Fixed Controller - Fit Horizontal", function () {
+    test("Create Fixed Controller - Fit Horizontal", function (): void {
         checkFixedNormalState(
-            () => new FakeView(model.ZoomMode.Fixed, 600, 400, 581, 380, 10, 1.1),
+            () => new FakeView(600, 400, 581, 380, 10, 1.1, model.ZoomMode.Fixed),
             10,
             6000 / 581,
             580 / 581,
             testRecursionDepth
-        )
+        );
     });
 
-    test("Create Fixed Controller - Fit Vertical", function () {
+    test("Create Fixed Controller - Fit Vertical", function (): void {
         checkFixedNormalState(
-            () => new FakeView(model.ZoomMode.Fixed, 600, 400, 580, 381, 10, 1.1),
+            () => new FakeView(600, 400, 580, 381, 10, 1.1, model.ZoomMode.Fixed),
             4100 / 381,
             10,
             380 / 381,
             testRecursionDepth
-        )
+        );
     });
 
-    test("Create Fit Controller - Upscaling - Fit Horizontal", function () {
-        checkPureFitState(() => new FakeView(model.ZoomMode.Fit, 600, 400, 100, 10, 10, 1.1), testRecursionDepth);
+    test("Create Fit Controller - Upscaling - Fit Horizontal", function (): void {
+        checkFitState(() => new FakeView(600, 400, 100, 10, 10, 1.1, model.ZoomMode.Fit), testRecursionDepth);
     });
 
-    test("Create Fit Controller - Upscaling - Fit Vertical", function () {
-        checkPureFitState(() => new FakeView(model.ZoomMode.Fit, 600, 400, 10, 100, 10, 1.1), testRecursionDepth);
+    test("Create Fit Controller - Upscaling - Fit Vertical", function (): void {
+        checkFitState(() => new FakeView(600, 400, 10, 100, 10, 1.1, model.ZoomMode.Fit), testRecursionDepth);
     });
 
-    test("Create Fit Controller - Downscaling - Fit Horizontal", function () {
-        checkPureFitState(() => new FakeView(model.ZoomMode.Fit, 600, 400, 1000, 100, 10, 1.1), testRecursionDepth);
+    test("Create Fit Controller - Downscaling - Fit Horizontal", function (): void {
+        checkFitState(() => new FakeView(600, 400, 1000, 100, 10, 1.1, model.ZoomMode.Fit), testRecursionDepth);
     });
 
-    test("Create Fit Controller - Downscaling - Fit Vertical", function () {
-        checkPureFitState(() => new FakeView(model.ZoomMode.Fit, 600, 400, 100, 1000, 10, 1.1), testRecursionDepth);
+    test("Create Fit Controller - Downscaling - Fit Vertical", function (): void {
+        checkFitState(() => new FakeView(600, 400, 100, 1000, 10, 1.1, model.ZoomMode.Fit), testRecursionDepth);
     });
 
-    test("Create AutoFit Controller - 100%", function () {
-        checkAutoFitPure100PercentState(
-            () => new FakeView(model.ZoomMode.AutoFit, 600, 400, 300, 200, 10, 1.1),
-            150,
-            100,
-            testRecursionDepth);
+    test("Create AutoFit Controller - 100%", function (): void {
+        checkAutoFit100PercentState(
+            () => new FakeView(600, 400, 300, 200, 10, 1.1, model.ZoomMode.AutoFit),
+            testRecursionDepth
+        );
     });
 
-    test("Create AutoFit Controller - Corner", function () {
-        checkAutoFitPureFitState(
-            () => new FakeView(model.ZoomMode.AutoFit, 600, 400, 580, 380, 10, 1.1),
-            testRecursionDepth);
+    test("Create AutoFit Controller - Corner", function (): void {
+        checkAutoFitFitState(
+            () => new FakeView(600, 400, 580, 380, 10, 1.1, model.ZoomMode.AutoFit),
+            testRecursionDepth
+        );
     });
 
-    test("Create AutoFit Controller - Fit Horizontal", function () {
-        checkAutoFitPureFitState(
-            () => new FakeView(model.ZoomMode.AutoFit, 600, 400, 581, 380, 10, 1.1),
-            testRecursionDepth);
+    test("Create AutoFit Controller - Fit Horizontal", function (): void {
+        checkAutoFitFitState(
+            () => new FakeView(600, 400, 581, 380, 10, 1.1, model.ZoomMode.AutoFit),
+            testRecursionDepth
+        );
     });
 
-    test("Create AutoFit Controller - Fit Vertical", function () {
-        checkAutoFitPureFitState(
-            () => new FakeView(model.ZoomMode.AutoFit, 600, 400, 580, 381, 10, 1.1),
-            testRecursionDepth);
+    test("Create AutoFit Controller - Fit Vertical", function (): void {
+        checkAutoFitFitState(
+            () => new FakeView(600, 400, 580, 381, 10, 1.1, model.ZoomMode.AutoFit),
+            testRecursionDepth
+        );
     });
 });

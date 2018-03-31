@@ -22,11 +22,11 @@ function getDotProgram(): string {
     }
 }
 
-function getGraphvizPreviewUri(sourceUri: vscode.Uri) {
+function getGraphvizPreviewUri(sourceUri: vscode.Uri): vscode.Uri {
     return previewBaseUri.with({ query: sourceUri.toString(true) });
 }
 
-function getPreviewColumn(editor: vscode.TextEditor) {
+function getPreviewColumn(editor: vscode.TextEditor): vscode.ViewColumn {
     switch (editor.viewColumn) {
         case vscode.ViewColumn.One:
             return vscode.ViewColumn.Two;
@@ -181,14 +181,14 @@ class GraphvizPreviewContentProvider implements vscode.TextDocumentContentProvid
         });
     }
 
-    public updatePreview(sourceUri: vscode.Uri) {
+    public updatePreview(sourceUri: vscode.Uri): void {
         this.onDidChangeEventEmitter.fire(getGraphvizPreviewUri(sourceUri));
     }
 }
 
 // Extension interfaces.
 
-export function activate(context: vscode.ExtensionContext) {
+export function activate(context: vscode.ExtensionContext): void {
     const previewContentProvider = new GraphvizPreviewContentProvider();
 
     context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(previewScheme,

@@ -1,21 +1,29 @@
 {
     "compilerOptions": {
-        "module": "commonjs",
-        "target": "esnext",
-        "outDir": "out",
+        "alwaysStrict": true,
         "lib": [
-            "esnext"
+            "es2018"
         ],
-        "sourceMap": true,
-        "rootDir": "src",
-        "strict": true,
+        "module": "commonjs",
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitAny": true,
+        "noImplicitReturns": true,
+        "noImplicitThis": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
+        "outDir": "out",
         "plugins": [
             {
                 "name": "tslint-language-service"
             }
-        ]
+        ],
+        "rootDir": "src",
+        "sourceMap": true,
+        "strict": true,
+        "strictFunctionTypes": true,
+        "strictNullChecks": true,
+        "strictPropertyInitialization": true,
+        "target": "es2018"
     },
     "exclude": [
         "node_modules",
