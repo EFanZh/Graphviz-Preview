@@ -3,7 +3,7 @@
     "version": "0.0.4",
     "publisher": "EFanZh",
     "engines": {
-        "vscode": "^1.21.0"
+        "vscode": "^1.21.1"
     },
     "license": "SEE LICENSE IN LICENSE",
     "displayName": "Graphviz Preview",
