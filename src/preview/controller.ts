@@ -908,6 +908,9 @@ export class Controller {
                 (view.width - view.contentWidth * view.zoom) / 2,
                 (view.height - view.contentHeight * view.zoom) / 2
             );
+
+            this.notifyLayoutChanged();
+            this.notifyZoomingModeChanged();
         }
     }
 

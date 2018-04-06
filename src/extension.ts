@@ -10,7 +10,13 @@ const previewCommand = "graphviz.showPreview";
 // Utility functions.
 
 function readFileAsync(path: string): Promise<string> {
-    return new Promise((resolve) => fs.readFile(path, "utf8", (_, data) => resolve(data)));
+    return new Promise(
+        (resolve, reject) => fs.readFile(path, "utf8", (err, data) => err ? reject(err) : resolve(data))
+    );
+}
+
+function writeFileAsync(path: string, text: string): Promise<void> {
+    return new Promise((resolve, reject) => fs.writeFile(path, text, "utf8", (err) => err ? reject(err) : resolve()));
 }
 
 function getDotProgram(): string {
@@ -59,7 +65,12 @@ export interface IErrorMessage {
 
 export type PreviewMessage = IUpdateMessage | IErrorMessage;
 
-type MyWebView = any;
+export interface IExportMessage {
+    type: "export";
+    image: string;
+}
+
+export type ClientMessage = IExportMessage;
 
 class PreviewManager {
     private static async compileSource(source: string): Promise<string> {
@@ -72,7 +83,7 @@ class PreviewManager {
         }
     }
 
-    private static postMessageToPreview(preview: MyWebView, message: PreviewMessage): Thenable<boolean> {
+    private static postMessageToPreview(preview: vscode.Webview, message: PreviewMessage): Thenable<boolean> {
         return preview.postMessage(message);
     }
 
@@ -81,7 +92,7 @@ class PreviewManager {
     }
 
     private static async updatePreviewContent(
-        preview: MyWebView,
+        preview: vscode.Webview,
         document: vscode.TextDocument
     ): Promise<boolean> {
         preview.title = this.makeTitle(document);
@@ -105,9 +116,22 @@ class PreviewManager {
         }
     }
 
-    private readonly previews = new WeakMap<vscode.TextDocument, MyWebView>();
+    private static async exportImage(image: string): Promise<void> {
+        const filePath = await vscode.window.showSaveDialog({ filters: { "SVG Image": ["svg"] } });
+
+        if (filePath) {
+            await writeFileAsync(filePath.fsPath, image);
+        }
+    }
+
+    private static async dispatchWebviewMessage(message: ClientMessage): Promise<void> {
+        if (message.type === "export") {
+            await this.exportImage(message.image);
+        }
+    }
+
+    private readonly previews = new WeakMap<vscode.TextDocument, vscode.Webview>();
     private readonly previewContent: string;
-    private readonly resourceRoots: vscode.Uri[];
 
     public constructor(context: vscode.ExtensionContext, template: string) {
         const previewDirUri = vscode.Uri.file(context.asAbsolutePath("out/preview"));
@@ -116,8 +140,6 @@ class PreviewManager {
             /\{preview-dir\}/g,
             previewDirUri.with({ scheme: "vscode-resource" }).toString(true)
         );
-
-        this.resourceRoots = [previewDirUri];
     }
 
     public async showPreview(editor: vscode.TextEditor): Promise<void> {
@@ -131,6 +153,7 @@ class PreviewManager {
             this.previews.set(document, result);
 
             result.onDidDispose(() => this.previews.delete(document));
+            result.onDidReceiveMessage((e) => PreviewManager.dispatchWebviewMessage(e as ClientMessage));
         } else {
             result.reveal(result.viewColumn || getPreviewColumn(editor.viewColumn));
         }
@@ -144,20 +167,15 @@ class PreviewManager {
         }
     }
 
-    private async createPreview(column: vscode.ViewColumn, document: vscode.TextDocument): Promise<MyWebView> {
-        const result = (vscode.window as any).createWebview(
+    private async createPreview(column: vscode.ViewColumn, document: vscode.TextDocument): Promise<vscode.Webview> {
+        const result = vscode.window.createWebview(
             "",
             PreviewManager.makeTitle(document),
             column,
-            {
-                enableScripts: true,
-                localResourceRoots: this.resourceRoots
-            }
+            { enableScripts: true }
         );
 
-        const nonce = new Date().getTime() + "" + new Date().getMilliseconds();
-
-        result.html = this.previewContent.replace(/\{nonce\}/g, nonce);
+        result.html = this.previewContent;
 
         await PreviewManager.updatePreviewContent(result, document);
 

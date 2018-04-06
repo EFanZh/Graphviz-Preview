@@ -3,10 +3,9 @@
 
 <head>
     <meta charset="utf-8" />
-    <meta http-equiv="Content-Security-Policy" content="img-src data:; script-src 'nonce-{nonce}';">
     <title>Graphviz Preview</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script async nonce="{nonce}" src="{preview-dir}/main.js" type="module"></script>
+    <script async src="{preview-dir}/bundle.js"></script>
     <style>
         html,
         body {
@@ -52,11 +51,13 @@
             border: none;
             box-sizing: border-box;
             color: whitesmoke;
+            cursor: default;
             font: inherit;
             margin: 0.25em;
-            outline: none;
+            outline: none !important;
             padding: 0.5em;
             text-align: center;
+            text-decoration: none !important;
             transition: background ease-out 125ms, color ease-out 125ms;
             user-select: none;
             width: 5em;
@@ -98,7 +99,7 @@
         }
 
         #image {
-            box-shadow: black 0 0 4em;
+            box-shadow: rgba(0, 0, 0, 0.6) 0 0 3em;
             max-height: none;
             max-width: none;
             pointer-events: none;
@@ -131,8 +132,8 @@
             <span id="zoom"></span>
         </div>
         <div class="center-panel">
-            <button id="identity" class="button">1:1</button>
-            <button id="center" class="button">Center</button>
+            <button class="button" id="identity">1:1</button>
+            <button class="button" id="center">Center</button>
             <div class="separator"></div>
             <label class="fancy-checkbox">
                 <input name="zoom-mode" type="radio" value="fixed" />
@@ -148,7 +149,7 @@
             </label>
         </div>
         <div class="right-panel">
-            <button id="export" class="button">Export</button>
+            <button class="button" id="export">Export</button>
         </div>
     </div>
     <main id="workspace">
