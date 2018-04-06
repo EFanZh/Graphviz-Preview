@@ -25,6 +25,8 @@ interface IView {
     readonly contentX: number;
     readonly contentY: number;
     readonly zoom: number;
+    readonly isIdentity: boolean;
+    readonly isCenter: boolean;
 }
 
 abstract class FixedView implements IView {
@@ -37,7 +39,9 @@ abstract class FixedView implements IView {
         public contentHeight: number,
         public contentMargin: number,
         public contentX: number,
-        public contentY: number
+        public contentY: number,
+        public isCenter: boolean,
+        public isIdentity: boolean
     ) {
     }
 
@@ -105,7 +109,7 @@ class View extends FixedView {
         contentY: number,
         public zoom: number
     ) {
-        super(width, height, contentWidth, contentHeight, contentMargin, contentX, contentY);
+        super(width, height, contentWidth, contentHeight, contentMargin, contentX, contentY, false, false);
     }
 
     public zoomTo(x: number, y: number, zoom: number): void {
@@ -145,7 +149,7 @@ class IdentityView extends FixedView {
         contentX: number,
         contentY: number
     ) {
-        super(width, height, contentWidth, contentHeight, contentMargin, contentX, contentY);
+        super(width, height, contentWidth, contentHeight, contentMargin, contentX, contentY, false, true);
     }
 
     public zoomTo(x: number, y: number, zoom: number): View {
@@ -163,6 +167,8 @@ class IdentityView extends FixedView {
 }
 
 class FitView implements IView {
+    public readonly isIdentity = false;
+    public readonly isCenter = true;
     private widthValue: number;
     private heightValue: number;
     private contentWidthValue: number;
@@ -318,6 +324,8 @@ class FitView implements IView {
 }
 
 class IdentityCenterView implements IView {
+    public readonly isIdentity = true;
+    public readonly isCenter = true;
     public readonly zoom: number = 1;
     private widthValue: number;
     private heightValue: number;
@@ -890,6 +898,25 @@ export class Controller {
             this.notifyLayoutChanged();
             this.notifyZoomingModeChanged();
         };
+    }
+
+    public makeCenter(): void {
+        const view = this.state.view;
+
+        if (!view.isCenter) {
+            this.state.moveTo(
+                (view.width - view.contentWidth * view.zoom) / 2,
+                (view.height - view.contentHeight * view.zoom) / 2
+            );
+        }
+    }
+
+    public makeIdentity(): void {
+        const view = this.state.view;
+
+        if (!view.isIdentity) {
+            this.zoomTo(view.width / 2, view.height / 2, 1);
+        }
     }
 
     public resize(width: number, height: number): void {

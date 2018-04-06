@@ -1,15 +1,17 @@
 "use strict";
 
 import * as child_process from "child_process";
-import * as path from "path";
+import * as fs from "fs";
 import * as vscode from "vscode";
 
 const extensionId = "graphviz-preview";
 const previewCommand = "graphviz.showPreview";
-const previewScheme = "graphviz-preview";
-const previewBaseUri = vscode.Uri.parse(previewScheme + "://preview");
 
 // Utility functions.
+
+function readFileAsync(path: string): Promise<string> {
+    return new Promise((resolve) => fs.readFile(path, "utf8", (_, data) => resolve(data)));
+}
 
 function getDotProgram(): string {
     const configuration = vscode.workspace.getConfiguration(extensionId);
@@ -22,192 +24,167 @@ function getDotProgram(): string {
     }
 }
 
-function getGraphvizPreviewUri(sourceUri: vscode.Uri): vscode.Uri {
-    return previewBaseUri.with({ query: sourceUri.toString(true) });
-}
-
-function getPreviewColumn(editor: vscode.TextEditor): vscode.ViewColumn {
-    switch (editor.viewColumn) {
+function getPreviewColumn(activeColumn?: vscode.ViewColumn): vscode.ViewColumn {
+    switch (activeColumn) {
         case vscode.ViewColumn.One:
             return vscode.ViewColumn.Two;
-
         default:
             return vscode.ViewColumn.Three;
     }
 }
 
-function getSourceUri(previewUri: vscode.Uri): vscode.Uri {
-    return vscode.Uri.parse(previewUri.query);
+function runChildProcess(program: string, args: string[], input: string): Promise<[number, string, string]> {
+    return new Promise((resolve, reject) => {
+        const process = child_process.spawn(program, args);
+        const stdoutBuffer: Array<(string | Buffer)> = [];
+        const stderrBuffer: Array<(string | Buffer)> = [];
+
+        process.on("error", reject);
+        process.on("exit", (code) => resolve([code, stdoutBuffer.join(), stderrBuffer.join()]));
+        process.stdout.on("data", (chunk) => stdoutBuffer.push(chunk));
+        process.stderr.on("data", (chunk) => stderrBuffer.push(chunk));
+        process.stdin.end(input);
+    });
 }
 
-function wrapSvgText(svgText: string): string {
-    return `<!DOCTYPE html>
-<html>
-    <head>
-        <title>Graphviz Preview</title>
-        <style>
-            html, body
-            {
-                color: black;
-                height: 100%;
-            }
-
-            body
-            {
-                background-color: darkgray;
-                display: flex;
-                flex-flow: column;
-                margin: 0;
-                padding: 0;
-            }
-
-            #header
-            {
-                background-color: lightgray;
-                box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.62);
-                padding: 6px;
-                z-index: 1;
-            }
-
-            #main
-            {
-                display: flex;
-                flex: 1;
-                overflow: auto;
-            }
-
-            .zoom-identity
-            {
-                flex: none;
-                margin: auto;
-            }
-
-            .zoom-fit
-            {
-                height: 100%;
-                width: 100%;
-            }
-
-            .zoom-fit-100-percent
-            {
-                margin: auto;
-                max-height: 100%;
-                max-width: 100%;
-            }
-        </style>
-        <script>
-            document.addEventListener('DOMContentLoaded', () =>
-            {
-                'use strict';
-
-                const main = document.getElementById('main');
-                const image = document.querySelector('#main > *');
-                const defaultZoomButtom = document.querySelector('input[name="zoom"][value="zoom-fit-100-percent"]');
-
-                function updateZoom()
-                {
-                    while (image.classList.length > 0)
-                    {
-                        image.classList.remove(image.classList[0]);
-                    }
-
-                    image.classList.add(this.value);
-                }
-
-                for (const button of document.querySelectorAll('input[name="zoom"]'))
-                {
-                    button.onchange = updateZoom;
-                }
-
-                defaultZoomButtom.checked = true;
-                defaultZoomButtom.onchange();
-            });
-        </script>
-    </head>
-    <body>
-        <header id="header">
-            <div>
-                <span>Zoom: </span>
-                <label><input name="zoom" type="radio" value="zoom-identity" /> 100 %</label>
-                <label><input name="zoom" type="radio" value="zoom-fit" /> Fit</label>
-                <label><input name="zoom" type="radio" value="zoom-fit-100-percent" /> Fit (at most 100 %)</label>
-            </div>
-        </header>
-        <main id="main">${svgText}</main>
-    </body>
-</html>
-`;
+export interface IUpdateMessage {
+    type: "success";
+    image: string;
 }
 
-// The preview content provider class.
+export interface IErrorMessage {
+    type: "failure";
+    message: any;
+}
 
-class GraphvizPreviewContentProvider implements vscode.TextDocumentContentProvider {
-    private onDidChangeEventEmitter = new vscode.EventEmitter<vscode.Uri>();
+export type PreviewMessage = IUpdateMessage | IErrorMessage;
 
-    public get onDidChange(): vscode.Event<vscode.Uri> {
-        return this.onDidChangeEventEmitter.event;
+type MyWebView = any;
+
+class PreviewManager {
+    private static async compileSource(source: string): Promise<string> {
+        const [exitCode, stdout, stderr] = await runChildProcess(getDotProgram(), ["-T", "svg"], source);
+
+        if (exitCode === 0) {
+            return stdout;
+        } else {
+            throw stderr;
+        }
     }
 
-    public async provideTextDocumentContent(uri: vscode.Uri, token: vscode.CancellationToken): Promise<string> {
-        const sourceUri = getSourceUri(uri);
-        const sourceDocument = await vscode.workspace.openTextDocument(sourceUri);
-        const sourceText = sourceDocument.getText();
-        const dotProgram = getDotProgram();
+    private static postMessageToPreview(preview: MyWebView, message: PreviewMessage): Thenable<boolean> {
+        return preview.postMessage(message);
+    }
 
-        return new Promise<string>((resolve, reject) => {
-            const dotProcess = child_process.execFile(dotProgram,
-                ["-T", "svg"],
-                (error, stdout) => {
-                    if (error) {
-                        reject(error.message);
-                    } else {
-                        resolve(wrapSvgText(stdout));
-                    }
-                });
+    private static makeTitle(document: vscode.TextDocument): string {
+        return `Preview: ${document.fileName}`;
+    }
 
-            token.onCancellationRequested((_) => {
-                try {
-                    dotProcess.kill();
-                } catch (_) {
-                    return;
+    private static async updatePreviewContent(
+        preview: MyWebView,
+        document: vscode.TextDocument
+    ): Promise<boolean> {
+        preview.title = this.makeTitle(document);
+
+        try {
+            return this.postMessageToPreview(
+                preview,
+                {
+                    image: await this.compileSource(document.getText()),
+                    type: "success"
                 }
-            });
-
-            try {
-                dotProcess.stdin.end(sourceText);
-            } catch (_) {
-                return;
-            }
-        });
+            );
+        } catch (error) {
+            return this.postMessageToPreview(
+                preview,
+                {
+                    message: error,
+                    type: "failure"
+                }
+            );
+        }
     }
 
-    public updatePreview(sourceUri: vscode.Uri): void {
-        this.onDidChangeEventEmitter.fire(getGraphvizPreviewUri(sourceUri));
+    private readonly previews = new WeakMap<vscode.TextDocument, MyWebView>();
+    private readonly previewContent: string;
+    private readonly resourceRoots: vscode.Uri[];
+
+    public constructor(context: vscode.ExtensionContext, template: string) {
+        const previewDirUri = vscode.Uri.file(context.asAbsolutePath("out/preview"));
+
+        this.previewContent = template.replace(
+            /\{preview-dir\}/g,
+            previewDirUri.with({ scheme: "vscode-resource" }).toString(true)
+        );
+
+        this.resourceRoots = [previewDirUri];
+    }
+
+    public async showPreview(editor: vscode.TextEditor): Promise<void> {
+        const document = editor.document;
+
+        let result = this.previews.get(document);
+
+        if (result === undefined) {
+            result = await this.createPreview(getPreviewColumn(editor.viewColumn), document);
+
+            this.previews.set(document, result);
+
+            result.onDidDispose(() => this.previews.delete(document));
+        } else {
+            result.reveal(result.viewColumn || getPreviewColumn(editor.viewColumn));
+        }
+    }
+
+    public async updatePreview(document: vscode.TextDocument): Promise<void> {
+        const preview = this.previews.get(document);
+
+        if (preview !== undefined) {
+            await PreviewManager.updatePreviewContent(preview, document);
+        }
+    }
+
+    private async createPreview(column: vscode.ViewColumn, document: vscode.TextDocument): Promise<MyWebView> {
+        const result = (vscode.window as any).createWebview(
+            "",
+            PreviewManager.makeTitle(document),
+            column,
+            {
+                enableScripts: true,
+                localResourceRoots: this.resourceRoots
+            }
+        );
+
+        const nonce = new Date().getTime() + "" + new Date().getMilliseconds();
+
+        result.html = this.previewContent.replace(/\{nonce\}/g, nonce);
+
+        await PreviewManager.updatePreviewContent(result, document);
+
+        return result;
     }
 }
 
 // Extension interfaces.
 
-export function activate(context: vscode.ExtensionContext): void {
-    const previewContentProvider = new GraphvizPreviewContentProvider();
+export async function activate(context: vscode.ExtensionContext): Promise<void> {
+    const previewHtml = await readFileAsync(context.asAbsolutePath("src/preview/preview.html"));
+    const previewManager = new PreviewManager(context, previewHtml);
 
-    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(previewScheme,
-        previewContentProvider));
+    context.subscriptions.push(
+        vscode.commands.registerCommand(
+            previewCommand,
+            () => {
+                const activeTextEditor = vscode.window.activeTextEditor;
 
-    context.subscriptions.push(vscode.commands.registerCommand(previewCommand, () => {
-        const activeTextEditor = vscode.window.activeTextEditor;
+                if (activeTextEditor !== undefined) {
+                    previewManager.showPreview(activeTextEditor);
+                }
+            }
+        )
+    );
 
-        if (activeTextEditor !== undefined) {
-            vscode.commands.executeCommand(
-                "vscode.previewHtml",
-                getGraphvizPreviewUri(activeTextEditor.document.uri),
-                getPreviewColumn(activeTextEditor),
-                `Preview '${path.basename(activeTextEditor.document.uri.fsPath)}'`,
-                { allowScripts: true, allowSvgs: true });
-        }
-    }));
-
-    context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((e) => {
-        previewContentProvider.updatePreview(e.document.uri);
-    }));
+    context.subscriptions.push(
+        vscode.workspace.onDidChangeTextDocument((e) => previewManager.updatePreview(e.document))
+    );
 }
