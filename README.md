@@ -12,11 +12,12 @@ To set the `graphviz-preview.dotPath` option, go to File → Preference → Sett
 
 ## Roadmap
 
-- Add border and shadow to indicate graph border.
-- Allow user to save the generated graph.
-- Report error if the document is invalid.
+- [x] Add border and shadow to indicate graph border.
+- [x] Allow user to save the generated graph.
+- [x] Report error if the document is invalid.
 
 ## Known issues
 
-- The zoom option resets when the preview updates.
 - After saving an untitled file, the preview becomes invalid.
+- Selecting is not disabled when user is dragging image.
+- Occasionally, the image becomes undraggable.
