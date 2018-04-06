@@ -892,25 +892,17 @@ export class Controller {
         const offsetX = this.state.view.contentX - x;
         const offsetY = this.state.view.contentY - y;
 
-        return (x1, y1) => {
-            this.state = this.state.moveTo(offsetX + x1, offsetY + y1);
-
-            this.notifyLayoutChanged();
-            this.notifyZoomingModeChanged();
-        };
+        return (x1, y1) => this.moveTo(offsetX + x1, offsetY + y1);
     }
 
     public makeCenter(): void {
         const view = this.state.view;
 
         if (!view.isCenter) {
-            this.state.moveTo(
+            this.moveTo(
                 (view.width - view.contentWidth * view.zoom) / 2,
                 (view.height - view.contentHeight * view.zoom) / 2
             );
-
-            this.notifyLayoutChanged();
-            this.notifyZoomingModeChanged();
         }
     }
 
@@ -954,6 +946,13 @@ export class Controller {
 
     public zoomOut(x: number, y: number): void {
         this.zoomTo(x, y, this.state.view.zoom / this.zoomStep);
+    }
+
+    private moveTo(x: number, y: number): void {
+        this.state = this.state.moveTo(x, y);
+
+        this.notifyLayoutChanged();
+        this.notifyZoomingModeChanged();
     }
 
     private zoomTo(x: number, y: number, value: number): void {
