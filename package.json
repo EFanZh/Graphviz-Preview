@@ -57,7 +57,7 @@
     "scripts": {
         "vscode:prepublish": "npm run compile",
         "compile": "tsc -p . && webpack",
-        "watch": "concurrently --kill-others \"tsc -p . -w\" \"webpack -w\"",
+        "watch": "concurrently --kill-others -r \"tsc -p . -w\" \"webpack -w\"",
         "postinstall": "node ./node_modules/vscode/bin/install",
         "test": "npm run compile && node ./node_modules/vscode/bin/test"
     },
