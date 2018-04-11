@@ -1,11 +1,13 @@
 {
     "compilerOptions": {
         "alwaysStrict": true,
+        "forceConsistentCasingInFileNames": true,
         "lib": [
             "dom",
             "es2018"
         ],
         "module": "commonjs",
+        "moduleResolution": "node",
         "noFallthroughCasesInSwitch": true,
         "noImplicitAny": true,
         "noImplicitReturns": true,

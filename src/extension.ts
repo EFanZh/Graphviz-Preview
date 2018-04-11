@@ -130,7 +130,7 @@ class PreviewManager {
         }
     }
 
-    private readonly previews = new WeakMap<vscode.TextDocument, vscode.Webview>();
+    private readonly previews = new WeakMap<vscode.TextDocument, vscode.WebviewPanel>();
     private readonly previewContent: string;
 
     public constructor(context: vscode.ExtensionContext, template: string) {
@@ -153,9 +153,9 @@ class PreviewManager {
             this.previews.set(document, result);
 
             result.onDidDispose(() => this.previews.delete(document));
-            result.onDidReceiveMessage((e) => PreviewManager.dispatchWebviewMessage(e as ClientMessage));
+            result.webview.onDidReceiveMessage((e) => PreviewManager.dispatchWebviewMessage(e as ClientMessage));
         } else {
-            result.reveal(result.viewColumn || getPreviewColumn(editor.viewColumn));
+            result.reveal(result.position || getPreviewColumn(editor.viewColumn));
         }
     }
 
@@ -163,21 +163,24 @@ class PreviewManager {
         const preview = this.previews.get(document);
 
         if (preview !== undefined) {
-            await PreviewManager.updatePreviewContent(preview, document);
+            await PreviewManager.updatePreviewContent(preview.webview, document);
         }
     }
 
-    private async createPreview(column: vscode.ViewColumn, document: vscode.TextDocument): Promise<vscode.Webview> {
-        const result = vscode.window.createWebview(
-            "",
+    private async createPreview(
+        column: vscode.ViewColumn,
+        document: vscode.TextDocument
+    ): Promise<vscode.WebviewPanel> {
+        const result = vscode.window.createWebviewPanel(
+            "preview",
             PreviewManager.makeTitle(document),
             column,
             { enableScripts: true }
         );
 
-        result.html = this.previewContent;
+        result.webview.html = this.previewContent;
 
-        await PreviewManager.updatePreviewContent(result, document);
+        await PreviewManager.updatePreviewContent(result.webview, document);
 
         return result;
     }

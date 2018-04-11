@@ -1,4 +1,5 @@
 import { PreviewMessage } from "../extension";
+import * as app from "./app";
 import * as controller from "./controller";
 
 function onReady(callback: () => void): void {
@@ -28,7 +29,15 @@ onReady(() => {
     const imageElement = document.getElementById("image")! as HTMLImageElement;
     const statusElement = document.getElementById("status")!;
 
-    class ControllerEventListener implements controller.IViewEventListener {
+    class ControllerEventListener implements app.IAppEventListener {
+        public onImageChanged(image: string): void {
+            imageElement.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(image)}`;
+        }
+
+        public onStatusChanged(status: string | null): void {
+            statusElement.textContent = status;
+        }
+
         public onZoomModeChanged(zoomMode: controller.ZoomMode): void {
             switch (zoomMode) {
                 case controller.ZoomMode.Fixed:
@@ -43,22 +52,16 @@ onReady(() => {
             }
         }
 
-        public onLayoutChanged(x: number, y: number, zoom: number): void {
+        public onLayoutChanged(x: number, y: number, width: number, height: number, zoom: number): void {
             zoomElement.textContent = `${Math.round(zoom * 10000) / 100} %`;
-
-            imageElement.style.cssText = `left:${x}px;top:${y}px;width:${imageElement.naturalWidth * zoom}px`;
+            imageElement.style.cssText = `left:${x}px;top:${y}px;width:${width * zoom}px;height:${height * zoom}px`;
         }
     }
 
-    const theController = new controller.Controller(
+    const theApp = app.App.create(
         workspaceElement.offsetWidth,
         workspaceElement.offsetHeight,
-        imageElement.naturalWidth,
-        imageElement.naturalHeight,
-        10,
-        new ControllerEventListener(),
-        1.1,
-        controller.ZoomMode.AutoFit
+        new ControllerEventListener()
     );
 
     // Window events.
@@ -67,23 +70,21 @@ onReady(() => {
         const message = ev.data as PreviewMessage;
 
         if (message.type === "success") {
-            setImage(message.image);
-            setDownload(message.image);
-            clearStatus();
+            theApp.setImage(message.image);
         } else {
-            setStatus(message.message);
+            theApp.setStatus(message.message);
         }
     };
 
-    window.onresize = () => theController.resize(workspaceElement.offsetWidth, workspaceElement.offsetHeight);
+    window.onresize = () => theApp.resize(workspaceElement.offsetWidth, workspaceElement.offsetHeight);
 
     // Identity element.
 
-    identityElement.onclick = () => theController.makeIdentity();
+    identityElement.onclick = () => theApp.makeIdentity();
 
     // Center element.
 
-    centerElement.onclick = () => theController.makeCenter();
+    centerElement.onclick = () => theApp.makeCenter();
 
     // Zoom mode elements.
 
@@ -93,13 +94,13 @@ onReady(() => {
         if (checkedElement.checked) {
             switch (checkedElement.value) {
                 case "fixed":
-                    theController.setZoomMode(controller.ZoomMode.Fixed);
+                    theApp.setZoomMode(controller.ZoomMode.Fixed);
                     break;
                 case "fit":
-                    theController.setZoomMode(controller.ZoomMode.Fit);
+                    theApp.setZoomMode(controller.ZoomMode.Fit);
                     break;
                 case "auto-fit":
-                    theController.setZoomMode(controller.ZoomMode.AutoFit);
+                    theApp.setZoomMode(controller.ZoomMode.AutoFit);
                     break;
             }
         }
@@ -111,52 +112,30 @@ onReady(() => {
 
     // Export element.
 
-    let theImage: string | null = null;
-
-    function setDownload(image: string): void {
-        theImage = image;
-    }
-
-    exportElement.onclick = () => {
-        if (theImage) {
-            window.parent.postMessage({ type: "export", image: theImage }, "*");
-        }
-    };
-
-    // Image element.
-
-    function setImage(image: string): void {
-        imageElement.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(image)}`;
-    }
-
-    // Status element.
-
-    function setStatus(status: string): void {
-        statusElement.textContent = status;
-    }
-
-    function clearStatus(): void {
-        statusElement.textContent = null;
-    }
+    exportElement.onclick = () => window.parent.postMessage({ type: "export", image: theApp.image }, "*");
 
     // Workspace element.
 
-    workspaceElement.ondblclick = (ev) => {
-        theController.toggleOverview(ev.offsetX, ev.offsetY);
+    workspaceElement.onclick = (ev) => {
+        if (ev.detail % 2 === 0) {
+            theApp.toggleOverview(ev.offsetX, ev.offsetY);
+        }
     };
 
     workspaceElement.onmousewheel = (ev) => {
         if (ev.deltaY < 0) {
-            theController.zoomIn(ev.offsetX, ev.offsetY);
+            theApp.zoomIn(ev.offsetX, ev.offsetY);
         } else {
-            theController.zoomOut(ev.offsetX, ev.offsetY);
+            theApp.zoomOut(ev.offsetX, ev.offsetY);
         }
     };
 
     workspaceElement.onpointerdown = (ev) => {
+        ev.preventDefault();
+
         workspaceElement.setPointerCapture(ev.pointerId);
 
-        const handler = theController.beginDrag(ev.offsetX, ev.offsetY);
+        const handler = theApp.beginDrag(ev.offsetX, ev.offsetY);
 
         workspaceElement.style.cursor = "-webkit-grabbing";
         workspaceElement.onpointermove = (ev1) => handler(ev1.offsetX, ev1.offsetY);
@@ -166,9 +145,4 @@ onReady(() => {
             workspaceElement.style.cursor = "";
         };
     };
-
-    // Image element.
-
-    imageElement.onload = () => theController.resizeContent(imageElement.naturalWidth, imageElement.naturalHeight);
-}
-);
+});

@@ -8,5 +8,6 @@ module.exports = {
         path: path.resolve(__dirname, "out", "preview"),
         filename: "[name].js"
     },
+    devtool: "source-map",
     mode: "development"
 }
