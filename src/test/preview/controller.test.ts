@@ -50,7 +50,7 @@ class FakeView {
             }
         }(this);
 
-        this.controller = new model.Controller(
+        this.controller = model.Controller.create(
             width,
             height,
             contentWidth,

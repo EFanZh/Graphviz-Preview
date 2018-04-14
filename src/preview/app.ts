@@ -1,4 +1,4 @@
-import { Controller, IViewEventListener, ZoomMode } from "./controller";
+import { Controller, IControllerArchive, IViewEventListener, ZoomMode } from "./controller";
 
 const theXmlParser = new DOMParser();
 
@@ -14,6 +14,12 @@ function measureImageSize(image: string): [number, number] {
     return [rootElement.width.baseVal.value, rootElement.height.baseVal.value];
 }
 
+interface IAppArchive {
+    image: string;
+    status: string | null;
+    controller: IControllerArchive;
+}
+
 export class App {
     public static create(width: number, height: number, appEventListener: IAppEventListener): App {
         const initialImage = '<svg xmlns="http://www.w3.org/2000/svg" width="100px" height="100px"></svg>';
@@ -22,7 +28,7 @@ export class App {
         return new App(
             initialImage,
             null,
-            new Controller(
+            Controller.create(
                 width,
                 height,
                 imageWidth,
@@ -36,11 +42,20 @@ export class App {
         );
     }
 
+    public static fromArchive(archive: IAppArchive, appEventListener: IAppEventListener): App {
+        return new App(
+            archive.image,
+            archive.status,
+            Controller.fromArchive(archive.controller, appEventListener),
+            appEventListener
+        );
+    }
+
     private static readonly contentMargin = 10;
     private static readonly zoomStep = 1.2;
     private static readonly initialZoomMode = ZoomMode.AutoFit;
 
-    constructor(
+    private constructor(
         private imageValue: string,
         private status: string | null,
         private readonly controller: Controller,
@@ -99,5 +114,13 @@ export class App {
         this.status = status;
 
         this.appEventListener.onStatusChanged(status);
+    }
+
+    public serialize(): IAppArchive {
+        return {
+            controller: this.controller.serialize(),
+            image: this.image,
+            status: this.status
+        };
     }
 }

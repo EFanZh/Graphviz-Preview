@@ -1,4 +1,15 @@
-import { FitView, FixedView, IdentityCenterView, IdentityView, IView, View } from "./view";
+import {
+    FitView,
+    FixedView,
+    IdentityCenterView,
+    IdentityView,
+    IFitViewArchive,
+    IIdentityCenterViewArchive,
+    IIdentityViewArchive,
+    IView,
+    IViewArchive,
+    View
+} from "./view";
 
 const defaultNormalZoom = 2;
 
@@ -50,9 +61,20 @@ interface IViewState {
     setZoomMode(zoomMode: ZoomMode): IViewState;
     toggleOverview(x: number, y: number): IViewState;
     zoomTo(x: number, y: number, zoom: number): FixedNormalState;
+
+    serialize(): StateArchive;
 }
 
 abstract class FixedState implements IViewState {
+    public static fromArchive(archive: FixedStateArchive): FixedState {
+        switch (archive.type) {
+            case "FixedNormalState":
+                return FixedNormalState.fromArchive(archive);
+            case "Fixed100PercentState":
+                return Fixed100PercentState.fromArchive(archive);
+        }
+    }
+
     public static create(
         width: number,
         height: number,
@@ -110,9 +132,19 @@ abstract class FixedState implements IViewState {
     public abstract toggleOverview(x: number, y: number): IViewState;
     public abstract zoomTo(x: number, y: number, zoom: number): FixedNormalState;
 
+    public abstract serialize(): FixedStateArchive;
+}
+
+interface IFixedNormalStateArchive {
+    type: "FixedNormalState";
+    view: IViewArchive;
 }
 
 class FixedNormalState extends FixedState {
+    public static fromArchive(archive: IFixedNormalStateArchive): FixedNormalState {
+        return new FixedNormalState(View.fromArchive(archive.view));
+    }
+
     public constructor(public readonly view: View) {
         super();
     }
@@ -137,9 +169,26 @@ class FixedNormalState extends FixedState {
 
         return this;
     }
+
+    public serialize(): IFixedNormalStateArchive {
+        return {
+            type: "FixedNormalState",
+            view: this.view.serialize()
+        };
+    }
+}
+
+interface IFixed100PercentStateArchive {
+    type: "Fixed100PercentState";
+    view: IIdentityViewArchive;
+    savedZoom: number;
 }
 
 class Fixed100PercentState extends FixedState {
+    public static fromArchive(archive: IFixed100PercentStateArchive): Fixed100PercentState {
+        return new Fixed100PercentState(IdentityView.fromArchive(archive.view), archive.savedZoom);
+    }
+
     public constructor(public readonly view: IdentityView, private readonly savedZoom: number) {
         super();
     }
@@ -162,9 +211,34 @@ class Fixed100PercentState extends FixedState {
     public zoomTo(x: number, y: number, zoom: number): FixedNormalState {
         return new FixedNormalState(this.view.zoomTo(x, y, zoom));
     }
+
+    public serialize(): IFixed100PercentStateArchive {
+        return {
+            savedZoom: this.savedZoom,
+            type: "Fixed100PercentState",
+            view: this.view.serialize()
+        };
+    }
+}
+
+type FixedStateArchive = IFixedNormalStateArchive | IFixed100PercentStateArchive;
+
+interface IFitStateArchive {
+    type: "FitState";
+    view: IFitViewArchive;
+    savedState: FixedStateArchive | undefined;
+    savedZoom: number;
 }
 
 class FitState implements IViewState {
+    public static fromArchive(archive: IFitStateArchive): FitState {
+        return new FitState(
+            FitView.fromArchive(archive.view),
+            archive.savedState === undefined ? undefined : FixedState.fromArchive(archive.savedState),
+            archive.savedZoom
+        );
+    }
+
     public readonly zoomMode = ZoomMode.Fit;
 
     public constructor(
@@ -227,6 +301,15 @@ class FitState implements IViewState {
     public zoomTo(x: number, y: number, zoom: number): FixedNormalState {
         return new FixedNormalState(this.view.zoomTo(x, y, zoom));
     }
+
+    public serialize(): IFitStateArchive {
+        return {
+            savedState: this.savedState === undefined ? undefined : this.savedState.serialize(),
+            savedZoom: this.savedZoom,
+            type: "FitState",
+            view: this.view.serialize()
+        };
+    }
 }
 
 abstract class AutoFitState implements IViewState {
@@ -277,9 +360,26 @@ abstract class AutoFitState implements IViewState {
     public zoomTo(x: number, y: number, zoom: number): FixedNormalState {
         return new FixedNormalState(this.view.zoomTo(x, y, zoom));
     }
+
+    public abstract serialize(): AutoFitStateArchive;
+}
+
+interface IAutoFit100PercentStateArchive {
+    type: "AutoFit100PercentState";
+    view: IIdentityCenterViewArchive;
+    savedState: FixedStateArchive | undefined;
+    savedZoom: number;
 }
 
 class AutoFit100PercentState extends AutoFitState {
+    public static fromArchive(archive: IAutoFit100PercentStateArchive): AutoFit100PercentState {
+        return new AutoFit100PercentState(
+            IdentityCenterView.fromArchive(archive.view),
+            archive.savedState === undefined ? undefined : FixedState.fromArchive(archive.savedState),
+            archive.savedZoom
+        );
+    }
+
     constructor(
         public readonly view: IdentityCenterView,
         private readonly savedState: FixedState | undefined,
@@ -345,9 +445,33 @@ class AutoFit100PercentState extends AutoFitState {
     public toggleOverview(x: number, y: number): FixedNormalState {
         return new FixedNormalState(this.view.zoomTo(x, y, this.savedZoom));
     }
+
+    public serialize(): IAutoFit100PercentStateArchive {
+        return {
+            savedState: this.savedState === undefined ? undefined : this.savedState.serialize(),
+            savedZoom: this.savedZoom,
+            type: "AutoFit100PercentState",
+            view: this.view.serialize()
+        };
+    }
+}
+
+interface IAutoFitFitStateArchive {
+    type: "AutoFitFitState";
+    view: IFitViewArchive;
+    savedState: FixedStateArchive | undefined;
+    savedZoom: number;
 }
 
 class AutoFitFitState extends AutoFitState {
+    public static fromArchive(archive: IAutoFitFitStateArchive): AutoFitFitState {
+        return new AutoFitFitState(
+            FitView.fromArchive(archive.view),
+            archive.savedState === undefined ? undefined : FixedState.fromArchive(archive.savedState),
+            archive.savedZoom
+        );
+    }
+
     constructor(
         public readonly view: FitView,
         private readonly savedState: FixedState | undefined,
@@ -421,6 +545,15 @@ class AutoFitFitState extends AutoFitState {
     public toggleOverview(x: number, y: number): Fixed100PercentState {
         return new Fixed100PercentState(this.view.toIdentity(x, y), this.view.zoom);
     }
+
+    public serialize(): IAutoFitFitStateArchive {
+        return {
+            savedState: this.savedState === undefined ? undefined : this.savedState.serialize(),
+            savedZoom: this.savedZoom,
+            type: "AutoFitFitState",
+            view: this.view.serialize()
+        };
+    }
 }
 
 export interface IViewEventListener {
@@ -428,22 +561,45 @@ export interface IViewEventListener {
     onLayoutChanged(x: number, y: number, width: number, height: number, zoom: number): void;
 }
 
-export class Controller {
-    private state: IViewState;
+type AutoFitStateArchive = IAutoFit100PercentStateArchive | IAutoFitFitStateArchive;
+type StateArchive = FixedStateArchive | IFitStateArchive | AutoFitStateArchive;
 
-    public constructor(
+function stateFromArchive(archive: StateArchive): IViewState {
+    switch (archive.type) {
+        case "FixedNormalState":
+            return FixedNormalState.fromArchive(archive);
+        case "Fixed100PercentState":
+            return Fixed100PercentState.fromArchive(archive);
+        case "FitState":
+            return FitState.fromArchive(archive);
+        case "AutoFit100PercentState":
+            return AutoFit100PercentState.fromArchive(archive);
+        case "AutoFitFitState":
+            return AutoFitFitState.fromArchive(archive);
+    }
+}
+
+export interface IControllerArchive {
+    state: StateArchive;
+    zoomStep: number;
+}
+
+export class Controller {
+    public static create(
         width: number,
         height: number,
         contentWidth: number,
         contentHeight: number,
         contentMargin: number,
-        private readonly viewEventListener: IViewEventListener,
-        private readonly zoomStep: number,
+        viewEventListener: IViewEventListener,
+        zoomStep: number,
         zoomMode: ZoomMode
-    ) {
+    ): Controller {
+        let state: IViewState;
+
         switch (zoomMode) {
             case ZoomMode.Fixed:
-                this.state = FixedState.create(
+                state = FixedState.create(
                     width,
                     height,
                     contentWidth,
@@ -455,15 +611,27 @@ export class Controller {
             case ZoomMode.Fit:
                 const view = new FitView(width, height, contentWidth, contentHeight, contentMargin);
 
-                this.state = new FitState(view, undefined, view.zoom);
+                state = new FitState(view, undefined, view.zoom);
                 break;
             case ZoomMode.AutoFit:
-                this.state = AutoFitState.create(width, height, contentWidth, contentHeight, contentMargin);
+                state = AutoFitState.create(width, height, contentWidth, contentHeight, contentMargin);
                 break;
             default:
                 throw new Error();
         }
 
+        return new Controller(state, zoomStep, viewEventListener);
+    }
+
+    public static fromArchive(archive: IControllerArchive, viewEventListener: IViewEventListener): Controller {
+        return new Controller(stateFromArchive(archive.state), archive.zoomStep, viewEventListener);
+    }
+
+    public constructor(
+        private state: IViewState,
+        private readonly zoomStep: number,
+        private readonly viewEventListener: IViewEventListener
+    ) {
         this.notifyLayoutChanged();
         this.notifyZoomingModeChanged();
     }
@@ -526,6 +694,13 @@ export class Controller {
 
     public zoomOut(x: number, y: number): void {
         this.zoomTo(x, y, this.state.view.zoom / this.zoomStep);
+    }
+
+    public serialize(): IControllerArchive {
+        return {
+            state: this.state.serialize(),
+            zoomStep: this.zoomStep
+        };
     }
 
     private moveTo(x: number, y: number): void {
