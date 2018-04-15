@@ -41,8 +41,7 @@
         }
     },
     "activationEvents": [
-        "onCommand:graphviz.showPreview",
-        "onView:viewType"
+        "onCommand:graphviz.showPreview"
     ],
     "devDependencies": {
         "@types/mocha": "^5.0.0",

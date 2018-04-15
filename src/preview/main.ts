@@ -1,4 +1,5 @@
-import { PreviewMessage } from "../extension";
+import { ExtensionRequest, ExtensionResponse, PreviewRequest, PreviewResponse } from "../messages";
+import { createMessenger, IMessagePort, IReceiveMessage, ISendMessage } from "../messenger";
 import * as app from "./app";
 import * as controller from "./controller";
 
@@ -29,7 +30,7 @@ onReady(() => {
     const imageElement = document.getElementById("image")! as HTMLImageElement;
     const statusElement = document.getElementById("status")!;
 
-    class ControllerEventListener implements app.IAppEventListener {
+    class AppEventListener implements app.IAppEventListener {
         public onImageChanged(image: string): void {
             imageElement.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(image)}`;
         }
@@ -58,23 +59,67 @@ onReady(() => {
         }
     }
 
-    const theApp = app.App.create(
-        workspaceElement.offsetWidth,
-        workspaceElement.offsetHeight,
-        new ControllerEventListener()
+    let theApp: app.App;
+
+    // Message handler.
+
+    class ExtensionPort implements
+        IMessagePort<
+        ISendMessage<ExtensionRequest, PreviewResponse>, IReceiveMessage<ExtensionResponse, PreviewRequest>
+        > {
+        public send(message: ISendMessage<ExtensionRequest, PreviewResponse>): void {
+            window.parent.postMessage(message, "*");
+        }
+
+        public onReceive(handler: (message: IReceiveMessage<ExtensionResponse, PreviewRequest>) => void): void {
+            window.onmessage = (ev) => {
+                handler(ev.data);
+            };
+        }
+    }
+
+    async function handleRequest(message: PreviewRequest): Promise<PreviewResponse> {
+        switch (message.type) {
+            case "initialize":
+                theApp = app.App.create(
+                    workspaceElement.offsetWidth,
+                    workspaceElement.offsetHeight,
+                    new AppEventListener()
+                );
+                break;
+            case "restore":
+                theApp = app.App.fromArchive(message.archive, new AppEventListener());
+
+                // TODO: Is this really necessary?
+                theApp.resize(workspaceElement.offsetWidth, workspaceElement.offsetHeight);
+                break;
+            case "success":
+                try {
+                    theApp.setImage(message.image);
+                } catch (error) {
+                    theApp.setStatus("Invalid SVG");
+                }
+                break;
+            case "failure":
+                theApp.setStatus(message.message);
+                break;
+            case "serialize":
+                return {
+                    result: theApp.serialize(),
+                    type: "serializeResponse"
+                };
+        }
+
+        return undefined;
+    }
+
+    // TODO: Maybe remove type annotation sometime later.
+    const messenger = createMessenger<ExtensionRequest, ExtensionResponse, PreviewRequest, PreviewResponse>(
+        new ExtensionPort(),
+        handleRequest
     );
 
     // Window events.
-
-    window.onmessage = (ev) => {
-        const message = ev.data as PreviewMessage;
-
-        if (message.type === "success") {
-            theApp.setImage(message.image);
-        } else {
-            theApp.setStatus(message.message);
-        }
-    };
 
     window.onresize = () => theApp.resize(workspaceElement.offsetWidth, workspaceElement.offsetHeight);
 
@@ -112,7 +157,10 @@ onReady(() => {
 
     // Export element.
 
-    exportElement.onclick = () => window.parent.postMessage({ type: "export", image: theApp.image }, "*");
+    exportElement.onclick = async () => messenger({
+        image: theApp.image,
+        type: "export"
+    });
 
     // Workspace element.
 
@@ -131,8 +179,6 @@ onReady(() => {
     };
 
     workspaceElement.onpointerdown = (ev) => {
-        ev.preventDefault();
-
         workspaceElement.setPointerCapture(ev.pointerId);
 
         const handler = theApp.beginDrag(ev.offsetX, ev.offsetY);

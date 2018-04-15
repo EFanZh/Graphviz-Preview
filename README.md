@@ -6,13 +6,14 @@ An extension for Visual Studio Code to preview Graphviz (DOT) files.
 
 ## Configuration
 
-Make sure the extension can find the “dot” program. You can set `graphviz-preview.dotPath` option to the path of the dot executable, or make sure the directory containing the dot program is in your `PATH` environment variable.
+Make sure the extension can find the “dot” program. You can set `graphviz-preview.dotPath` option to the path of the dot
+executable, or make sure the directory containing the dot program is in your `PATH` environment variable.
 
 To set the `graphviz-preview.dotPath` option, go to File → Preference → Settings.
 
 ## Roadmap
 
-- [x] Add border and shadow to indicate graph border.
+- [x] Add border and shadow to indicate the graph border.
 - [x] Allow user to save the generated graph.
 - [x] Report error if the document is invalid.
 
