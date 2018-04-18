@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import * as engines from "./engines";
 import { ExtensionRequest, ExtensionResponse, PreviewRequest, PreviewResponse } from "./messages";
 import { createMessenger, IMessagePort, IReceiveMessage, ISendMessage } from "./messenger";
 import * as utilities from "./utilities";
@@ -25,17 +26,6 @@ function getPreviewColumn(activeColumn?: vscode.ViewColumn): vscode.ViewColumn {
             return vscode.ViewColumn.Two;
         default:
             return vscode.ViewColumn.Three;
-    }
-}
-
-async function compileSource(source: string): Promise<string> {
-    const dotProgram = utilities.getDotProgram();
-    const [exitCode, stdout, stderr] = await utilities.runChildProcess(dotProgram, ["-T", "svg"], source);
-
-    if (exitCode === 0) {
-        return stdout;
-    } else {
-        throw stderr;
     }
 }
 
@@ -74,6 +64,7 @@ export class PreviewManager {
     private readonly previews = new WeakMap<vscode.TextDocument, vscode.WebviewPanel>();
     private readonly documents = new WeakMap<vscode.WebviewPanel, vscode.TextDocument>();
     private readonly messengers = new WeakMap<vscode.Webview, (message: PreviewRequest) => Promise<PreviewResponse>>();
+    private readonly engine = engines.getEngine();
 
     public constructor(context: vscode.ExtensionContext, template: string) {
         const previewDirUri = vscode.Uri.file(context.asAbsolutePath("out/preview"));
@@ -157,7 +148,7 @@ export class PreviewManager {
         try {
             await messenger(
                 {
-                    image: await compileSource(document.getText()),
+                    image: await this.engine(document.getText()),
                     type: "success"
                 }
             );
