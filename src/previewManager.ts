@@ -83,7 +83,7 @@ export class PreviewManager {
         if (result === undefined) {
             result = await this.createPreview(getPreviewColumn(editor.viewColumn), document);
         } else {
-            result.reveal(result.position || getPreviewColumn(editor.viewColumn));
+            result.reveal(result.viewColumn || getPreviewColumn(editor.viewColumn));
         }
     }
 
@@ -91,7 +91,7 @@ export class PreviewManager {
         const preview = this.previews.get(document);
 
         if (preview !== undefined) {
-            await this.updatePreviewContent(preview.webview, document);
+            await this.updatePreviewContent(preview, document);
         }
     }
 
@@ -126,20 +126,20 @@ export class PreviewManager {
 
         result.onDidChangeViewState(((e) => {
             if (e.webviewPanel.visible) {
-                this.updatePreviewContent(e.webviewPanel.webview, this.documents.get(e.webviewPanel)!);
+                this.updatePreviewContent(e.webviewPanel, this.documents.get(e.webviewPanel)!);
             }
         }));
 
         // Initialize.
 
         await messenger({ type: "initialize" });
-        await this.updatePreviewContentWithMessenger(result.webview, messenger, document);
+        await this.updatePreviewContentWithMessenger(result, messenger, document);
 
         return result;
     }
 
     private async updatePreviewContentWithMessenger(
-        preview: vscode.Webview,
+        preview: vscode.WebviewPanel,
         messenger: (message: PreviewRequest) => Promise<PreviewResponse>,
         document: vscode.TextDocument
     ): Promise<void> {
@@ -163,9 +163,9 @@ export class PreviewManager {
     }
 
     private async updatePreviewContent(
-        preview: vscode.Webview,
+        preview: vscode.WebviewPanel,
         document: vscode.TextDocument
     ): Promise<void> {
-        await this.updatePreviewContentWithMessenger(preview, this.messengers.get(preview)!, document);
+        await this.updatePreviewContentWithMessenger(preview, this.messengers.get(preview.webview)!, document);
     }
 }
