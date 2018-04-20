@@ -7,7 +7,6 @@
             "request": "launch",
             "runtimeExecutable": "${execPath}",
             "args": [
-                "--enable-proposed-api=EFanZh.graphviz-preview",
                 "--extensionDevelopmentPath=${workspaceFolder}"
             ],
             "outFiles": [

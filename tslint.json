@@ -1,9 +1,9 @@
 {
+    "$schema": "http://json.schemastore.org/tslint",
     "extends": "tslint:latest",
     "linterOptions": {
         "exclude": [
-            "**/*.d.ts",
-            "node_modules/**"
+            "*.d.ts"
         ]
     },
     "rules": {

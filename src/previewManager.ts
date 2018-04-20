@@ -52,11 +52,7 @@ async function handleRequest(message: ExtensionRequest): Promise<ExtensionRespon
 }
 
 function createMessengerForWebview(view: vscode.Webview): (message: PreviewRequest) => Promise<PreviewResponse> {
-    // TODO: Maybe remove type annotation sometime later.
-    return createMessenger<PreviewRequest, PreviewResponse, ExtensionRequest, ExtensionResponse>(
-        new PreviewPort(view),
-        handleRequest
-    );
+    return createMessenger(new PreviewPort(view), handleRequest);
 }
 
 export class PreviewManager {
@@ -146,26 +142,19 @@ export class PreviewManager {
         preview.title = makeTitle(document);
 
         try {
-            await messenger(
-                {
-                    image: await this.engine(document.getText()),
-                    type: "success"
-                }
-            );
+            await messenger({
+                image: await this.engine(document.getText()),
+                type: "success"
+            });
         } catch (error) {
-            await messenger(
-                {
-                    message: error,
-                    type: "failure"
-                }
-            );
+            await messenger({
+                message: error,
+                type: "failure"
+            });
         }
     }
 
-    private async updatePreviewContent(
-        preview: vscode.WebviewPanel,
-        document: vscode.TextDocument
-    ): Promise<void> {
+    private async updatePreviewContent(preview: vscode.WebviewPanel, document: vscode.TextDocument): Promise<void> {
         await this.updatePreviewContentWithMessenger(preview, this.messengers.get(preview.webview)!, document);
     }
 }
