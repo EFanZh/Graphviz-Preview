@@ -7,7 +7,7 @@ const previewCommand = "graphviz.showPreview";
 // Extension interfaces.
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
-    const previewHtml = await utilities.readFileAsync(context.asAbsolutePath("src/preview/preview.html"));
+    const previewHtml = await utilities.readFileAsync(context.asAbsolutePath("src/preview/preview.html"), "utf8");
     const previewManager = new PreviewManager(context, previewHtml);
 
     context.subscriptions.push(

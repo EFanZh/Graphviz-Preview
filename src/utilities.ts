@@ -1,17 +1,11 @@
 import * as child_process from "child_process";
 import * as fs from "fs";
+import * as util from "util";
 
 export const extensionId = "graphviz-preview";
 
-export function readFileAsync(path: string): Promise<string> {
-    return new Promise(
-        (resolve, reject) => fs.readFile(path, "utf8", (err, data) => err ? reject(err) : resolve(data))
-    );
-}
-
-export function writeFileAsync(path: string, text: string): Promise<void> {
-    return new Promise((resolve, reject) => fs.writeFile(path, text, "utf8", (err) => err ? reject(err) : resolve()));
-}
+export const readFileAsync = util.promisify(fs.readFile);
+export const writeFileAsync = util.promisify(fs.writeFile);
 
 export function runChildProcess(program: string, args: string[], input: string): Promise<[number, string, string]> {
     return new Promise((resolve, reject) => {

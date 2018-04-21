@@ -38,7 +38,7 @@ async function exportImage(image: string): Promise<void> {
     const filePath = await vscode.window.showSaveDialog({ filters: { "SVG Image": ["svg"] } });
 
     if (filePath) {
-        await utilities.writeFileAsync(filePath.fsPath, image);
+        await utilities.writeFileAsync(filePath.fsPath, image, "utf8");
     }
 }
 
