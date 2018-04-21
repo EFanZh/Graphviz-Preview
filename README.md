@@ -47,5 +47,6 @@ To set the `graphviz-preview.dotPath` option, go to File → Preference → Sett
 ## Known issues
 
 - After saving an untitled file, the preview becomes invalid.
-- Selecting is not disabled when user is dragging image.
-- Occasionally, the image becomes undraggable.
+- The graph border and the the shadow is not strictly aligned.
+- When the zooming ratio is too large, the graph may be at a wrong position.
+- Current, only one “dot” application is allowed to run, so the preview may not look very smooth.
