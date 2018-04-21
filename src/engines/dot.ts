@@ -17,12 +17,20 @@ export function getEngine(): (source: string) => Promise<string> {
     const args = ["-T", "svg"];
 
     async function compile(source: string): Promise<string> {
-        const [exitCode, stdout, stderr] = await utilities.runChildProcess(dot, args, source);
+        try {
+            const [exitCode, stdout, stderr] = await utilities.runChildProcess(dot, args, source);
 
-        if (exitCode === 0) {
-            return stdout;
-        } else {
-            throw new Error(stderr.trim());
+            if (exitCode === 0) {
+                return stdout;
+            } else {
+                throw new Error(stderr.trim());
+            }
+        } catch (error) {
+            if (error.code === "ENOENT") {
+                throw new Error(`Program not found: “${dot}”.\nPlease check your configuration.`);
+            } else {
+                throw error;
+            }
         }
     }
 
