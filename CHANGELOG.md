@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Added
+
+- Add a button to export generated graph.
+- User can now use mouse to zoom and pan preview.
+- Add shadow effect to preview.
+- Add some unit tests.
+- Reports error if the source is invalid.
+
+### Changes.
+
+- Redesignd UI.
+
+### Fixed
+
+- Preserve zooming mode when source changes.
+- Make sure the preview consistent with source by using a scheduler.
+
 ## [0.0.4] - 2018-03-04
 
 ### Changed
