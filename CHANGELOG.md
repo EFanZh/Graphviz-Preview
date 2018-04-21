@@ -12,7 +12,7 @@
 
 ### Changes.
 
-- Redesignd UI.
+- Redesigned UI.
 
 ### Fixed
 

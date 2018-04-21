@@ -26,9 +26,9 @@ To export the generated graph, click the “Export” button on the top right co
 
 ## Configuration
 
-| Configuration              | Type               | Description                                                                                                                                 |
-| -------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `graphviz-preview.dotPath` | `string` \| `null` | `null` means use the “dot” program in your `PATH` ennvironment variable, or a `string` value to indicate the “dot” program you want to use. |
+| Configuration              | Type               | Description                                                                                                                                |
+| -------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `graphviz-preview.dotPath` | `string` \| `null` | `null` means use the “dot” program in your `PATH` environment variable, or a `string` value to indicate the “dot” program you want to use. |
 
 Make sure the extension can find the “dot” program. You can set `graphviz-preview.dotPath` option to the path of the dot
 executable, or make sure the directory containing the dot program is in your `PATH` environment variable.
