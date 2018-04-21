@@ -28,11 +28,6 @@ function parseSVG(image: string): SVGSVGElement | [SVGSVGElement | null, string]
 
 function measureImageSize(svg: SVGSVGElement): [number, number] {
     return [svg.width.baseVal.value, svg.height.baseVal.value];
-    // } else {
-    //     const errorMessage = imageDocument.querySelector("parsererror>div")!.textContent;
-
-    //     throw new Error(`The engine didn’t generate a correct SVG (not your fault):\n${errorMessage}`);
-    // }
 }
 
 interface IAppArchive {
