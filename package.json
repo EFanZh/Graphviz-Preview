@@ -65,6 +65,5 @@
     "repository": {
         "type": "git",
         "url": "https://github.com/EFanZh/Graphviz-Preview"
-    },
-    "enableProposedApi": true
+    }
 }

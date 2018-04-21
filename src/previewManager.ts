@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import * as engines from "./engines";
 import { ExtensionRequest, ExtensionResponse, PreviewRequest, PreviewResponse } from "./messages";
 import { createMessenger, IMessagePort, IReceiveMessage, ISendMessage } from "./messenger";
+import { createScheduler } from "./scheduler";
 import * as utilities from "./utilities";
 
 const previewType = "graphviz.preview";
@@ -41,25 +42,46 @@ async function exportImage(image: string): Promise<void> {
     }
 }
 
-async function handleRequest(message: ExtensionRequest): Promise<ExtensionResponse> {
-    switch (message.type) {
-        case "export":
-            await exportImage(message.image);
-            break;
+function createMessengerForWebview(view: vscode.Webview): (message: PreviewRequest) => Promise<PreviewResponse> {
+    async function handleRequest(message: ExtensionRequest): Promise<ExtensionResponse> {
+        switch (message.type) {
+            case "export":
+                await exportImage(message.image);
+                break;
+        }
+
+        return undefined;
     }
 
-    return undefined;
+    return createMessenger(new PreviewPort(view), handleRequest);
 }
 
-function createMessengerForWebview(view: vscode.Webview): (message: PreviewRequest) => Promise<PreviewResponse> {
-    return createMessenger(new PreviewPort(view), handleRequest);
+function createSchedulerForWebview(
+    engine: (source: string) => Promise<string>,
+    messenger: (message: PreviewRequest) => Promise<PreviewResponse>
+): (arg: string) => void {
+    function onResult(result: string): void {
+        messenger({
+            image: result,
+            type: "success"
+        });
+    }
+
+    function onError(error: Error): void {
+        messenger({
+            message: error.message,
+            type: "failure"
+        });
+    }
+
+    return createScheduler(engine, onResult, onError);
 }
 
 export class PreviewManager {
     private readonly previewContent: string;
     private readonly previews = new WeakMap<vscode.TextDocument, vscode.WebviewPanel>();
     private readonly documents = new WeakMap<vscode.WebviewPanel, vscode.TextDocument>();
-    private readonly messengers = new WeakMap<vscode.Webview, (message: PreviewRequest) => Promise<PreviewResponse>>();
+    private readonly schedulers = new WeakMap<vscode.Webview, (arg: string) => void>();
     private readonly engine = engines.getEngine();
 
     public constructor(context: vscode.ExtensionContext, template: string) {
@@ -87,7 +109,7 @@ export class PreviewManager {
         const preview = this.previews.get(document);
 
         if (preview !== undefined) {
-            await this.updatePreviewContent(preview, document);
+            await this.updatePreviewContent(preview.webview, document);
         }
     }
 
@@ -113,8 +135,9 @@ export class PreviewManager {
         this.documents.set(result, document);
 
         const messenger = createMessengerForWebview(result.webview);
+        const scheduler = createSchedulerForWebview(this.engine, messenger);
 
-        this.messengers.set(result.webview, messenger);
+        this.schedulers.set(result.webview, scheduler);
 
         // Add event handlers.
 
@@ -122,39 +145,20 @@ export class PreviewManager {
 
         result.onDidChangeViewState(((e) => {
             if (e.webviewPanel.visible) {
-                this.updatePreviewContent(e.webviewPanel, this.documents.get(e.webviewPanel)!);
+                this.updatePreviewContent(e.webviewPanel.webview, this.documents.get(e.webviewPanel)!);
             }
         }));
 
         // Initialize.
 
         await messenger({ type: "initialize" });
-        await this.updatePreviewContentWithMessenger(result, messenger, document);
+
+        this.updatePreviewContent(result.webview, document);
 
         return result;
     }
 
-    private async updatePreviewContentWithMessenger(
-        preview: vscode.WebviewPanel,
-        messenger: (message: PreviewRequest) => Promise<PreviewResponse>,
-        document: vscode.TextDocument
-    ): Promise<void> {
-        preview.title = makeTitle(document);
-
-        try {
-            await messenger({
-                image: await this.engine(document.getText()),
-                type: "success"
-            });
-        } catch (error) {
-            await messenger({
-                message: error,
-                type: "failure"
-            });
-        }
-    }
-
-    private async updatePreviewContent(preview: vscode.WebviewPanel, document: vscode.TextDocument): Promise<void> {
-        await this.updatePreviewContentWithMessenger(preview, this.messengers.get(preview.webview)!, document);
+    private updatePreviewContent(view: vscode.Webview, document: vscode.TextDocument): void {
+        this.schedulers.get(view)!(document.getText());
     }
 }

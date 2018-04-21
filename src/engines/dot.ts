@@ -12,13 +12,19 @@ function getDotProgram(): string {
     }
 }
 
-export async function compile(source: string): Promise<string> {
-    const dotProgram = getDotProgram();
-    const [exitCode, stdout, stderr] = await utilities.runChildProcess(dotProgram, ["-T", "svg"], source);
+export function getEngine(): (source: string) => Promise<string> {
+    const dot = getDotProgram();
+    const args = ["-T", "svg"];
 
-    if (exitCode === 0) {
-        return stdout;
-    } else {
-        throw stderr;
+    async function compile(source: string): Promise<string> {
+        const [exitCode, stdout, stderr] = await utilities.runChildProcess(dot, args, source);
+
+        if (exitCode === 0) {
+            return stdout;
+        } else {
+            throw new Error(stderr.trim());
+        }
     }
+
+    return compile;
 }

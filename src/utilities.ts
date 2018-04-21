@@ -20,7 +20,7 @@ export function runChildProcess(program: string, args: string[], input: string):
         const stderrBuffer: Array<(string | Buffer)> = [];
 
         process.on("error", reject);
-        process.on("exit", (code) => resolve([code, stdoutBuffer.join(), stderrBuffer.join()]));
+        process.on("exit", (code) => resolve([code, stdoutBuffer.join(""), stderrBuffer.join("")]));
         process.stdout.on("data", (chunk) => stdoutBuffer.push(chunk));
         process.stderr.on("data", (chunk) => stderrBuffer.push(chunk));
         process.stdin.end(input);

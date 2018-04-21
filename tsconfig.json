@@ -17,7 +17,8 @@
         "outDir": "out",
         "plugins": [
             {
-                "name": "tslint-language-service"
+                "name": "tslint-language-service",
+                "ignoreDefinitionFiles": true
             }
         ],
         "rootDir": "src",

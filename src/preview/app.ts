@@ -2,16 +2,37 @@ import { Controller, IControllerArchive, IViewEventListener, ZoomMode } from "./
 
 const theXmlParser = new DOMParser();
 
+const theDefaultImage = theXmlParser.parseFromString(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="100px" height="100px"></svg>',
+    "image/svg+xml"
+).rootElement;
+
 export interface IAppEventListener extends IViewEventListener {
     onImageChanged(image: string): void;
     onStatusChanged(status: string | null): void;
 }
 
-function measureImageSize(image: string): [number, number] {
+function parseSVG(image: string): SVGSVGElement | [SVGSVGElement | null, string] {
     const imageDocument = theXmlParser.parseFromString(image, "image/svg+xml");
     const rootElement = imageDocument.rootElement;
 
-    return [rootElement.width.baseVal.value, rootElement.height.baseVal.value];
+    if (rootElement) {
+        return rootElement;
+    } else {
+        const partialSvg = imageDocument.querySelector("svg");
+        const errorMessage = imageDocument.querySelector("parsererror>div")!.textContent!;
+
+        return [partialSvg, errorMessage];
+    }
+}
+
+function measureImageSize(svg: SVGSVGElement): [number, number] {
+    return [svg.width.baseVal.value, svg.height.baseVal.value];
+    // } else {
+    //     const errorMessage = imageDocument.querySelector("parsererror>div")!.textContent;
+
+    //     throw new Error(`The engine didn’t generate a correct SVG (not your fault):\n${errorMessage}`);
+    // }
 }
 
 interface IAppArchive {
@@ -22,11 +43,10 @@ interface IAppArchive {
 
 export class App {
     public static create(width: number, height: number, appEventListener: IAppEventListener): App {
-        const initialImage = '<svg xmlns="http://www.w3.org/2000/svg" width="100px" height="100px"></svg>';
-        const [imageWidth, imageHeight] = measureImageSize(initialImage);
+        const [imageWidth, imageHeight] = measureImageSize(theDefaultImage);
 
         return new App(
-            initialImage,
+            theDefaultImage.outerHTML,
             null,
             Controller.create(
                 width,
@@ -100,14 +120,29 @@ export class App {
     }
 
     public setImage(image: string): void {
-        this.imageValue = image;
-        const [imageWidth, imageHeight] = measureImageSize(image);
+        const result = parseSVG(image);
+        let svg: SVGSVGElement;
+
+        if (result instanceof SVGSVGElement) {
+            svg = result;
+
+            this.imageValue = image;
+            this.status = null;
+        } else {
+            const [maybeSvg, errorMessage] = result;
+
+            svg = maybeSvg === null ? theDefaultImage : maybeSvg;
+
+            this.imageValue = svg.outerHTML;
+            this.status = `Invalid SVG: ${errorMessage}`;
+        }
+
+        const [imageWidth, imageHeight] = measureImageSize(svg);
 
         this.controller.resizeContent(imageWidth, imageHeight);
-        this.setStatus(null);
 
-        this.appEventListener.onImageChanged(image);
-        this.appEventListener.onStatusChanged(null);
+        this.appEventListener.onImageChanged(this.imageValue);
+        this.appEventListener.onStatusChanged(this.status);
     }
 
     public setStatus(status: string | null): void {

@@ -97,7 +97,7 @@ onReady(() => {
                 try {
                     theApp.setImage(message.image);
                 } catch (error) {
-                    theApp.setStatus("Invalid SVG");
+                    theApp.setStatus(error.toString());
                 }
                 break;
             case "failure":

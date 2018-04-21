@@ -1,11 +1,6 @@
 {
     "$schema": "http://json.schemastore.org/tslint",
     "extends": "tslint:latest",
-    "linterOptions": {
-        "exclude": [
-            "*.d.ts"
-        ]
-    },
     "rules": {
         "max-classes-per-file": false,
         "no-implicit-dependencies": {
