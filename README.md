@@ -9,7 +9,7 @@ An extension for Visual Studio Code to preview Graphviz (DOT) files.
 ### Open preview
 
 Open the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) (usually by
-pressing <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd>), Select “Graphviz: Show Preview”.
+pressing <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd>), then select “Graphviz: Show Preview”.
 
 ### Manipulate preview
 
@@ -19,6 +19,13 @@ pressing <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd>), Select “Graphviz:
 | Zoom out         | Mouse wheel down   |
 | Toggle 100% zoom | Mouse double click |
 | Pan              | Mouse drag         |
+
+There are three zooming modes: **Fixed**, **Fit** and **Auto Fit**.
+
+- **Fixed**: The zoom ratio does not change when the source changes or the window size changes.
+- **Fit**: The graph is scaled to align to the border of the visible view area.
+- **Auto Fit**: When the view area is big enough to contain a 100% sized graph, the graph will be set a zoom ratio of
+  100%, otherwise the graph is scaled to fit into the view area.
 
 ### Export graph
 
@@ -43,10 +50,15 @@ To set the `graphviz-preview.dotPath` option, go to File → Preference → Sett
 - [ ] Apply configuration change without restart.
 - [ ] Allow user to manipulate preview with keyboard.
 - [ ] Add CI integration.
+- [ ] Add animation for zooming.
+- [ ] Take a new screenshot.
+- [ ] Allow user to configure the default zoom mode.
+- [ ] Add a preview button for source editor.
 
 ## Known issues
 
 - After saving an untitled file, the preview becomes invalid.
 - The graph border and the the shadow is not strictly aligned.
-- When the zooming ratio is too large, the graph may be at a wrong position.
-- Current, only one “dot” application is allowed to run, so the preview may not look very smooth.
+- When the zoom ratio is too large, the graph may be at a wrong position.
+- Current, only one “dot” application is allowed to run, so the preview may not look very smooth when the source is
+  being edited quickly.
