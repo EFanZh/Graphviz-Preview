@@ -54,6 +54,7 @@ To set the `graphviz-preview.dotPath` option, go to File → Preference → Sett
 - [ ] Take a new screenshot.
 - [ ] Allow user to configure the default zoom mode.
 - [ ] Add a preview button for source editor.
+- [ ] Add cancellation support in scheduler.
 
 ## Known issues
 
