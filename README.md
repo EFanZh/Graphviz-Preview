@@ -46,7 +46,7 @@ To set the `graphviz-preview.dotPath` option, go to File → Preference → Sett
 
 - [x] Add border and shadow to indicate the graph border.
 - [x] Allow user to save the generated graph.
-- [x] Report error if the document is invalid.
+- [x] Report error if the source is invalid.
 - [ ] Apply configuration change without restart.
 - [ ] Allow user to manipulate preview with keyboard.
 - [ ] Add CI integration.
@@ -55,6 +55,7 @@ To set the `graphviz-preview.dotPath` option, go to File → Preference → Sett
 - [ ] Allow user to configure the default zoom mode.
 - [ ] Add a preview button for source editor.
 - [ ] Add cancellation support in scheduler.
+- [ ] Support previewing source containing multiple graphs.
 
 ## Known issues
 
