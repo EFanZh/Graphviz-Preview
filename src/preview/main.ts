@@ -3,6 +3,10 @@ import { createMessenger, IMessagePort, IReceiveMessage, ISendMessage } from "..
 import * as app from "./app";
 import * as controller from "./controller";
 
+declare var acquireVsCodeApi: any;
+
+const vscode = acquireVsCodeApi();
+
 function onReady(callback: () => void): void {
     if (document.readyState === "loading") {
         document.addEventListener("DOMContentLoaded", callback);
@@ -68,7 +72,7 @@ onReady(() => {
         ISendMessage<ExtensionRequest, PreviewResponse>, IReceiveMessage<ExtensionResponse, PreviewRequest>
         > {
         public send(message: ISendMessage<ExtensionRequest, PreviewResponse>): void {
-            window.parent.postMessage(message, "*");
+            vscode.postMessage(message, "*");
         }
 
         public onReceive(handler: (message: IReceiveMessage<ExtensionResponse, PreviewRequest>) => void): void {
