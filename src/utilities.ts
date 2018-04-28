@@ -2,8 +2,6 @@ import * as child_process from "child_process";
 import * as fs from "fs";
 // import * as util from "util";
 
-export const extensionId = "graphviz-preview";
-
 // export const readFileAsync = util.promisify(fs.readFile);
 // export const writeFileAsync = util.promisify(fs.writeFile);
 

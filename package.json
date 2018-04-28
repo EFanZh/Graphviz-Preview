@@ -28,14 +28,25 @@
         "configuration": {
             "title": "Graphviz Preview",
             "properties": {
-                "graphviz-preview.dotPath": {
+                "graphvizPreview.dotPath": {
                     "description": "The path of the dot program.",
                     "type": [
                         "string",
                         "null"
                     ],
-                    "default": null,
-                    "isExecutable": true
+                    "default": null
+                },
+                "graphvizPreview.engine": {
+                    "description": "The layout engine to use.",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "enum": [
+                        "dot",
+                        null
+                    ],
+                    "default": null
                 }
             }
         }
@@ -57,7 +68,7 @@
     "scripts": {
         "vscode:prepublish": "npm run compile",
         "compile": "tsc -p . && webpack",
-        "watch": "concurrently --kill-others -r \"tsc -p . -w\" \"webpack -w\"",
+        "watch": "concurrently --kill-others --allow-restart --restart-after 500 -r \"tsc -p . -w\" \"webpack -w\"",
         "postinstall": "node ./node_modules/vscode/bin/install",
         "test": "npm run compile && node ./node_modules/vscode/bin/test"
     },

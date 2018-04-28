@@ -35,21 +35,21 @@ To export the generated graph, click the “Export” button on the top right co
 
 ## Configuration
 
-| Configuration              | Type               | Description                                                                                                                                    |
-| -------------------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `graphviz-preview.dotPath` | `string` \| `null` | `null` means use the “dot” program in your `PATH` environment variable, or a `string` value to indicate the “dot” program you want to use. |
+| Configuration             | Type               | Description                                                                                                                                    |
+| ------------------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `graphvizPreview.dotPath` | `string` \| `null` | `null` means use the “dot” program in your `PATH` environment variable, or a `string` value to indicate the “dot” program you want to use. |
 
-Make sure the extension can find the “dot” program. You can set `graphviz-preview.dotPath` option to the path of the dot
+Make sure the extension can find the “dot” program. You can set `graphvizPreview.dotPath` option to the path of the dot
 executable, or make sure the directory containing the dot program is in your `PATH` environment variable.
 
-To set the `graphviz-preview.dotPath` option, go to File → Preference → Settings.
+To set the `graphvizPreview.dotPath` option, go to File → Preference → Settings.
 
 ## Roadmap
 
 - [x] Add border and shadow to indicate the graph border.
 - [x] Allow user to save the generated graph.
 - [x] Report error if the source is invalid.
-- [ ] Apply configuration change without restart.
+- [x] Apply configuration change without restart.
 - [x] Allow user to manipulate preview with keyboard.
 - [ ] Add CI integration.
 - [ ] Add animation for zooming.

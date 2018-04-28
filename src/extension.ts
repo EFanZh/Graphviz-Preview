@@ -1,4 +1,6 @@
 import * as vscode from "vscode";
+import * as configuration from "./configuration";
+import * as engines from "./engines";
 import { PreviewManager } from "./previewManager";
 import * as utilities from "./utilities";
 
@@ -20,10 +22,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                     previewManager.showPreview(activeTextEditor);
                 }
             }
-        )
-    );
-
-    context.subscriptions.push(
-        vscode.workspace.onDidChangeTextDocument((e) => previewManager.updatePreview(e.document))
+        ),
+        vscode.workspace.onDidChangeTextDocument((e) => previewManager.updatePreview(e.document)),
+        vscode.workspace.onDidChangeConfiguration((e) => {
+            if (e.affectsConfiguration(configuration.sectionName)) {
+                engines.updateConfiguration();
+            }
+        })
     );
 }

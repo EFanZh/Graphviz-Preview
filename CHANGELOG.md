@@ -5,14 +5,17 @@
 ### Added
 
 - Add a button to export generated graph.
-- User can now use mouse to zoom and pan preview.
+- User can now use mouse and keyboard to zoom and pan preview.
 - Add shadow effect to preview.
 - Add some unit tests.
 - Reports error if the source is invalid.
+- The configuration change takes effect immediately.
 
 ### Changes.
 
 - Redesigned UI.
+- The “graphviz-preview” section is now called “graphvizPreview”. This is a breaking change, please update your
+  configuration accordingly.
 
 ### Fixed
 
