@@ -380,7 +380,7 @@ class AutoFit100PercentState extends AutoFitState {
         );
     }
 
-    constructor(
+    public constructor(
         public readonly view: IdentityCenterView,
         private readonly savedState: FixedState | undefined,
         private readonly savedZoom: number
@@ -472,7 +472,7 @@ class AutoFitFitState extends AutoFitState {
         );
     }
 
-    constructor(
+    public constructor(
         public readonly view: FitView,
         private readonly savedState: FixedState | undefined,
         private readonly savedZoom: number

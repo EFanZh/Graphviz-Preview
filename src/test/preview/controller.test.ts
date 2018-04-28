@@ -17,7 +17,7 @@ class FakeView {
     private zoomModeValue: model.ZoomMode = model.ZoomMode.Fixed;
     private controller: model.Controller;
 
-    constructor(
+    public constructor(
         width: number,
         height: number,
         contentWidth: number,
@@ -34,7 +34,7 @@ class FakeView {
         this.contentMarginValue = contentMargin;
 
         const viewEventListener = new class implements model.IViewEventListener {
-            constructor(private fakeView: FakeView) {
+            public constructor(private fakeView: FakeView) {
             }
 
             public onZoomModeChanged(zoomMode1: model.ZoomMode): void {
