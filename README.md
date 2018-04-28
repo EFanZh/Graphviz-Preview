@@ -58,6 +58,7 @@ To set the `graphvizPreview.dotPath` option, go to File → Preference → Setti
 - [ ] Add a preview button for source editor.
 - [ ] Add cancellation support in scheduler.
 - [ ] Support previewing source containing multiple graphs.
+- [ ] Design a better icon.
 
 ## Known issues
 
