@@ -5,8 +5,6 @@ import * as controller from "./controller";
 
 declare var acquireVsCodeApi: () => { postMessage: (msg: any) => void };
 
-const vscode = acquireVsCodeApi();
-
 function onReady(callback: () => void): void {
     if (document.readyState === "loading") {
         document.addEventListener("DOMContentLoaded", callback);
@@ -16,6 +14,8 @@ function onReady(callback: () => void): void {
 }
 
 onReady(() => {
+    const vscode = acquireVsCodeApi();
+
     const zoomElement = document.getElementById("zoom")!;
     const identityElement = document.getElementById("identity")!;
     const centerElement = document.getElementById("center")!;
@@ -90,18 +90,24 @@ onReady(() => {
                     workspaceElement.offsetHeight,
                     new AppEventListener()
                 );
+                registerEventListeners();
                 break;
             case "restore":
                 theApp = app.App.fromArchive(message.archive, new AppEventListener());
+                registerEventListeners();
 
                 // TODO: Is this really necessary?
                 theApp.resize(workspaceElement.offsetWidth, workspaceElement.offsetHeight);
                 break;
             case "success":
-                try {
-                    theApp.setImage(message.image);
-                } catch (error) {
-                    theApp.setStatus(error.toString());
+                if (message.image === "") {
+                    theApp.setStatus("No graph is generated");
+                } else {
+                    try {
+                        theApp.setImage(message.image);
+                    } catch (error) {
+                        theApp.setStatus(error.toString());
+                    }
                 }
                 break;
             case "failure":
@@ -123,119 +129,124 @@ onReady(() => {
         handleRequest
     );
 
-    // Window events.
+    function registerEventListeners(): void {
+        // Window.
 
-    window.addEventListener("keydown", (ev) => {
-        switch (ev.key) {
-            case " ":
-                theApp.toggleOverviewCenter();
-                break;
-            case "_":
-            case "-":
-                theApp.zoomOutCenter();
-                break;
-            case "+":
-            case "=":
-                theApp.zoomInCenter();
-                break;
-            case "0":
-                theApp.makeIdentity();
-                break;
-            case "A":
-            case "ArrowLeft":
-            case "a":
-                theApp.moveRight();
-                break;
-            case "ArrowDown":
-            case "S":
-            case "s":
-                theApp.moveUp();
-                break;
-            case "ArrowRight":
-            case "D":
-            case "d":
-                theApp.moveLeft();
-                break;
-            case "ArrowUp":
-            case "W":
-            case "w":
-                theApp.moveDown();
-                break;
-            case "X":
-            case "x":
-                theApp.makeCenter();
-                break;
-        }
-    });
-
-    window.addEventListener("resize", () => theApp.resize(workspaceElement.offsetWidth, workspaceElement.offsetHeight));
-
-    // Identity element.
-
-    identityElement.addEventListener("click", () => theApp.makeIdentity());
-
-    // Center element.
-
-    centerElement.addEventListener("click", () => theApp.makeCenter());
-
-    // Zoom mode elements.
-
-    function updateZoomMode(this: HTMLInputElement): void {
-        if (this.checked) {
-            switch (this.value) {
-                case "fixed":
-                    theApp.setZoomMode(controller.ZoomMode.Fixed);
+        window.addEventListener("keydown", (ev) => {
+            switch (ev.key) {
+                case " ":
+                    theApp.toggleOverviewCenter();
                     break;
-                case "fit":
-                    theApp.setZoomMode(controller.ZoomMode.Fit);
+                case "_":
+                case "-":
+                    theApp.zoomOutCenter();
                     break;
-                case "auto-fit":
-                    theApp.setZoomMode(controller.ZoomMode.AutoFit);
+                case "+":
+                case "=":
+                    theApp.zoomInCenter();
+                    break;
+                case "0":
+                    theApp.makeIdentity();
+                    break;
+                case "A":
+                case "ArrowLeft":
+                case "a":
+                    theApp.moveRight();
+                    break;
+                case "ArrowDown":
+                case "S":
+                case "s":
+                    theApp.moveUp();
+                    break;
+                case "ArrowRight":
+                case "D":
+                case "d":
+                    theApp.moveLeft();
+                    break;
+                case "ArrowUp":
+                case "W":
+                case "w":
+                    theApp.moveDown();
+                    break;
+                case "X":
+                case "x":
+                    theApp.makeCenter();
                     break;
             }
+        });
+
+        window.addEventListener(
+            "resize",
+            () => theApp.resize(workspaceElement.offsetWidth, workspaceElement.offsetHeight)
+        );
+
+        // Identity element.
+
+        identityElement.addEventListener("click", () => theApp.makeIdentity());
+
+        // Center element.
+
+        centerElement.addEventListener("click", () => theApp.makeCenter());
+
+        // Zoom mode elements.
+
+        function updateZoomMode(this: HTMLInputElement): void {
+            if (this.checked) {
+                switch (this.value) {
+                    case "fixed":
+                        theApp.setZoomMode(controller.ZoomMode.Fixed);
+                        break;
+                    case "fit":
+                        theApp.setZoomMode(controller.ZoomMode.Fit);
+                        break;
+                    case "auto-fit":
+                        theApp.setZoomMode(controller.ZoomMode.AutoFit);
+                        break;
+                }
+            }
         }
+
+        zoomModeFixedElement.addEventListener("change", updateZoomMode);
+        zoomModeFitElement.addEventListener("change", updateZoomMode);
+        zoomModeAutoFitElement.addEventListener("change", updateZoomMode);
+
+        // Export element.
+
+        exportElement.addEventListener("click", async () => messenger({
+            image: theApp.image,
+            type: "export"
+        }));
+
+        // Workspace element.
+
+        workspaceElement.addEventListener("click", (ev) => {
+            if (ev.detail % 2 === 0) {
+                theApp.toggleOverview(ev.offsetX, ev.offsetY);
+            }
+        });
+
+        workspaceElement.addEventListener("mousewheel", (ev) => {
+            if (ev.deltaY < 0) {
+                theApp.zoomIn(ev.offsetX, ev.offsetY);
+            } else {
+                theApp.zoomOut(ev.offsetX, ev.offsetY);
+            }
+        });
+
+        workspaceElement.addEventListener("pointerdown", (ev) => {
+            const handler = theApp.beginDrag(ev.offsetX, ev.offsetY);
+            const pointerMoveListener = (ev1: PointerEvent) => handler(ev1.offsetX, ev1.offsetY);
+
+            const pointerUpListener = () => {
+                workspaceElement.removeEventListener("pointermove", pointerMoveListener);
+                workspaceElement.removeEventListener("pointerup", pointerUpListener);
+                workspaceElement.style.cursor = "";
+            };
+
+            workspaceElement.addEventListener("pointermove", pointerMoveListener);
+            workspaceElement.addEventListener("pointerup", pointerUpListener);
+            workspaceElement.setPointerCapture(ev.pointerId);
+            workspaceElement.style.cursor = "-webkit-grabbing";
+        });
     }
-
-    zoomModeFixedElement.addEventListener("change", updateZoomMode);
-    zoomModeFitElement.addEventListener("change", updateZoomMode);
-    zoomModeAutoFitElement.addEventListener("change", updateZoomMode);
-
-    // Export element.
-
-    exportElement.addEventListener("click", async () => messenger({
-        image: theApp.image,
-        type: "export"
-    }));
-
-    // Workspace element.
-
-    workspaceElement.addEventListener("click", (ev) => {
-        if (ev.detail % 2 === 0) {
-            theApp.toggleOverview(ev.offsetX, ev.offsetY);
-        }
-    });
-
-    workspaceElement.addEventListener("mousewheel", (ev) => {
-        if (ev.deltaY < 0) {
-            theApp.zoomIn(ev.offsetX, ev.offsetY);
-        } else {
-            theApp.zoomOut(ev.offsetX, ev.offsetY);
-        }
-    });
-
-    workspaceElement.addEventListener("pointerdown", (ev) => {
-        const handler = theApp.beginDrag(ev.offsetX, ev.offsetY);
-        const pointerMoveListener = (ev1: PointerEvent) => handler(ev1.offsetX, ev1.offsetY);
-
-        const pointerUpListener = () => {
-            workspaceElement.removeEventListener("pointermove", pointerMoveListener);
-            workspaceElement.removeEventListener("pointerup", pointerUpListener);
-            workspaceElement.style.cursor = "";
-        };
-
-        workspaceElement.addEventListener("pointermove", pointerMoveListener);
-        workspaceElement.addEventListener("pointerup", pointerUpListener);
-        workspaceElement.setPointerCapture(ev.pointerId);
-        workspaceElement.style.cursor = "-webkit-grabbing";
-    });
 });

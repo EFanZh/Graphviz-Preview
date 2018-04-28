@@ -11,7 +11,7 @@ export async function readFileAsync(path: string, options: string): Promise<stri
     return new Promise<string>((resolve, reject) => {
         fs.readFile(path, options, (err, data) => {
             if (err) {
-                reject(err)
+                reject(err);
             } else {
                 resolve(data);
             }
@@ -23,7 +23,7 @@ export async function writeFileAsync(path: string, data: string, options: string
     return new Promise<void>((resolve, reject) => {
         fs.writeFile(path, data, options, (err) => {
             if (err) {
-                reject(err)
+                reject(err);
             } else {
                 resolve();
             }
