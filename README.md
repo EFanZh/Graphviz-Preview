@@ -13,21 +13,21 @@ pressing <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd>), then select “Grap
 
 ### Manipulate preview
 
-| Action            | Gesture                                                                                                                                       |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| Zoom in           | Mouse wheel up / <kbd>+</kbd>                                                                                                                 |
-| Zoom out          | Mouse wheel down / <kbd>-</kbd>                                                                                                               |
-| Toggle 100 % zoom | Mouse double click / <kbd>Space</kbd>                                                                                                         |
-| Pan               | Mouse drag / <kbd>Left</kbd> / <kbd>Right</kbd> / <kbd>Up</kbd> / <kbd>Down</kbd> / <kbd>A</kbd> / <kbd>D</kbd> / <kbd>W</kbd> / <kbd>S</kbd> |
-| Zoom to 100 %     | <kbd>0</kbd>                                                                                                                                  |
-| Move to center    | <kbd>X</kbd>                                                                                                                                  |
+| Action           | Gesture                                                                                                                                       |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Zoom in          | Mouse wheel up / <kbd>+</kbd>                                                                                                                 |
+| Zoom out         | Mouse wheel down / <kbd>-</kbd>                                                                                                               |
+| Toggle 100% zoom | Mouse double click / <kbd>Space</kbd>                                                                                                         |
+| Pan              | Mouse drag / <kbd>Left</kbd> / <kbd>Right</kbd> / <kbd>Up</kbd> / <kbd>Down</kbd> / <kbd>A</kbd> / <kbd>D</kbd> / <kbd>W</kbd> / <kbd>S</kbd> |
+| Zoom to 100%     | <kbd>0</kbd>                                                                                                                                  |
+| Move to center   | <kbd>X</kbd>                                                                                                                                  |
 
 There are three zooming modes: **Fixed**, **Fit** and **Auto Fit**.
 
 - **Fixed**: The zoom ratio does not change when the source changes or the window size changes.
 - **Fit**: The graph is scaled to align to the border of the visible view area.
-- **Auto Fit**: When the view area is big enough to contain a 100 % sized graph, the graph will be set a zoom ratio of
-  100 %, otherwise the graph is scaled to fit into the view area.
+- **Auto Fit**: When the view area is big enough to contain a 100% sized graph, the graph will be set a zoom ratio of
+  100%, otherwise the graph is scaled to fit into the view area.
 
 ### Export graph
 
