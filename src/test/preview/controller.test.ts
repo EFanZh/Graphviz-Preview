@@ -24,6 +24,7 @@ class FakeView {
         contentHeight: number,
         contentMargin: number,
         public readonly zoomStep: number,
+        public readonly offsetStep: number,
         zoomMode: model.ZoomMode
     ) {
         this.widthValue = width;
@@ -58,6 +59,7 @@ class FakeView {
             contentMargin,
             viewEventListener,
             zoomStep,
+            offsetStep,
             zoomMode
         );
     }
@@ -1081,7 +1083,7 @@ function checkAutoFitFitStateWithSavedZoom(
 suite("Model", function (): void {
     test("Fixed Controller - 100%", function (): void {
         checkFixed100PercentStateWithSavedZoom(
-            () => new FakeView(600, 400, 300, 200, 10, 1.1, model.ZoomMode.Fixed),
+            () => new FakeView(600, 400, 300, 200, 10, 1.1, 10, model.ZoomMode.Fixed),
             150,
             100,
             defaultNormalZoom,
@@ -1091,7 +1093,7 @@ suite("Model", function (): void {
 
     test("Create Fixed Controller - Corner", function (): void {
         checkFixedNormalState(
-            () => new FakeView(600, 400, 580, 380, 10, 1.1, model.ZoomMode.Fixed),
+            () => new FakeView(600, 400, 580, 380, 10, 1.1, 10, model.ZoomMode.Fixed),
             10,
             10,
             1,
@@ -1101,7 +1103,7 @@ suite("Model", function (): void {
 
     test("Create Fixed Controller - Fit Horizontal", function (): void {
         checkFixedNormalState(
-            () => new FakeView(600, 400, 581, 380, 10, 1.1, model.ZoomMode.Fixed),
+            () => new FakeView(600, 400, 581, 380, 10, 1.1, 10, model.ZoomMode.Fixed),
             10,
             6000 / 581,
             580 / 581,
@@ -1111,7 +1113,7 @@ suite("Model", function (): void {
 
     test("Create Fixed Controller - Fit Vertical", function (): void {
         checkFixedNormalState(
-            () => new FakeView(600, 400, 580, 381, 10, 1.1, model.ZoomMode.Fixed),
+            () => new FakeView(600, 400, 580, 381, 10, 1.1, 10, model.ZoomMode.Fixed),
             4100 / 381,
             10,
             380 / 381,
@@ -1120,32 +1122,32 @@ suite("Model", function (): void {
     });
 
     test("Create Fit Controller - Upscaling - Fit Horizontal", function (): void {
-        const creator = () => new FakeView(600, 400, 100, 10, 10, 1.1, model.ZoomMode.Fit);
+        const creator = () => new FakeView(600, 400, 100, 10, 10, 1.1, 10, model.ZoomMode.Fit);
 
         checkFitStateWithSavedZoom(creator, creator().zoom, testRecursionDepth);
     });
 
     test("Create Fit Controller - Upscaling - Fit Vertical", function (): void {
-        const creator = () => new FakeView(600, 400, 10, 100, 10, 1.1, model.ZoomMode.Fit);
+        const creator = () => new FakeView(600, 400, 10, 100, 10, 1.1, 10, model.ZoomMode.Fit);
 
         checkFitStateWithSavedZoom(creator, creator().zoom, testRecursionDepth);
     });
 
     test("Create Fit Controller - Downscaling - Fit Horizontal", function (): void {
-        const creator = () => new FakeView(600, 400, 1000, 100, 10, 1.1, model.ZoomMode.Fit);
+        const creator = () => new FakeView(600, 400, 1000, 100, 10, 1.1, 10, model.ZoomMode.Fit);
 
         checkFitStateWithSavedZoom(creator, creator().zoom, testRecursionDepth);
     });
 
     test("Create Fit Controller - Downscaling - Fit Vertical", function (): void {
-        const creator = () => new FakeView(600, 400, 100, 1000, 10, 1.1, model.ZoomMode.Fit);
+        const creator = () => new FakeView(600, 400, 100, 1000, 10, 1.1, 10, model.ZoomMode.Fit);
 
         checkFitStateWithSavedZoom(creator, creator().zoom, testRecursionDepth);
     });
 
     test("Create AutoFit Controller - 100%", function (): void {
         checkAutoFit100PercentStateWithSavedZoom(
-            () => new FakeView(600, 400, 300, 200, 10, 1.1, model.ZoomMode.AutoFit),
+            () => new FakeView(600, 400, 300, 200, 10, 1.1, 10, model.ZoomMode.AutoFit),
             defaultNormalZoom,
             testRecursionDepth
         );
@@ -1153,20 +1155,20 @@ suite("Model", function (): void {
 
     test("Create AutoFit Controller - Corner", function (): void {
         checkAutoFitFitStateWithSavedZoom(
-            () => new FakeView(600, 400, 580, 380, 10, 1.1, model.ZoomMode.AutoFit),
+            () => new FakeView(600, 400, 580, 380, 10, 1.1, 10, model.ZoomMode.AutoFit),
             1,
             testRecursionDepth
         );
     });
 
     test("Create AutoFit Controller - Fit Horizontal", function (): void {
-        const creator = () => new FakeView(600, 400, 581, 380, 10, 1.1, model.ZoomMode.AutoFit);
+        const creator = () => new FakeView(600, 400, 581, 380, 10, 1.1, 10, model.ZoomMode.AutoFit);
 
         checkAutoFitFitStateWithSavedZoom(creator, creator().zoom, testRecursionDepth);
     });
 
     test("Create AutoFit Controller - Fit Vertical", function (): void {
-        const creator = () => new FakeView(600, 400, 580, 381, 10, 1.1, model.ZoomMode.AutoFit);
+        const creator = () => new FakeView(600, 400, 580, 381, 10, 1.1, 10, model.ZoomMode.AutoFit);
 
         checkAutoFitFitStateWithSavedZoom(creator, creator().zoom, testRecursionDepth);
     });

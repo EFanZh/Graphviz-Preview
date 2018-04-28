@@ -582,6 +582,7 @@ function stateFromArchive(archive: StateArchive): IViewState {
 export interface IControllerArchive {
     state: StateArchive;
     zoomStep: number;
+    offsetStep: number;
 }
 
 export class Controller {
@@ -593,6 +594,7 @@ export class Controller {
         contentMargin: number,
         viewEventListener: IViewEventListener,
         zoomStep: number,
+        offsetStep: number,
         zoomMode: ZoomMode
     ): Controller {
         let state: IViewState;
@@ -620,16 +622,17 @@ export class Controller {
                 throw new Error();
         }
 
-        return new Controller(state, zoomStep, viewEventListener);
+        return new Controller(state, zoomStep, offsetStep, viewEventListener);
     }
 
     public static fromArchive(archive: IControllerArchive, viewEventListener: IViewEventListener): Controller {
-        return new Controller(stateFromArchive(archive.state), archive.zoomStep, viewEventListener);
+        return new Controller(stateFromArchive(archive.state), archive.zoomStep, archive.offsetStep, viewEventListener);
     }
 
     public constructor(
         private state: IViewState,
         private readonly zoomStep: number,
+        private readonly offsetStep: number,
         private readonly viewEventListener: IViewEventListener
     ) {
         this.notifyLayoutChanged();
@@ -662,6 +665,30 @@ export class Controller {
         }
     }
 
+    public moveDown(): void {
+        const view = this.state.view;
+
+        this.moveTo(view.contentX, view.contentY + this.offsetStep);
+    }
+
+    public moveLeft(): void {
+        const view = this.state.view;
+
+        this.moveTo(view.contentX - this.offsetStep, view.contentY);
+    }
+
+    public moveRight(): void {
+        const view = this.state.view;
+
+        this.moveTo(view.contentX + this.offsetStep, view.contentY);
+    }
+
+    public moveUp(): void {
+        const view = this.state.view;
+
+        this.moveTo(view.contentX, view.contentY - this.offsetStep);
+    }
+
     public resize(width: number, height: number): void {
         this.state = this.state.resize(width, height);
 
@@ -688,16 +715,35 @@ export class Controller {
         this.notifyZoomingModeChanged();
     }
 
+    public toggleOverviewCenter(): void {
+        const view = this.state.view;
+
+        this.toggleOverview(view.width / 2, view.height / 2);
+    }
+
     public zoomIn(x: number, y: number): void {
         this.zoomTo(x, y, this.state.view.zoom * this.zoomStep);
+    }
+
+    public zoomInCenter(): void {
+        const view = this.state.view;
+
+        this.zoomTo(view.width / 2, view.height / 2, this.state.view.zoom * this.zoomStep);
     }
 
     public zoomOut(x: number, y: number): void {
         this.zoomTo(x, y, this.state.view.zoom / this.zoomStep);
     }
 
+    public zoomOutCenter(): void {
+        const view = this.state.view;
+
+        this.zoomTo(view.width / 2, view.height / 2, this.state.view.zoom / this.zoomStep);
+    }
+
     public serialize(): IControllerArchive {
         return {
+            offsetStep: this.offsetStep,
             state: this.state.serialize(),
             zoomStep: this.zoomStep
         };

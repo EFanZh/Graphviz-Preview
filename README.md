@@ -13,19 +13,21 @@ pressing <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd>), then select “Grap
 
 ### Manipulate preview
 
-| Action           | Gesture            |
-| ---------------- | ------------------ |
-| Zoom in          | Mouse wheel up     |
-| Zoom out         | Mouse wheel down   |
-| Toggle 100% zoom | Mouse double click |
-| Pan              | Mouse drag         |
+| Action            | Gesture                                                                                                                                       |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Zoom in           | Mouse wheel up / <kbd>+</kbd>                                                                                                                 |
+| Zoom out          | Mouse wheel down / <kbd>-</kbd>                                                                                                               |
+| Toggle 100 % zoom | Mouse double click / <kbd>Space</kbd>                                                                                                         |
+| Pan               | Mouse drag / <kbd>Left</kbd> / <kbd>Right</kbd> / <kbd>Up</kbd> / <kbd>Down</kbd> / <kbd>A</kbd> / <kbd>D</kbd> / <kbd>W</kbd> / <kbd>S</kbd> |
+| Zoom to 100 %     | <kbd>0</kbd>                                                                                                                                  |
+| Move to center    | <kbd>X</kbd>                                                                                                                                  |
 
 There are three zooming modes: **Fixed**, **Fit** and **Auto Fit**.
 
 - **Fixed**: The zoom ratio does not change when the source changes or the window size changes.
 - **Fit**: The graph is scaled to align to the border of the visible view area.
-- **Auto Fit**: When the view area is big enough to contain a 100% sized graph, the graph will be set a zoom ratio of
-  100%, otherwise the graph is scaled to fit into the view area.
+- **Auto Fit**: When the view area is big enough to contain a 100 % sized graph, the graph will be set a zoom ratio of
+  100 %, otherwise the graph is scaled to fit into the view area.
 
 ### Export graph
 
@@ -33,8 +35,8 @@ To export the generated graph, click the “Export” button on the top right co
 
 ## Configuration
 
-| Configuration              | Type               | Description                                                                                                                                |
-| -------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Configuration              | Type               | Description                                                                                                                                    |
+| -------------------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | `graphviz-preview.dotPath` | `string` \| `null` | `null` means use the “dot” program in your `PATH` environment variable, or a `string` value to indicate the “dot” program you want to use. |
 
 Make sure the extension can find the “dot” program. You can set `graphviz-preview.dotPath` option to the path of the dot
@@ -48,7 +50,7 @@ To set the `graphviz-preview.dotPath` option, go to File → Preference → Sett
 - [x] Allow user to save the generated graph.
 - [x] Report error if the source is invalid.
 - [ ] Apply configuration change without restart.
-- [ ] Allow user to manipulate preview with keyboard.
+- [x] Allow user to manipulate preview with keyboard.
 - [ ] Add CI integration.
 - [ ] Add animation for zooming.
 - [ ] Take a new screenshot.

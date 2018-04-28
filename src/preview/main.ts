@@ -3,7 +3,7 @@ import { createMessenger, IMessagePort, IReceiveMessage, ISendMessage } from "..
 import * as app from "./app";
 import * as controller from "./controller";
 
-declare var acquireVsCodeApi: any;
+declare var acquireVsCodeApi: () => { postMessage: (msg: any) => void };
 
 const vscode = acquireVsCodeApi();
 
@@ -72,13 +72,13 @@ onReady(() => {
         ISendMessage<ExtensionRequest, PreviewResponse>, IReceiveMessage<ExtensionResponse, PreviewRequest>
         > {
         public send(message: ISendMessage<ExtensionRequest, PreviewResponse>): void {
-            vscode.postMessage(message, "*");
+            vscode.postMessage(message);
         }
 
         public onReceive(handler: (message: IReceiveMessage<ExtensionResponse, PreviewRequest>) => void): void {
-            window.onmessage = (ev) => {
+            window.addEventListener("message", (ev) => {
                 handler(ev.data);
-            };
+            });
         }
     }
 
@@ -125,23 +125,64 @@ onReady(() => {
 
     // Window events.
 
-    window.onresize = () => theApp.resize(workspaceElement.offsetWidth, workspaceElement.offsetHeight);
+    window.addEventListener("keydown", (ev) => {
+        switch (ev.key) {
+            case " ":
+                theApp.toggleOverviewCenter();
+                break;
+            case "_":
+            case "-":
+                theApp.zoomOutCenter();
+                break;
+            case "+":
+            case "=":
+                theApp.zoomInCenter();
+                break;
+            case "0":
+                theApp.makeIdentity();
+                break;
+            case "A":
+            case "ArrowLeft":
+            case "a":
+                theApp.moveRight();
+                break;
+            case "ArrowDown":
+            case "S":
+            case "s":
+                theApp.moveUp();
+                break;
+            case "ArrowRight":
+            case "D":
+            case "d":
+                theApp.moveLeft();
+                break;
+            case "ArrowUp":
+            case "W":
+            case "w":
+                theApp.moveDown();
+                break;
+            case "X":
+            case "x":
+                theApp.makeCenter();
+                break;
+        }
+    });
+
+    window.addEventListener("resize", () => theApp.resize(workspaceElement.offsetWidth, workspaceElement.offsetHeight));
 
     // Identity element.
 
-    identityElement.onclick = () => theApp.makeIdentity();
+    identityElement.addEventListener("click", () => theApp.makeIdentity());
 
     // Center element.
 
-    centerElement.onclick = () => theApp.makeCenter();
+    centerElement.addEventListener("click", () => theApp.makeCenter());
 
     // Zoom mode elements.
 
-    function updateZoomMode(this: HTMLElement): void {
-        const checkedElement = this as HTMLInputElement;
-
-        if (checkedElement.checked) {
-            switch (checkedElement.value) {
+    function updateZoomMode(this: HTMLInputElement): void {
+        if (this.checked) {
+            switch (this.value) {
                 case "fixed":
                     theApp.setZoomMode(controller.ZoomMode.Fixed);
                     break;
@@ -155,44 +196,46 @@ onReady(() => {
         }
     }
 
-    zoomModeFixedElement.onchange = updateZoomMode;
-    zoomModeFitElement.onchange = updateZoomMode;
-    zoomModeAutoFitElement.onchange = updateZoomMode;
+    zoomModeFixedElement.addEventListener("change", updateZoomMode);
+    zoomModeFitElement.addEventListener("change", updateZoomMode);
+    zoomModeAutoFitElement.addEventListener("change", updateZoomMode);
 
     // Export element.
 
-    exportElement.onclick = async () => messenger({
+    exportElement.addEventListener("click", async () => messenger({
         image: theApp.image,
         type: "export"
-    });
+    }));
 
     // Workspace element.
 
-    workspaceElement.onclick = (ev) => {
+    workspaceElement.addEventListener("click", (ev) => {
         if (ev.detail % 2 === 0) {
             theApp.toggleOverview(ev.offsetX, ev.offsetY);
         }
-    };
+    });
 
-    workspaceElement.onmousewheel = (ev) => {
+    workspaceElement.addEventListener("mousewheel", (ev) => {
         if (ev.deltaY < 0) {
             theApp.zoomIn(ev.offsetX, ev.offsetY);
         } else {
             theApp.zoomOut(ev.offsetX, ev.offsetY);
         }
-    };
+    });
 
-    workspaceElement.onpointerdown = (ev) => {
-        workspaceElement.setPointerCapture(ev.pointerId);
-
+    workspaceElement.addEventListener("pointerdown", (ev) => {
         const handler = theApp.beginDrag(ev.offsetX, ev.offsetY);
+        const pointerMoveListener = (ev1: PointerEvent) => handler(ev1.offsetX, ev1.offsetY);
 
-        workspaceElement.style.cursor = "-webkit-grabbing";
-        workspaceElement.onpointermove = (ev1) => handler(ev1.offsetX, ev1.offsetY);
-
-        workspaceElement.onpointerup = () => {
-            workspaceElement.onpointermove = null;
+        const pointerUpListener = () => {
+            workspaceElement.removeEventListener("pointermove", pointerMoveListener);
+            workspaceElement.removeEventListener("pointerup", pointerUpListener);
             workspaceElement.style.cursor = "";
         };
-    };
+
+        workspaceElement.addEventListener("pointermove", pointerMoveListener);
+        workspaceElement.addEventListener("pointerup", pointerUpListener);
+        workspaceElement.setPointerCapture(ev.pointerId);
+        workspaceElement.style.cursor = "-webkit-grabbing";
+    });
 });

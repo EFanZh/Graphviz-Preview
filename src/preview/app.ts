@@ -51,6 +51,7 @@ export class App {
                 this.contentMargin,
                 appEventListener,
                 this.zoomStep,
+                this.offsetStep,
                 this.initialZoomMode
             ),
             appEventListener
@@ -68,6 +69,7 @@ export class App {
 
     private static readonly contentMargin = 10;
     private static readonly zoomStep = 1.2;
+    private static readonly offsetStep = 10;
     private static readonly initialZoomMode = ZoomMode.AutoFit;
 
     private constructor(
@@ -94,6 +96,22 @@ export class App {
         this.controller.makeIdentity();
     }
 
+    public moveDown(): void {
+        this.controller.moveDown();
+    }
+
+    public moveLeft(): void {
+        this.controller.moveLeft();
+    }
+
+    public moveRight(): void {
+        this.controller.moveRight();
+    }
+
+    public moveUp(): void {
+        this.controller.moveUp();
+    }
+
     public resize(width: number, height: number): void {
         this.controller.resize(width, height);
     }
@@ -106,12 +124,24 @@ export class App {
         this.controller.toggleOverview(x, y);
     }
 
+    public toggleOverviewCenter(): void {
+        this.controller.toggleOverviewCenter();
+    }
+
     public zoomIn(x: number, y: number): void {
         this.controller.zoomIn(x, y);
     }
 
     public zoomOut(x: number, y: number): void {
         this.controller.zoomOut(x, y);
+    }
+
+    public zoomInCenter(): void {
+        this.controller.zoomInCenter();
+    }
+
+    public zoomOutCenter(): void {
+        this.controller.zoomOutCenter();
     }
 
     public setImage(image: string): void {
