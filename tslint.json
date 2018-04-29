@@ -3,6 +3,13 @@
     "extends": "tslint:latest",
     "rules": {
         "max-classes-per-file": false,
+        "member-access": {
+            "options": [
+                "check-accessor",
+                "check-constructor",
+                "check-parameter-property"
+            ]
+        },
         "no-implicit-dependencies": {
             "options": [
                 "dev"
