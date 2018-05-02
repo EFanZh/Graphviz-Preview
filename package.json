@@ -56,12 +56,12 @@
     ],
     "devDependencies": {
         "@types/mocha": "^5.2.0",
-        "@types/node": "^10.0.1",
+        "@types/node": "^10.0.2",
         "concurrently": "^3.5.1",
         "tslint": "^5.9.1",
         "tslint-language-service": "^0.9.9",
         "typescript": "^2.8.3",
-        "vscode": "^1.1.16",
+        "vscode": "^1.1.17",
         "webpack": "^4.6.0",
         "webpack-cli": "^2.1.2"
     },
