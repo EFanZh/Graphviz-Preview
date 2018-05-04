@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.0.0] - 2018-05-04
+
 ### Added
 
 - Add a button to export generated graph.
@@ -46,7 +48,8 @@
 
 - Initial release.
 
-[Unreleased]: https://github.com/EFanZh/Graphviz-Preview/compare/v0.0.4...HEAD
+[Unreleased]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/EFanZh/Graphviz-Preview/compare/v0.0.4...v1.0.0
 [0.0.4]: https://github.com/EFanZh/Graphviz-Preview/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/EFanZh/Graphviz-Preview/compare/v0.0.2...v0.0.3
 [0.0.2]: https://github.com/EFanZh/Graphviz-Preview/compare/v0.0.1...v0.0.2
