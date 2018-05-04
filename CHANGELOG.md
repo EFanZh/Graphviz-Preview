@@ -13,7 +13,7 @@
 - Reports error if the source is invalid.
 - The configuration change takes effect immediately.
 
-### Changes.
+### Changed
 
 - Redesigned UI.
 - The “graphviz-preview” section is now called “graphvizPreview”. This is a breaking change, please update your
