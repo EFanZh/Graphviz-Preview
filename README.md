@@ -35,9 +35,10 @@ To export the generated graph, click the “Export” button on the top right co
 
 ## Configuration
 
-| Configuration             | Type               | Description                                                                                                                                    |
-| ------------------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `graphvizPreview.dotPath` | `string` \| `null` | `null` means use the “dot” program in your `PATH` environment variable, or a `string` value to indicate the “dot” program you want to use. |
+| Configuration             | Type               | Description                                                                                                                                       |
+| ------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `graphvizPreview.dotPath` | `string` \| `null` | `null` means to use the “dot” program in your `PATH` environment variable, or a `string` value to indicate the “dot” program you want to use. |
+| `graphvizPreview.engine`  | `"dot"` \| `null`  | The layout engine to use. `null` means to use the “dot” layout engine. Currently, only the “dot” engine is supported.                         |
 
 Make sure the extension can find the “dot” program. You can set `graphvizPreview.dotPath` option to the path of the dot
 executable, or make sure the directory containing the dot program is in your `PATH` environment variable.
