@@ -166,7 +166,10 @@ export class App {
 
         this.controller.resizeContent(imageWidth, imageHeight);
 
-        this.appEventListener.onImageChanged(this.imageValue);
+        // A hack to remove extra space of the graph within the img element.
+        svg.setAttribute("preserveAspectRatio", "none");
+
+        this.appEventListener.onImageChanged(svg.outerHTML);
         this.appEventListener.onStatusChanged(this.status);
     }
 

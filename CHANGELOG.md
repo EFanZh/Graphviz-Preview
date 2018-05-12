@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## Fixed
+
+- Remove extra paddings within the `<img>` element.
+
 ## [1.1.0] - 2018-05-12
 
 ### Added

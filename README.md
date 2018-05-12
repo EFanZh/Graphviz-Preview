@@ -69,5 +69,4 @@ To set the `graphvizPreview.dotPath` option, go to File → Preference → Setti
 ## Known issues
 
 - After saving an untitled file, the preview becomes invalid.
-- The graph border and the the shadow is not strictly aligned.
 - When the zoom ratio is too large, the graph may be at a wrong position.
