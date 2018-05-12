@@ -2,11 +2,16 @@
 
 ## [Unreleased]
 
+## [1.1.0] - 2018-05-12
+
+### Added
+
+- Add cancellation support for the layout engine interface.
+
 ### Changed
 
-- Add cancellation support for the engine interface.
-- Refactored the scheduler, currently at most 4 layout engine instances are allowed to run concurrently. Now you should
-  notice editing source file updates preview more smoothly.
+- Refactored the scheduler. Currently at most 4 layout engine instances are allowed to run concurrently. Now you should
+  notice editing source file updates the preview more smoothly.
 
 ## [1.0.0] - 2018-05-04
 
@@ -54,7 +59,8 @@
 
 - Initial release.
 
-[Unreleased]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/EFanZh/Graphviz-Preview/compare/v0.0.4...v1.0.0
 [0.0.4]: https://github.com/EFanZh/Graphviz-Preview/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/EFanZh/Graphviz-Preview/compare/v0.0.2...v0.0.3
