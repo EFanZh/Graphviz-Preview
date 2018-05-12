@@ -4,6 +4,11 @@ An extension for Visual Studio Code to preview Graphviz (DOT) files.
 
 ![Graphviz Preview screenshot](resources/screenshot.png)
 
+## Installation
+
+You can install this extension from the
+[Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=EFanZh.graphviz-preview).
+
 ## Usage
 
 ### Open preview
