@@ -57,7 +57,7 @@ To set the `graphvizPreview.dotPath` option, go to File → Preference → Setti
 - [x] Take a new screenshot.
 - [ ] Allow user to configure the default zoom mode.
 - [ ] Add a preview button for source editor.
-- [ ] Add cancellation support in scheduler.
+- [x] Add cancellation support in scheduler.
 - [ ] Support previewing source containing multiple graphs.
 - [ ] Design a better icon.
 
@@ -66,5 +66,3 @@ To set the `graphvizPreview.dotPath` option, go to File → Preference → Setti
 - After saving an untitled file, the preview becomes invalid.
 - The graph border and the the shadow is not strictly aligned.
 - When the zoom ratio is too large, the graph may be at a wrong position.
-- Current, only one “dot” application is allowed to run, so the preview may not look very smooth when the source is
-  being edited quickly.
