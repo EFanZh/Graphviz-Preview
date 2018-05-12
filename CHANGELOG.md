@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Changed
+
+- Add cancellation support for the engine interface.
+- Refactored the scheduler, currently at most 4 layout engine instances are allowed to run concurrently. Now you should
+  notice editing source file updates preview more smoothly.
+
 ## [1.0.0] - 2018-05-04
 
 ### Added

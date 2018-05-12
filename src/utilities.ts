@@ -29,7 +29,7 @@ export async function writeFileAsync(path: string, data: string, options: string
     });
 }
 
-export function runChildProcess(program: string, args: string[], input: string): Promise<[number, string, string]> {
+export function runChildProcess(program: string, args: string[], input: string, cancel: Promise<void>): Promise<[number, string, string]> {
     return new Promise((resolve, reject) => {
         const process = child_process.spawn(program, args);
         const stdoutBuffer: Array<(string | Buffer)> = [];
@@ -39,6 +39,8 @@ export function runChildProcess(program: string, args: string[], input: string):
         process.on("exit", (code) => resolve([code, stdoutBuffer.join(""), stderrBuffer.join("")]));
         process.stdout.on("data", (chunk) => stdoutBuffer.push(chunk));
         process.stderr.on("data", (chunk) => stderrBuffer.push(chunk));
+
+        cancel.then(() => process.kill());
 
         try {
             process.stdin.end(input);

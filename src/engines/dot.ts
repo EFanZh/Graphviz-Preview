@@ -1,13 +1,13 @@
 import * as configuration from "../configuration";
 import * as utilities from "../utilities";
 
-export function getEngine(): (source: string) => Promise<string> {
+export function getEngine(): (source: string, cancel: Promise<void>) => Promise<string> {
     const dot = configuration.getNullableConfiguration<string>("dotPath", "dot");
     const args = ["-T", "svg"];
 
-    return async (source: string) => {
+    return async (source, cancel) => {
         try {
-            const [exitCode, stdout, stderr] = await utilities.runChildProcess(dot, args, source);
+            const [exitCode, stdout, stderr] = await utilities.runChildProcess(dot, args, source, cancel);
 
             if (exitCode === 0) {
                 return stdout;

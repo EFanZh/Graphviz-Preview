@@ -60,7 +60,7 @@ function createMessengerForWebview(view: vscode.Webview): (message: PreviewReque
 }
 
 function createSchedulerForWebview(
-    engine: (source: string) => Promise<string>,
+    engine: (source: string, cancel: Promise<void>) => Promise<string>,
     messenger: (message: PreviewRequest) => Promise<PreviewResponse>
 ): (arg: string) => void {
     function onResult(result: string): void {
