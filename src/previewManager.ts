@@ -53,10 +53,7 @@ function createMessengerForWebview(view: vscode.Webview): (message: PreviewReque
         return undefined;
     }
 
-    return createMessenger<PreviewRequest, PreviewResponse, ExtensionRequest, ExtensionResponse>(
-        new PreviewPort(view),
-        handleRequest
-    );
+    return createMessenger(new PreviewPort(view), handleRequest);
 }
 
 function createSchedulerForWebview(

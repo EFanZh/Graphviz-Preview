@@ -9,12 +9,19 @@ interface IRequsetMessage<T> {
     message: T;
 }
 
-interface IResponseMessage<T> {
-    type: "response";
+interface IResponseSuccessMessage<T> {
+    type: "success";
     id: number;
-    success: boolean;
-    message: T;
+    result: T;
 }
+
+interface IResponseFailureMessage {
+    type: "failure";
+    id: number;
+    message: string;
+}
+
+type IResponseMessage<T> = IResponseSuccessMessage<T> | IResponseFailureMessage;
 
 export type ISendMessage<TRequest1, TResponse2> = IRequsetMessage<TRequest1> | IResponseMessage<TResponse2>;
 export type IReceiveMessage<TResponse1, TRequest2> = IResponseMessage<TResponse1> | IRequsetMessage<TRequest2>;
@@ -36,30 +43,27 @@ export function createMessenger<TRequest1, TResponse1, TRequest2, TResponse2>(
         try {
             port.send({
                 id,
-                message: await handler(message),
-                success: true,
-                type: "response"
+                result: await handler(message),
+                type: "success"
             });
         } catch (error) {
             port.send({
                 id,
-                message: error.toString(),
-                success: false,
-                type: "response"
+                message: String(error),
+                type: "failure"
             });
         }
     }
 
     async function handleResponse(wrappedMessage: IResponseMessage<TResponse1>): Promise<void> {
-        const { id, success, message } = wrappedMessage;
-        const [resolver, rejector] = pendingCalls.get(id)!;
+        const [resolver, rejector] = pendingCalls.get(wrappedMessage.id)!;
 
-        pendingCalls.delete(id);
+        pendingCalls.delete(wrappedMessage.id);
 
-        if (success) {
-            resolver(message);
+        if (wrappedMessage.type === "success") {
+            resolver(wrappedMessage.result);
         } else {
-            rejector(message);
+            rejector(wrappedMessage.message);
         }
     }
 

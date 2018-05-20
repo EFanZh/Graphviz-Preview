@@ -123,11 +123,7 @@ onReady(() => {
         return undefined;
     }
 
-    // TODO: Maybe remove type annotation sometime later.
-    const messenger = createMessenger<ExtensionRequest, ExtensionResponse, PreviewRequest, PreviewResponse>(
-        new ExtensionPort(),
-        handleRequest
-    );
+    const messenger = createMessenger(new ExtensionPort(), handleRequest);
 
     function registerEventListeners(): void {
         // Window.
