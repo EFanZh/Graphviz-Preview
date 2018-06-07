@@ -2,9 +2,13 @@
 
 ## [Unreleased]
 
-## Fixed
+### Fixed
 
 - Remove extra paddings within the `<img>` element.
+
+### Changed
+
+- The focus is preserved when preview is opened.
 
 ## [1.1.0] - 2018-05-12
 

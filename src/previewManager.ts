@@ -101,7 +101,7 @@ export class PreviewManager {
         if (result === undefined) {
             result = await this.createPreview(getPreviewColumn(editor.viewColumn), document);
         } else {
-            result.reveal(result.viewColumn || getPreviewColumn(editor.viewColumn));
+            result.reveal(result.viewColumn || getPreviewColumn(editor.viewColumn), true);
         }
     }
 
@@ -120,7 +120,10 @@ export class PreviewManager {
         const result = vscode.window.createWebviewPanel(
             previewType,
             makeTitle(document),
-            column,
+            {
+                preserveFocus: true,
+                viewColumn: column
+            },
             {
                 enableScripts: true,
                 retainContextWhenHidden: true
