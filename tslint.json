@@ -1,7 +1,10 @@
 {
     "$schema": "http://json.schemastore.org/tslint",
+    "defaultSeverity": "warning",
     "extends": "tslint:latest",
     "rules": {
+        "class-name": true,
+        "curly": true,
         "max-classes-per-file": false,
         "member-access": {
             "options": [
@@ -10,14 +13,21 @@
                 "check-parameter-property"
             ]
         },
+        "no-duplicate-variable": true,
         "no-implicit-dependencies": {
             "options": [
                 "dev"
             ]
         },
+        "no-string-throw": true,
         "no-submodule-imports": false,
+        "no-unused-expression": true,
         "only-arrow-functions": false,
         "prefer-readonly": false,
+        "semicolon": [
+            true,
+            "always"
+        ],
         "space-before-function-paren": false,
         "trailing-comma": {
             "options": [
@@ -27,6 +37,7 @@
                 }
             ]
         },
+        "triple-equals": true,
         "typedef": {
             "options": [
                 "call-signature"

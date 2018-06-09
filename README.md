@@ -61,10 +61,11 @@ To set the `graphvizPreview.dotPath` option, go to File → Preference → Setti
 - [ ] Add animation for zooming.
 - [x] Take a new screenshot.
 - [ ] Allow user to configure the default zoom mode.
-- [ ] Add a preview button for source editor.
+- [x] Add a preview button for source editor.
 - [x] Add cancellation support in scheduler.
 - [ ] Support previewing source containing multiple graphs.
 - [ ] Design a better icon.
+- [ ] Apply [Content Security Policy](https://en.wikipedia.org/wiki/Content_Security_Policy) to webview.
 
 ## Known issues
 

@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- Add a button to open preview to the source editor if current editor’s language is
+  [DOT](https://en.wikipedia.org/wiki/DOT_(graph_description_language)).
+
 ### Fixed
 
 - Remove extra paddings within the `<img>` element.
