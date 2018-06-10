@@ -22,7 +22,11 @@
             {
                 "command": "graphviz.showPreview",
                 "title": "Show Preview",
-                "category": "Graphviz"
+                "category": "Graphviz",
+                "icon": {
+                    "dark": "resources/show-preview-dark.svg",
+                    "light": "resources/show-preview-light.svg"
+                }
             }
         ],
         "configuration": {
