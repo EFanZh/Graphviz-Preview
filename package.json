@@ -18,6 +18,19 @@
     ],
     "main": "./out/extension",
     "contributes": {
+        "languages": [
+            {
+                "id": "dot",
+                "aliases": [
+                    "Graphviz",
+                    "DOT"
+                ],
+                "extensions": [
+                    ".dot",
+                    ".gv"
+                ]
+            }
+        ],
         "commands": [
             {
                 "command": "graphviz.showPreview",
@@ -68,7 +81,7 @@
         "onCommand:graphviz.showPreview"
     ],
     "devDependencies": {
-        "@types/mocha": "^5.2.1",
+        "@types/mocha": "^5.2.2",
         "@types/node": "^10.3.2",
         "concurrently": "^3.5.1",
         "tslint": "^5.10.0",
