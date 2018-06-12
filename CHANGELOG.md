@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.2.0] - 2018-06-12
+
 ### Added
 
 - Add a button to open preview to the source editor if current editor’s language is
@@ -72,7 +74,8 @@
 
 - Initial release.
 
-[Unreleased]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.2.0...master
+[1.2.0]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/EFanZh/Graphviz-Preview/compare/v0.0.4...v1.0.0
 [0.0.4]: https://github.com/EFanZh/Graphviz-Preview/compare/v0.0.3...v0.0.4
