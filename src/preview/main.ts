@@ -58,7 +58,7 @@ onReady(() => {
         }
 
         public onLayoutChanged(x: number, y: number, width: number, height: number, zoom: number): void {
-            zoomElement.textContent = `${Math.round(zoom * 10000) / 100} %`;
+            zoomElement.textContent = `${Math.round(zoom * 10000) / 100}%`;
             imageElement.style.cssText = `left:${x}px;top:${y}px;width:${width * zoom}px;height:${height * zoom}px`;
         }
     }
