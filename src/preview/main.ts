@@ -31,12 +31,13 @@ onReady(() => {
 
     const exportElement = document.getElementById("export")!;
     const workspaceElement = document.getElementById("workspace")!;
-    const imageElement = document.getElementById("image")! as HTMLImageElement;
+    const imageElement = document.getElementById("image")! as HTMLDivElement;
     const statusElement = document.getElementById("status")!;
 
     class AppEventListener implements app.IAppEventListener {
-        public onImageChanged(image: string): void {
-            imageElement.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(image)}`;
+        public onImageChanged(image: SVGSVGElement): void {
+            imageElement.innerHTML = "";
+            imageElement.appendChild(image);
         }
 
         public onStatusChanged(status: string | null): void {

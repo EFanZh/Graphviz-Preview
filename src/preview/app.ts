@@ -8,7 +8,7 @@ const theDefaultImage = theXmlParser.parseFromString(
 ).rootElement;
 
 export interface IAppEventListener extends IViewEventListener {
-    onImageChanged(image: string): void;
+    onImageChanged(image: SVGSVGElement): void;
     onStatusChanged(status: string | null): void;
 }
 
@@ -168,8 +168,10 @@ export class App {
 
         // A hack to remove extra space of the graph within the img element.
         svg.setAttribute("preserveAspectRatio", "none");
+        svg.setAttribute("width", "100%");
+        svg.setAttribute("height", "100%");
 
-        this.appEventListener.onImageChanged(svg.outerHTML);
+        this.appEventListener.onImageChanged(svg);
         this.appEventListener.onStatusChanged(this.status);
     }
 

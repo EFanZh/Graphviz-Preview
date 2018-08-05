@@ -1,7 +1,7 @@
 import * as configuration from "../configuration";
 import * as dot from "./dot";
 
-function getCurrentEngine(): (source: string, cancel: Promise<void>) => Promise<string> {
+function getCurrentEngine(): (source: string, workingDir: string, cancel: Promise<void>) => Promise<string> {
     const engineName = configuration.getNullableConfiguration("engine", "dot");
 
     switch (engineName) {
@@ -14,8 +14,8 @@ function getCurrentEngine(): (source: string, cancel: Promise<void>) => Promise<
 
 let currentEngine = getCurrentEngine();
 
-export function getEngine(): (source: string, cancel: Promise<void>) => Promise<string> {
-    return (source, cancel) => currentEngine(source, cancel); // Do not use `return currentEngine;`.
+export function run(source: string, workingDir: string, cancel: Promise<void>): Promise<string> {
+    return currentEngine(source, workingDir, cancel);
 }
 
 export function updateConfiguration(): void {

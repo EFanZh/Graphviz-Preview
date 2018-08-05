@@ -35,4 +35,4 @@ export interface IExportRequest {
 }
 
 export type ExtensionRequest = IExportRequest;
-export type ExtensionResponse = undefined;
+export type ExtensionResponse = void;

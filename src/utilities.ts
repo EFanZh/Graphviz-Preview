@@ -32,11 +32,12 @@ export async function writeFileAsync(path: string, data: string, options: string
 export function runChildProcess(
     program: string,
     args: string[],
+    cwd: string,
     input: string,
     cancel: Promise<void>
 ): Promise<[number, string, string]> {
     return new Promise((resolve, reject) => {
-        const process = child_process.spawn(program, args);
+        const process = child_process.spawn(program, args, { cwd });
         const stdoutBuffer: Array<(string | Buffer)> = [];
         const stderrBuffer: Array<(string | Buffer)> = [];
 

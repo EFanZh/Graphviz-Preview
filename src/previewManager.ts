@@ -1,3 +1,4 @@
+import * as path from "path";
 import * as vscode from "vscode";
 import * as engines from "./engines";
 import { ExtensionRequest, ExtensionResponse, PreviewRequest, PreviewResponse } from "./messages";
@@ -21,17 +22,8 @@ class PreviewPort implements
     }
 }
 
-function getPreviewColumn(activeColumn?: vscode.ViewColumn): vscode.ViewColumn {
-    switch (activeColumn) {
-        case vscode.ViewColumn.One:
-            return vscode.ViewColumn.Two;
-        default:
-            return vscode.ViewColumn.Three;
-    }
-}
-
-function makeTitle(document: vscode.TextDocument): string {
-    return `Preview: ${document.fileName}`;
+function uriToVscodeResource(uri: vscode.Uri): string {
+    return uri.with({ scheme: "vscode-resource" }).toString(true);
 }
 
 async function exportImage(image: string): Promise<void> {
@@ -42,126 +34,113 @@ async function exportImage(image: string): Promise<void> {
     }
 }
 
-function createMessengerForWebview(view: vscode.Webview): (message: PreviewRequest) => Promise<PreviewResponse> {
-    async function handleRequest(message: ExtensionRequest): Promise<ExtensionResponse> {
-        switch (message.type) {
-            case "export":
-                await exportImage(message.image);
-                break;
-        }
-
-        return undefined;
-    }
-
-    return createMessenger(new PreviewPort(view), handleRequest);
-}
-
-function createSchedulerForWebview(
-    engine: (source: string, cancel: Promise<void>) => Promise<string>,
-    messenger: (message: PreviewRequest) => Promise<PreviewResponse>
-): (arg: string) => void {
-    function onResult(result: string): void {
-        messenger({
-            image: result,
-            type: "success"
-        });
-    }
-
-    function onError(error: Error): void {
-        messenger({
-            message: error.message,
-            type: "failure"
-        });
-    }
-
-    return createScheduler(engine, onResult, onError);
+interface IPreviewContext {
+    readonly webviewPanel: vscode.WebviewPanel;
+    readonly updatePreview: () => void;
 }
 
 export class PreviewManager {
+    private readonly previewDirUri: vscode.Uri;
     private readonly previewContent: string;
-    private readonly previews = new WeakMap<vscode.TextDocument, vscode.WebviewPanel>();
-    private readonly documents = new WeakMap<vscode.WebviewPanel, vscode.TextDocument>();
-    private readonly schedulers = new WeakMap<vscode.Webview, (arg: string) => void>();
-    private readonly engine = engines.getEngine();
+    private readonly previewContexts = new WeakMap<vscode.TextDocument, IPreviewContext>();
 
     public constructor(context: vscode.ExtensionContext, template: string) {
-        const previewDirUri = vscode.Uri.file(context.asAbsolutePath("out/preview"));
-
-        this.previewContent = template.replace(
-            /\{preview-dir\}/g,
-            previewDirUri.with({ scheme: "vscode-resource" }).toString(true)
-        );
+        this.previewDirUri = vscode.Uri.file(context.asAbsolutePath("out/preview"));
+        this.previewContent = template.replace(/\{preview-dir\}/g, uriToVscodeResource(this.previewDirUri));
     }
 
     public async showPreview(editor: vscode.TextEditor): Promise<void> {
         const document = editor.document;
+        const context = this.previewContexts.get(document);
 
-        let result = this.previews.get(document);
-
-        if (result === undefined) {
-            result = await this.createPreview(getPreviewColumn(editor.viewColumn), document);
+        if (context === undefined) {
+            this.previewContexts.set(document, await this.createPreview(document, vscode.ViewColumn.Beside));
         } else {
-            result.reveal(result.viewColumn || getPreviewColumn(editor.viewColumn), true);
+            context.webviewPanel.reveal(undefined, true);
         }
     }
 
     public async updatePreview(document: vscode.TextDocument): Promise<void> {
-        const preview = this.previews.get(document);
+        const context = this.previewContexts.get(document);
 
-        if (preview !== undefined) {
-            await this.updatePreviewContent(preview.webview, document);
+        if (context !== undefined) {
+            context.updatePreview();
         }
     }
 
-    private async createPreview(
-        column: vscode.ViewColumn,
-        document: vscode.TextDocument
-    ): Promise<vscode.WebviewPanel> {
-        const result = vscode.window.createWebviewPanel(
+    private async createPreview(document: vscode.TextDocument, column: vscode.ViewColumn): Promise<IPreviewContext> {
+        const documentDir = path.dirname(document.fileName);
+        const documentDirUri = vscode.Uri.file(documentDir);
+        const localResourceRoots = [this.previewDirUri, documentDirUri];
+
+        if (vscode.workspace.workspaceFolders) {
+            localResourceRoots.push(...vscode.workspace.workspaceFolders.map((f) => f.uri));
+        }
+
+        const webviewPanel = vscode.window.createWebviewPanel(
             previewType,
-            makeTitle(document),
+            `Preview: ${document.fileName}`,
             {
                 preserveFocus: true,
                 viewColumn: column
             },
             {
                 enableScripts: true,
+                localResourceRoots,
                 retainContextWhenHidden: true
             }
         );
 
-        result.webview.html = this.previewContent;
+        webviewPanel.webview.html = this.previewContent.replace(
+            /\{base-url\}/g,
+            uriToVscodeResource(documentDirUri)
+        );
 
         // Add bindings.
 
-        this.previews.set(document, result);
-        this.documents.set(result, document);
+        const messenger = createMessenger(
+            new PreviewPort(webviewPanel.webview),
+            async (message) => {
+                switch (message.type) {
+                    case "export":
+                        await exportImage(message.image);
+                        break;
+                }
+            }
+        );
 
-        const messenger = createMessengerForWebview(result.webview);
-        const scheduler = createSchedulerForWebview(this.engine, messenger);
-
-        this.schedulers.set(result.webview, scheduler);
+        const scheduler = createScheduler(
+            (cancel, source: string) => engines.run(source, documentDir, cancel),
+            (image) => messenger({
+                image,
+                type: "success"
+            }),
+            (error: Error) => messenger({
+                message: error.message,
+                type: "failure"
+            })
+        );
 
         // Add event handlers.
 
-        result.onDidDispose(() => this.previews.delete(document));
+        const updatePreview = () => scheduler(document.getText());
 
-        result.onDidChangeViewState(((e) => {
+        webviewPanel.onDidDispose(() => this.previewContexts.delete(document));
+
+        webviewPanel.onDidChangeViewState((e) => {
             if (e.webviewPanel.visible) {
-                this.updatePreviewContent(e.webviewPanel.webview, this.documents.get(e.webviewPanel)!);
+                updatePreview();
             }
-        }));
+        });
 
         // Initialize.
 
         await messenger({ type: "initialize" });
 
-        this.updatePreviewContent(result.webview, document);
+        updatePreview();
 
-        return result;
-    }
+        // Return context.
 
-    private updatePreviewContent(view: vscode.Webview, document: vscode.TextDocument): void {
-        this.schedulers.get(view)!(document.getText());
+        return { webviewPanel, updatePreview };
     }
 }

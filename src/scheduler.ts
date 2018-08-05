@@ -6,17 +6,17 @@ function createCancellationToken(): [Promise<void>, () => void] {
     return [result, resolver!];
 }
 
-export function createScheduler<TArg, TResult, TError>(
-    executer: (arg: TArg, cancel: Promise<void>) => Promise<TResult>,
+export function createScheduler<TArgs extends any[], TResult, TError>(
+    executer: (cancel: Promise<void>, ...args: TArgs) => Promise<TResult>,
     resolve: (result: TResult) => void,
     reject: (error: TError) => void
-): (arg: TArg) => void {
+): (...args: TArgs) => void {
     const maxConcurrentTasks = 4;
 
     // The running task queue.
     const q = [] as Array<() => void>;
 
-    return async (arg: TArg) => {
+    return async (...args: TArgs) => {
         const [cancelPromise, cancel] = createCancellationToken();
 
         if (q.length < maxConcurrentTasks) {
@@ -33,7 +33,7 @@ export function createScheduler<TArg, TResult, TError>(
         let resolveAction: () => void;
 
         try {
-            const result = await executer(arg, cancelPromise);
+            const result = await executer(cancelPromise, ...args);
 
             resolveAction = () => resolve(result);
         } catch (error) {
