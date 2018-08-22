@@ -11,12 +11,6 @@
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "outDir": "out",
-        "plugins": [
-            {
-                "ignoreDefinitionFiles": true,
-                "name": "tslint-language-service"
-            }
-        ],
         "rootDir": "src",
         "sourceMap": true,
         "strict": true,
