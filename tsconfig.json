@@ -1,32 +1,25 @@
 {
     "compilerOptions": {
-        "alwaysStrict": true,
         "forceConsistentCasingInFileNames": true,
         "lib": [
             "dom",
             "es2018"
         ],
         "module": "commonjs",
-        "moduleResolution": "node",
         "noFallthroughCasesInSwitch": true,
-        "noImplicitAny": true,
         "noImplicitReturns": true,
-        "noImplicitThis": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "outDir": "out",
         "plugins": [
             {
-                "name": "tslint-language-service",
-                "ignoreDefinitionFiles": true
+                "ignoreDefinitionFiles": true,
+                "name": "tslint-language-service"
             }
         ],
         "rootDir": "src",
         "sourceMap": true,
         "strict": true,
-        "strictFunctionTypes": true,
-        "strictNullChecks": true,
-        "strictPropertyInitialization": true,
         "target": "es2018"
     }
 }

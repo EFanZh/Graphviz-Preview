@@ -1,33 +1,9 @@
 import * as child_process from "child_process";
 import * as fs from "fs";
-// import * as util from "util";
+import * as util from "util";
 
-// export const readFileAsync = util.promisify(fs.readFile);
-// export const writeFileAsync = util.promisify(fs.writeFile);
-
-export async function readFileAsync(path: string, options: string): Promise<string> {
-    return new Promise<string>((resolve, reject) => {
-        fs.readFile(path, options, (err, data) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(data);
-            }
-        });
-    });
-}
-
-export async function writeFileAsync(path: string, data: string, options: string): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-        fs.writeFile(path, data, options, (err) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve();
-            }
-        });
-    });
-}
+export const readFileAsync = util.promisify(fs.readFile);
+export const writeFileAsync = util.promisify(fs.writeFile);
 
 export function runChildProcess(
     program: string,
