@@ -5,6 +5,10 @@ import * as util from "util";
 export const readFileAsync = util.promisify(fs.readFile);
 export const writeFileAsync = util.promisify(fs.writeFile);
 
+function joinBuffers(buffers: Uint8Array[]): string {
+    return Buffer.concat(buffers).toString()
+}
+
 export function runChildProcess(
     program: string,
     args: string[],
@@ -14,11 +18,11 @@ export function runChildProcess(
 ): Promise<[number, string, string]> {
     return new Promise((resolve, reject) => {
         const process = child_process.spawn(program, args, { cwd });
-        const stdoutBuffer: Array<(string | Buffer)> = [];
-        const stderrBuffer: Array<(string | Buffer)> = [];
+        const stdoutBuffer: Buffer[] = [];
+        const stderrBuffer: Buffer[] = [];
 
         process.on("error", reject);
-        process.on("exit", (code) => resolve([code, stdoutBuffer.join(""), stderrBuffer.join("")]));
+        process.on("exit", (code) => resolve([code, joinBuffers(stdoutBuffer), joinBuffers(stderrBuffer)]));
         process.stdout.on("data", (chunk) => stdoutBuffer.push(chunk));
         process.stderr.on("data", (chunk) => stderrBuffer.push(chunk));
 
