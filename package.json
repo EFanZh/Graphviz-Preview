@@ -95,7 +95,8 @@
         "compile": "tsc -p . && webpack",
         "watch": "concurrently --kill-others --allow-restart --restart-after 500 -r \"tsc -p . -w\" \"webpack -w\"",
         "postinstall": "node ./node_modules/vscode/bin/install",
-        "test": "tslint -p . && npm run compile && node ./node_modules/vscode/bin/test"
+        "lint": "tslint -p .",
+        "test": "npm run lint && npm run compile && node ./node_modules/vscode/bin/test"
     },
     "icon": "resources/icon.png",
     "repository": {

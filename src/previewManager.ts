@@ -4,7 +4,6 @@ import * as engines from "./engines";
 import { ExtensionRequest, ExtensionResponse, PreviewRequest, PreviewResponse } from "./messages";
 import { createMessenger, IMessagePort, IReceiveMessage, ISendMessage } from "./messenger";
 import { createScheduler } from "./scheduler";
-import * as utilities from "./utilities";
 
 const previewType = "graphviz.preview";
 
@@ -24,14 +23,6 @@ class PreviewPort implements
 
 function uriToVscodeResource(uri: vscode.Uri): string {
     return uri.with({ scheme: "vscode-resource" }).toString(true);
-}
-
-async function exportImage(image: string): Promise<void> {
-    const filePath = await vscode.window.showSaveDialog({ filters: { "SVG Image": ["svg"] } });
-
-    if (filePath) {
-        await utilities.writeFileAsync(filePath.fsPath, image, "utf8");
-    }
 }
 
 interface IPreviewContext {
@@ -65,6 +56,20 @@ export class PreviewManager {
 
         if (context !== undefined) {
             context.updatePreview();
+        }
+    }
+
+    private async exportImage(
+        source: string,
+        svgContent: string,
+        workingDir: string
+    ): Promise<void> {
+        const filePath = await vscode.window.showSaveDialog({
+            filters: { "PDF": ["pdf"], "PNG Image": ["png"], "SVG Image": ["svg"] }
+        });
+
+        if (filePath) {
+            await engines.currentEngine.saveToFile(source, svgContent, filePath.fsPath, workingDir);
         }
     }
 
@@ -103,14 +108,19 @@ export class PreviewManager {
             async (message) => {
                 switch (message.type) {
                     case "export":
-                        await exportImage(message.image);
+                        await this.exportImage(
+                            document.getText(),
+                            message.image,
+                            documentDir
+                        );
+
                         break;
                 }
             }
         );
 
         const scheduler = createScheduler(
-            (cancel, source: string) => engines.run(source, documentDir, cancel),
+            (cancel, source: string) => engines.currentEngine.renderToSvg(source, documentDir, cancel),
             (image) => messenger({
                 image,
                 type: "success"

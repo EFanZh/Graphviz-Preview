@@ -1,7 +1,8 @@
 import * as configuration from "../configuration";
 import * as dot from "./dot";
+import { IEngine } from "./engine";
 
-function getCurrentEngine(): (source: string, workingDir: string, cancel: Promise<void>) => Promise<string> {
+function getCurrentEngine(): IEngine {
     const engineName = configuration.getNullableConfiguration("engine", "dot");
 
     switch (engineName) {
@@ -12,12 +13,18 @@ function getCurrentEngine(): (source: string, workingDir: string, cancel: Promis
     }
 }
 
-let currentEngine = getCurrentEngine();
+let currentEngineInstance = getCurrentEngine();
 
-export function run(source: string, workingDir: string, cancel: Promise<void>): Promise<string> {
-    return currentEngine(source, workingDir, cancel);
-}
+export const currentEngine: IEngine = Object.freeze({
+    renderToSvg(source: string, workingDir: string, cancel: Promise<void>): Promise<string> {
+        return currentEngineInstance.renderToSvg(source, workingDir, cancel);
+    },
+
+    saveToFile(source: string, svgContent: string, filePath: string, workingDir: string): Promise<void> {
+        return currentEngineInstance.saveToFile(source, svgContent, filePath, workingDir);
+    }
+});
 
 export function updateConfiguration(): void {
-    currentEngine = getCurrentEngine();
+    currentEngineInstance = getCurrentEngine();
 }
