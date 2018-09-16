@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+## [1.3.0] - 2018-09-16
+
+### Added
+
+- Support exporting image of formats other than SVG. Currently, PDF and PNG support are added. (#14).
+
+### Fixed
+
+- Support showing external image. (#13)
+- Fix showing unicode characters. (#15)
+
 ## [1.2.0] - 2018-06-12
 
 ### Added
@@ -74,7 +85,8 @@
 
 - Initial release.
 
-[Unreleased]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.2.0...master
+[Unreleased]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.3.0...master
+[1.3.0]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/EFanZh/Graphviz-Preview/compare/v0.0.4...v1.0.0
