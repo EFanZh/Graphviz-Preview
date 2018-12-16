@@ -2,10 +2,11 @@ import { Controller, IControllerArchive, IViewEventListener, ZoomMode } from "./
 
 const theXmlParser = new DOMParser();
 
-const theDefaultImage = theXmlParser.parseFromString(
-    '<svg xmlns="http://www.w3.org/2000/svg" width="100px" height="100px"></svg>',
-    "image/svg+xml"
-).rootElement;
+function rawParseSvg(image: string): Document {
+    return theXmlParser.parseFromString(image, "image/svg+xml");
+}
+
+const theDefaultImage = rawParseSvg('<svg xmlns="http://www.w3.org/2000/svg" width="100px" height="100px"></svg>').documentElement as Element as SVGSVGElement;
 
 export interface IAppEventListener extends IViewEventListener {
     onImageChanged(image: SVGSVGElement): void;
@@ -13,10 +14,10 @@ export interface IAppEventListener extends IViewEventListener {
 }
 
 function parseSVG(image: string): SVGSVGElement | [SVGSVGElement | null, string] {
-    const imageDocument = theXmlParser.parseFromString(image, "image/svg+xml");
-    const rootElement = imageDocument.rootElement;
+    const imageDocument = rawParseSvg(image);
+    const rootElement = imageDocument.documentElement;
 
-    if (rootElement) {
+    if (rootElement instanceof SVGSVGElement) {
         return rootElement;
     } else {
         const partialSvg = imageDocument.querySelector("svg");

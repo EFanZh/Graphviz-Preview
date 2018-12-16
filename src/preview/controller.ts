@@ -661,7 +661,7 @@ export class Controller {
         const view = this.state.view;
 
         if (!view.isIdentity) {
-            this.zoomTo(view.width / 2, view.height / 2, 1);
+            this.toggleOverviewCenter();
         }
     }
 

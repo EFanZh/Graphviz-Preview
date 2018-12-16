@@ -222,7 +222,7 @@ onReady(() => {
             }
         });
 
-        workspaceElement.addEventListener("mousewheel", (ev) => {
+        workspaceElement.addEventListener("wheel", (ev) => {
             if (ev.deltaY < 0) {
                 theApp.zoomIn(ev.offsetX, ev.offsetY);
             } else {

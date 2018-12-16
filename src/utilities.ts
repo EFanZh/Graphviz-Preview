@@ -15,7 +15,7 @@ export function runChildProcess(
     cwd: string,
     input: string,
     cancel?: Promise<void>
-): Promise<[number, string, string]> {
+): Promise<[number | null, string, string]> {
     return new Promise((resolve, reject) => {
         const process = child_process.spawn(program, args, { cwd });
         const stdoutBuffer: Buffer[] = [];
