@@ -81,14 +81,14 @@
         "onCommand:graphviz.showPreview"
     ],
     "devDependencies": {
-        "@types/mocha": "^5.2.5",
-        "@types/node": "^10.12.15",
-        "concurrently": "^3.6.1",
-        "tslint": "^5.11.0",
-        "typescript": "^3.2.2",
-        "vscode": "^1.1.26",
-        "webpack": "^4.27.1",
-        "webpack-cli": "^3.1.2"
+        "@types/mocha": "^5.2.6",
+        "@types/node": "^10.12.30",
+        "concurrently": "^4.1",
+        "tslint": "^5.13",
+        "typescript": "^3.3",
+        "vscode": "^1.1.29",
+        "webpack": "^4.29",
+        "webpack-cli": "^3.2"
     },
     "scripts": {
         "vscode:prepublish": "npm run compile",
