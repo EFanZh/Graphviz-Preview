@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [1.3.1] - 2019-03-23
+
+### Fixed
+
+- Report error if fail to export image. (#18)
+- Fix internal state when toggling 100% zoom.
+
 ## [1.3.0] - 2018-09-16
 
 ### Added
@@ -85,7 +92,8 @@
 
 - Initial release.
 
-[Unreleased]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.3.0...master
+[Unreleased]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.3.1...master
+[1.3.0]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.0.0...v1.1.0
