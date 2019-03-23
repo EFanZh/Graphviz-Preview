@@ -13,7 +13,7 @@
 
 ### Added
 
-- Support exporting image of formats other than SVG. Currently, PDF and PNG support are added. (#14).
+- Support exporting image of formats other than SVG. Currently, PDF and PNG support are added. (#14)
 
 ### Fixed
 
