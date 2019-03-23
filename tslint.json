@@ -1,6 +1,5 @@
 {
     "$schema": "http://json.schemastore.org/tslint",
-    "defaultSeverity": "warning",
     "extends": "tslint:latest",
     "rules": {
         "class-name": true,
@@ -15,9 +14,7 @@
         },
         "no-duplicate-variable": true,
         "no-implicit-dependencies": {
-            "options": [
-                "dev"
-            ]
+            "options": "dev"
         },
         "no-string-throw": true,
         "no-submodule-imports": false,

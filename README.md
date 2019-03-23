@@ -1,5 +1,7 @@
 # Graphviz Preview
 
+[![Build Status](https://travis-ci.com/EFanZh/Graphviz-Preview.svg?branch=master)](https://travis-ci.com/EFanZh/Graphviz-Preview)
+
 An extension for Visual Studio Code to preview Graphviz (DOT) files.
 
 ![Graphviz Preview screenshot](resources/screenshot.png)
@@ -57,7 +59,7 @@ To set the `graphvizPreview.dotPath` option, go to File → Preference → Setti
 - [x] Report error if the source is invalid.
 - [x] Apply configuration change without restart.
 - [x] Allow user to manipulate preview with keyboard.
-- [ ] Add CI integration.
+- [x] Add CI integration.
 - [ ] Add animation for zooming.
 - [x] Take a new screenshot.
 - [ ] Allow user to configure the default zoom mode.

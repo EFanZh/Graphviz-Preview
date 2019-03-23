@@ -54,9 +54,9 @@ export function getEngine(): IEngine {
                         workingDir,
                         source
                     ).then((value) => {
-                        let [exitCode, , stderr] = value;
+                        const [exitCode, , stderr] = value;
 
-                        if (exitCode != 0) {
+                        if (exitCode !== 0) {
                             throw new Error(stderr.trim());
                         }
                     });

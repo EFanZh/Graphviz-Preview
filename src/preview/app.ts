@@ -6,7 +6,9 @@ function rawParseSvg(image: string): Document {
     return theXmlParser.parseFromString(image, "image/svg+xml");
 }
 
-const theDefaultImage = rawParseSvg('<svg xmlns="http://www.w3.org/2000/svg" width="100px" height="100px"></svg>').documentElement as Element as SVGSVGElement;
+const theDefaultImage = rawParseSvg(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="100px" height="100px"></svg>'
+).documentElement as Element as SVGSVGElement;
 
 export interface IAppEventListener extends IViewEventListener {
     onImageChanged(image: SVGSVGElement): void;
