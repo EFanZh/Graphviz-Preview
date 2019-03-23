@@ -80,6 +80,13 @@
     "activationEvents": [
         "onCommand:graphviz.showPreview"
     ],
+    "badges": [
+        {
+            "url": "https://travis-ci.com/EFanZh/Graphviz-Preview.svg?branch=master",
+            "href": "https://travis-ci.com/EFanZh/Graphviz-Preview",
+            "description": "Build Status"
+        }
+    ],
     "devDependencies": {
         "@types/mocha": "^5.2.6",
         "@types/node": "^10.2",
