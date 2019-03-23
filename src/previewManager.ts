@@ -108,11 +108,12 @@ export class PreviewManager {
             async (message) => {
                 switch (message.type) {
                     case "export":
-                        await this.exportImage(
-                            document.getText(),
-                            message.image,
-                            documentDir
-                        );
+                        try {
+                            await this.exportImage(document.getText(), message.image, documentDir);
+                        }
+                        catch (error) {
+                            await vscode.window.showErrorMessage(error.message);
+                        }
 
                         break;
                 }

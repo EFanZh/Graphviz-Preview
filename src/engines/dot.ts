@@ -53,8 +53,12 @@ export function getEngine(): IEngine {
                         ["-T", format, "-o", filePath],
                         workingDir,
                         source
-                    ).then(() => {
-                        // Do nothing.
+                    ).then((value) => {
+                        let [exitCode, , stderr] = value;
+
+                        if (exitCode != 0) {
+                            throw new Error(stderr.trim());
+                        }
                     });
                 }
             } else {
