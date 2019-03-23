@@ -1,10 +1,14 @@
 language: node_js
 node_js:
   - 10.2
-os:
-  - linux
-  - osx
-  - windows
+matrix:
+    include:
+      - os: linux
+        script: xvfb-run npm test
+      - os: osx
+        script: npm test
+      - os: windows
+        script: npm test
 dist: xenial
 notifications:
     email: false
