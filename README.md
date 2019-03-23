@@ -68,6 +68,8 @@ To set the `graphvizPreview.dotPath` option, go to File → Preference → Setti
 - [ ] Support previewing source containing multiple graphs.
 - [ ] Design a better icon.
 - [ ] Apply [Content Security Policy](https://en.wikipedia.org/wiki/Content_Security_Policy) to webview.
+- [ ] Support specifing a command-line array for the “dotPath” configuration so that we can use a wrapper for the “dot”
+      program.
 
 ## Known issues
 
