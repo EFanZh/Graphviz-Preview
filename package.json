@@ -99,10 +99,10 @@
         "@types/mocha": "^5.2",
         "@types/node": "^10.2",
         "concurrently": "^4.1",
-        "tslint": "^5.14",
-        "typescript": "^3.3",
+        "tslint": "^5.16",
+        "typescript": "^3.4",
         "vscode": "^1.1.33",
-        "webpack": "^4.29",
+        "webpack": "^4.30",
         "webpack-cli": "^3.3"
     },
     "scripts": {
