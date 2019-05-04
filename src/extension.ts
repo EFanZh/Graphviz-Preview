@@ -4,7 +4,7 @@ import * as engines from "./engines";
 import { PreviewManager } from "./previewManager";
 import * as utilities from "./utilities";
 
-const previewCommand = "graphviz.showPreview";
+const previewCommand = "graphviz.showPreviewToSide";
 
 // Extension interfaces.
 
@@ -19,7 +19,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
                 const activeTextEditor = vscode.window.activeTextEditor;
 
                 if (activeTextEditor !== undefined) {
-                    previewManager.showPreview(activeTextEditor);
+                    previewManager.showPreviewToSide(activeTextEditor);
                 }
             }
         ),

@@ -16,7 +16,7 @@ You can install this extension from the
 ### Open preview
 
 Open the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) (usually by
-pressing <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd>), then select “Graphviz: Show Preview”.
+pressing <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd>), then select “Graphviz: Open Preview to the Side”.
 
 ### Manipulate preview
 
@@ -42,8 +42,8 @@ To export the generated graph, click the “Export” button on the top right co
 
 ## Configuration
 
-| Configuration             | Type               | Description                                                                                                                                       |
-| ------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Configuration             | Type               | Description                                                                                                                                   |
+| ------------------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | `graphvizPreview.dotPath` | `string` \| `null` | `null` means to use the “dot” program in your `PATH` environment variable, or a `string` value to indicate the “dot” program you want to use. |
 | `graphvizPreview.engine`  | `"dot"` \| `null`  | The layout engine to use. `null` means to use the “dot” layout engine. Currently, only the “dot” engine is supported.                         |
 

@@ -40,7 +40,7 @@ export class PreviewManager {
         this.previewContent = template.replace(/\{preview-dir\}/g, uriToVscodeResource(this.previewDirUri));
     }
 
-    public async showPreview(editor: vscode.TextEditor): Promise<void> {
+    public async showPreviewToSide(editor: vscode.TextEditor): Promise<void> {
         const document = editor.document;
         const context = this.previewContexts.get(document);
 

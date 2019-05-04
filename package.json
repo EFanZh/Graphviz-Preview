@@ -33,8 +33,8 @@
         ],
         "commands": [
             {
-                "command": "graphviz.showPreview",
-                "title": "Show Preview",
+                "command": "graphviz.showPreviewToSide",
+                "title": "Open Preview to the Side",
                 "category": "Graphviz",
                 "icon": {
                     "dark": "resources/show-preview-dark.svg",
@@ -70,7 +70,7 @@
         "menus": {
             "editor/title": [
                 {
-                    "command": "graphviz.showPreview",
+                    "command": "graphviz.showPreviewToSide",
                     "group": "navigation",
                     "when": "editorLangId == dot"
                 }
@@ -78,15 +78,15 @@
         },
         "keybindings": [
             {
-                "command": "graphviz.showPreview",
-                "key": "ctrl+shift+v",
-                "mac": "cmd+shift+v",
+                "command": "graphviz.showPreviewToSide",
+                "key": "ctrl+k v",
+                "mac": "cmd+k v",
                 "when": "editorLangId == dot"
             }
         ]
     },
     "activationEvents": [
-        "onCommand:graphviz.showPreview"
+        "onCommand:graphviz.showPreviewToSide"
     ],
     "badges": [
         {
