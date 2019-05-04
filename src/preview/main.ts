@@ -218,25 +218,26 @@ onReady(() => {
 
         workspaceElement.addEventListener("click", (ev) => {
             if (ev.detail % 2 === 0) {
-                theApp.toggleOverview(ev.offsetX, ev.offsetY);
+                theApp.toggleOverview(ev.clientX, ev.clientY);
             }
         });
 
         workspaceElement.addEventListener("wheel", (ev) => {
             if (ev.deltaY < 0) {
-                theApp.zoomIn(ev.offsetX, ev.offsetY);
+                theApp.zoomIn(ev.clientX, ev.clientY);
             } else {
-                theApp.zoomOut(ev.offsetX, ev.offsetY);
+                theApp.zoomOut(ev.clientX, ev.clientY);
             }
         });
 
         workspaceElement.addEventListener("pointerdown", (ev) => {
-            const handler = theApp.beginDrag(ev.offsetX, ev.offsetY);
-            const pointerMoveListener = (ev1: PointerEvent) => handler(ev1.offsetX, ev1.offsetY);
+            const handler = theApp.beginDrag(ev.clientX, ev.clientY);
+            const pointerMoveListener = (ev1: PointerEvent) => handler(ev1.clientX, ev1.clientY);
 
             const pointerUpListener = () => {
                 workspaceElement.removeEventListener("pointermove", pointerMoveListener);
                 workspaceElement.removeEventListener("pointerup", pointerUpListener);
+                workspaceElement.releasePointerCapture(ev.pointerId);
                 workspaceElement.style.cursor = "";
             };
 
