@@ -75,7 +75,15 @@
                     "when": "editorLangId == dot"
                 }
             ]
-        }
+        },
+        "keybindings": [
+            {
+                "command": "graphviz.showPreview",
+                "key": "ctrl+shift+v",
+                "mac": "cmd+shift+v",
+                "when": "editorLangId == dot"
+            }
+        ]
     },
     "activationEvents": [
         "onCommand:graphviz.showPreview"
