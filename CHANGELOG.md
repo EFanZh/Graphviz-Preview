@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- Rename “Show Preview” to “Open Preview to the Side”.
+- Add a key binding for preview.
+- Prepare to support opening hyperlinks in preview.
+
 ## [1.3.1] - 2019-03-23
 
 ### Fixed
