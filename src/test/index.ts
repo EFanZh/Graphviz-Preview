@@ -1,7 +1,7 @@
 import * as testRunner from "vscode/lib/testrunner";
 
 testRunner.configure({
-    timeout: 60000,
+    timeout: 120000,
     ui: "tdd",
     useColors: true
 });
