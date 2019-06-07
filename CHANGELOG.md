@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+## [1.3.3] - 2019-06-07
+
+### Fixed
+
+- Opening hyperlinks now works in the latest Visual Studio Code. (#19)
+
+### Changed
+
+- Only show base name in the preview title. (#20)
+
 ## [1.3.2] - 2019-05-11
 
 ### Added
@@ -103,7 +113,8 @@
 
 - Initial release.
 
-[Unreleased]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.3.2...master
+[Unreleased]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.3.3...master
+[1.3.3]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.3.2...v1.3.3
 [1.3.2]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.3.1...v1.3.2
 [1.3.1]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.2.0...v1.3.0
