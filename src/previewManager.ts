@@ -84,7 +84,7 @@ export class PreviewManager {
 
         const webviewPanel = vscode.window.createWebviewPanel(
             previewType,
-            `Preview: ${document.fileName}`,
+            `Preview: ${path.basename(document.fileName)}`,
             {
                 preserveFocus: true,
                 viewColumn: column
