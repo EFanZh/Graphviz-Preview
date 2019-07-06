@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Fix zooming anchor position.
+
 ## [1.3.3] - 2019-06-07
 
 ### Fixed
