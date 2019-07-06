@@ -216,23 +216,39 @@ onReady(() => {
 
         // Workspace element.
 
+        function getPointerPosition(event: MouseEvent): [number, number] {
+            const boundingRect = workspaceElement.getBoundingClientRect();
+
+            return [event.clientX - boundingRect.left, event.clientY - boundingRect.top];
+        }
+
         workspaceElement.addEventListener("click", (ev) => {
             if (ev.detail % 2 === 0) {
-                theApp.toggleOverview(ev.clientX, ev.clientY);
+                const [x, y] = getPointerPosition(ev);
+
+                theApp.toggleOverview(x, y);
             }
         });
 
         workspaceElement.addEventListener("wheel", (ev) => {
+            const [x, y] = getPointerPosition(ev);
+
             if (ev.deltaY < 0) {
-                theApp.zoomIn(ev.clientX, ev.clientY);
+                theApp.zoomIn(x, y);
             } else {
-                theApp.zoomOut(ev.clientX, ev.clientY);
+                theApp.zoomOut(x, y);
             }
         });
 
         workspaceElement.addEventListener("pointerdown", (ev) => {
-            const handler = theApp.beginDrag(ev.clientX, ev.clientY);
-            const pointerMoveListener = (ev1: PointerEvent) => handler(ev1.clientX, ev1.clientY);
+            const [x, y] = getPointerPosition(ev);
+            const handler = theApp.beginDrag(x, y);
+
+            const pointerMoveListener = (ev1: PointerEvent) => {
+                const [x1, y1] = getPointerPosition(ev1);
+
+                handler(x1, y1);
+            };
 
             const pointerUpListener = () => {
                 workspaceElement.removeEventListener("pointermove", pointerMoveListener);
