@@ -1,5 +1,5 @@
 import * as assert from "assert";
-import * as model from "../../preview/controller";
+import * as model from "../../../preview/controller";
 
 const floatCheckEpsilon = 1e-12;
 const testRecursionDepth = 7;

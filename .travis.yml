@@ -9,6 +9,8 @@ matrix:
         script: npm test
       - os: windows
         script: npm test
+    allow_failures:
+      - os: windows
 dist: xenial
 notifications:
     email: false
