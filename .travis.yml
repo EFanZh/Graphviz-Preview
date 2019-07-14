@@ -7,6 +7,7 @@ matrix:
         script: xvfb-run npm test
       - os: osx
         script: npm test
+    allow_failures:
       - os: windows
         script: npm test
 dist: xenial
