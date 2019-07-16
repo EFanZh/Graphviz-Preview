@@ -68,10 +68,16 @@ To set the `graphvizPreview.dotPath` option, go to File → Preference → Setti
 - [ ] Support previewing source containing multiple graphs.
 - [ ] Design a better icon.
 - [ ] Apply [Content Security Policy](https://en.wikipedia.org/wiki/Content_Security_Policy) to webview.
-- [ ] Support specifing a command-line array for the “dotPath” configuration so that we can use a wrapper for the “dot”
+- [ ] Support specifying a command-line array for the “dotPath” configuration so that we can use a wrapper for the “dot”
       program.
 
 ## Known issues
 
 - After saving an untitled file, the preview becomes invalid.
 - When the zoom ratio is too large, the graph may be at a wrong position.
+
+## FAQ
+
+- Q: How do I change the layout engine?
+  - A: Graphviz Preview doesn’t support changing the default layout engine for now, but you can add `layout = <engine>`
+    to your source code which has the same effect.
