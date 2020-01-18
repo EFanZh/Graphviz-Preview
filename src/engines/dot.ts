@@ -1,9 +1,9 @@
 import * as path from "path";
 import * as configuration from "../configuration";
-import * as utilities from "../utilities";
-import { IEngine } from "./engine";
+import * as nodeUtilities from "../nodeUtilities";
+import { Engine } from "./engine";
 
-export function getEngine(): IEngine {
+export function getEngine(): Engine {
     const dot = configuration.getNullableConfiguration<string>("dotPath", "dot");
     const args = ["-T", "svg"];
 
@@ -20,7 +20,7 @@ export function getEngine(): IEngine {
     return Object.freeze({
         async renderToSvg(source: string, workingDir: string, cancel: Promise<void>): Promise<string> {
             try {
-                const [exitCode, stdout, stderr] = await utilities.runChildProcess(
+                const [exitCode, stdout, stderr] = await nodeUtilities.runChildProcess(
                     dot,
                     args,
                     workingDir,
@@ -46,9 +46,9 @@ export function getEngine(): IEngine {
 
             if (format) {
                 if (format === "svg") {
-                    return utilities.writeFileAsync(filePath, svgContent);
+                    return nodeUtilities.writeFileAsync(filePath, svgContent);
                 } else {
-                    return utilities.runChildProcess(
+                    return nodeUtilities.runChildProcess(
                         dot,
                         ["-T", format, "-o", filePath],
                         workingDir,

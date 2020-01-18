@@ -3,7 +3,7 @@
     "version": "1.3.4",
     "publisher": "EFanZh",
     "engines": {
-        "vscode": "^1.36.0"
+        "vscode": "^1.41.1"
     },
     "license": "MIT",
     "displayName": "Graphviz Preview",
@@ -96,14 +96,16 @@
         }
     ],
     "devDependencies": {
-        "@types/glob": "7.1.1",
+        "@types/glob": "^7.1.1",
         "@types/mocha": "^5.2.7",
-        "@types/node": "^12.6.2",
-        "@types/vscode": "1.36.0",
+        "@types/node": "^13.1.8",
+        "@types/vscode": "^1.41.0",
+        "@typescript-eslint/eslint-plugin": "^2.16",
+        "@typescript-eslint/parser": "^2.16",
         "concurrently": "^5.0.2",
-        "glob": "7.1.6",
+        "eslint": "^6.8",
+        "glob": "^7.1.6",
         "mocha": "^7.0.0",
-        "tslint": "^5.20.1",
         "typescript": "^3.7.5",
         "vscode-test": "^1.3.0",
         "webpack": "^4.41.5",
@@ -113,8 +115,8 @@
         "vscode:prepublish": "npm run lint && npm run compile",
         "compile": "tsc -p . && webpack",
         "watch": "concurrently --kill-others --allow-restart --restart-after 500 -r \"tsc -p . -w\" \"webpack -w\"",
+        "lint": "eslint src/**/*.ts",
         "pretest": "npm run lint && npm run compile",
-        "lint": "tslint -p .",
         "test": "node ./out/test/runTest.js"
     },
     "icon": "resources/icon.png",

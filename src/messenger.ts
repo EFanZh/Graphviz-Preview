@@ -1,43 +1,45 @@
-export interface IMessagePort<TSend, TReceive> {
+import { ensureValid } from "./utilities";
+
+export interface MessagePort<TSend, TReceive> {
     send(message: TSend): void;
     onReceive(handler: (message: TReceive) => void): void;
 }
 
-interface IRequsetMessage<T> {
+interface RequsetMessage<T> {
     type: "request";
     id: number;
     message: T;
 }
 
-interface IResponseSuccessMessage<T> {
+interface ResponseSuccessMessage<T> {
     type: "success";
     id: number;
     result: T;
 }
 
-interface IResponseFailureMessage {
+interface ResponseFailureMessage {
     type: "failure";
     id: number;
     message: string;
 }
 
-type IResponseMessage<T> = IResponseSuccessMessage<T> | IResponseFailureMessage;
+type ResponseMessage<T> = ResponseSuccessMessage<T> | ResponseFailureMessage;
 
-export type ISendMessage<TRequest1, TResponse2> = IRequsetMessage<TRequest1> | IResponseMessage<TResponse2>;
-export type IReceiveMessage<TResponse1, TRequest2> = IResponseMessage<TResponse1> | IRequsetMessage<TRequest2>;
+export type SendMessage<TRequest1, TResponse2> = RequsetMessage<TRequest1> | ResponseMessage<TResponse2>;
+export type ReceiveMessage<TResponse1, TRequest2> = ResponseMessage<TResponse1> | RequsetMessage<TRequest2>;
 
 type Resolver<T> = (value?: T | PromiseLike<T>) => void;
-type Rejector = (reason?: any) => void;
+type Rejector = (reason?: string) => void;
 
 export function createMessenger<TRequest1, TResponse1, TRequest2, TResponse2>(
-    port: IMessagePort<ISendMessage<TRequest1, TResponse2>, IReceiveMessage<TResponse1, TRequest2>>,
+    port: MessagePort<SendMessage<TRequest1, TResponse2>, ReceiveMessage<TResponse1, TRequest2>>,
     handler: (message: TRequest2) => Promise<TResponse2>
 ): (message: TRequest1) => Promise<TResponse1> {
     const maxIds = 2 ** 50;
     const pendingCalls = new Map<number, [Resolver<TResponse1>, Rejector]>();
     let previousId = - 1;
 
-    async function handleRequest(wrappedMessage: IRequsetMessage<TRequest2>): Promise<void> {
+    async function handleRequest(wrappedMessage: RequsetMessage<TRequest2>): Promise<void> {
         const { id, message } = wrappedMessage;
 
         try {
@@ -55,8 +57,8 @@ export function createMessenger<TRequest1, TResponse1, TRequest2, TResponse2>(
         }
     }
 
-    async function handleResponse(wrappedMessage: IResponseMessage<TResponse1>): Promise<void> {
-        const [resolver, rejector] = pendingCalls.get(wrappedMessage.id)!;
+    async function handleResponse(wrappedMessage: ResponseMessage<TResponse1>): Promise<void> {
+        const [resolver, rejector] = ensureValid(pendingCalls.get(wrappedMessage.id));
 
         pendingCalls.delete(wrappedMessage.id);
 
@@ -87,7 +89,7 @@ export function createMessenger<TRequest1, TResponse1, TRequest2, TResponse2>(
 
     async function send(message: TRequest1): Promise<TResponse1> {
         return new Promise<TResponse1>((resolve, reject) => {
-            const wrappedMessage: IRequsetMessage<TRequest1> = {
+            const wrappedMessage: RequsetMessage<TRequest1> = {
                 id: generateId(),
                 message,
                 type: "request"

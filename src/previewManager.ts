@@ -2,21 +2,21 @@ import * as path from "path";
 import * as vscode from "vscode";
 import * as engines from "./engines";
 import { ExtensionRequest, ExtensionResponse, PreviewRequest, PreviewResponse } from "./messages";
-import { createMessenger, IMessagePort, IReceiveMessage, ISendMessage } from "./messenger";
+import { createMessenger, MessagePort, ReceiveMessage, SendMessage } from "./messenger";
 import { createScheduler } from "./scheduler";
 
 const previewType = "graphviz.preview";
 
 class PreviewPort implements
-    IMessagePort<ISendMessage<PreviewRequest, ExtensionResponse>, IReceiveMessage<PreviewResponse, ExtensionRequest>> {
+    MessagePort<SendMessage<PreviewRequest, ExtensionResponse>, ReceiveMessage<PreviewResponse, ExtensionRequest>> {
     public constructor(private readonly view: vscode.Webview) {
     }
 
-    public send(message: ISendMessage<PreviewRequest, ExtensionResponse>): void {
+    public send(message: SendMessage<PreviewRequest, ExtensionResponse>): void {
         this.view.postMessage(message);
     }
 
-    public onReceive(handler: (message: IReceiveMessage<PreviewResponse, ExtensionRequest>) => void): void {
+    public onReceive(handler: (message: ReceiveMessage<PreviewResponse, ExtensionRequest>) => void): void {
         this.view.onDidReceiveMessage(handler);
     }
 }
@@ -25,7 +25,7 @@ function uriToVscodeResource(uri: vscode.Uri): string {
     return uri.with({ scheme: "vscode-resource" }).toString(true);
 }
 
-interface IPreviewContext {
+interface PreviewContext {
     readonly webviewPanel: vscode.WebviewPanel;
     readonly updatePreview: () => void;
 }
@@ -33,7 +33,7 @@ interface IPreviewContext {
 export class PreviewManager {
     private readonly previewDirUri: vscode.Uri;
     private readonly previewContent: string;
-    private readonly previewContexts = new WeakMap<vscode.TextDocument, IPreviewContext>();
+    private readonly previewContexts = new WeakMap<vscode.TextDocument, PreviewContext>();
 
     public constructor(context: vscode.ExtensionContext, template: string) {
         this.previewDirUri = vscode.Uri.file(context.asAbsolutePath("out/preview"));
@@ -73,7 +73,7 @@ export class PreviewManager {
         }
     }
 
-    private async createPreview(document: vscode.TextDocument, column: vscode.ViewColumn): Promise<IPreviewContext> {
+    private async createPreview(document: vscode.TextDocument, column: vscode.ViewColumn): Promise<PreviewContext> {
         const documentDir = path.dirname(document.fileName);
         const documentDirUri = vscode.Uri.file(documentDir);
         const localResourceRoots = [this.previewDirUri, documentDirUri];
@@ -133,7 +133,7 @@ export class PreviewManager {
 
         // Add event handlers.
 
-        const updatePreview = () => scheduler(document.getText());
+        const updatePreview = (): void => scheduler(document.getText());
 
         webviewPanel.onDidDispose(() => this.previewContexts.delete(document));
 
