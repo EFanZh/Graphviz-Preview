@@ -72,6 +72,7 @@ To set the `graphvizPreview.dotPath` option, go to File → Preference → Setti
       program.
 - [ ] Fix [`no-explicit-any`](https://github.com/typescript-eslint/typescript-eslint/blob/master/packages/eslint-plugin/docs/rules/no-explicit-any.md) errors.
 - [ ] Fix [`no-use-before-define`](https://github.com/typescript-eslint/typescript-eslint/blob/master/packages/eslint-plugin/docs/rules/no-use-before-define.md) errors.
+- [ ] Fix keyboard shortcut when toolbar buttons have focus.
 
 ## Known issues
 
