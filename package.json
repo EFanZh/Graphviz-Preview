@@ -105,7 +105,6 @@
         "mocha": "^7.0.0",
         "tslint": "^5.20.1",
         "typescript": "^3.7.5",
-        "vscode": "^1.1.36",
         "vscode-test": "^1.3.0",
         "webpack": "^4.41.5",
         "webpack-cli": "^3.3.10"
