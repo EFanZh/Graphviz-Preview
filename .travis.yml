@@ -4,6 +4,8 @@ node_js:
 matrix:
     include:
       - os: linux
+        before_install:
+          - sudo apt-get install --no-install-recommends -y libsecret-1-0
         script: xvfb-run npm test
       - os: osx
         script: npm test
