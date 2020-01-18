@@ -5,15 +5,23 @@ const floatCheckEpsilon = 1e-12;
 const testRecursionDepth = 7;
 const defaultNormalZoom = 2;
 
+function assertEqual(actual: number, expected: number): void {
+    assert.equal(actual, expected);
+}
+
+function assertAlmostEqual(actual: number, expected: number): void {
+    assert(Math.abs(actual - expected) < floatCheckEpsilon, `Actual: ${actual}, Expected: ${expected}.`);
+}
+
 class FakeView {
     private widthValue: number;
     private heightValue: number;
     private contentWidthValue: number;
     private contentHeightValue: number;
     private contentMarginValue: number;
-    private contentXValue: number = -1;
-    private contentYValue: number = -1;
-    private zoomValue: number = -1;
+    private contentXValue = -1;
+    private contentYValue = -1;
+    private zoomValue = -1;
     private zoomModeValue: model.ZoomMode = model.ZoomMode.Fixed;
     private controller: model.Controller;
 
@@ -33,7 +41,7 @@ class FakeView {
         this.contentHeightValue = contentHeight;
         this.contentMarginValue = contentMargin;
 
-        const viewEventListener = new class implements model.IViewEventListener {
+        const viewEventListener = new class implements model.ViewEventListener {
             public constructor(private fakeView: FakeView) {
             }
 
@@ -153,16 +161,8 @@ class FakeView {
     }
 }
 
-function assertEqual(actual: number, expected: number): void {
-    assert.equal(actual, expected);
-}
-
-function assertAlmostEqual(actual: number, expected: number): void {
-    assert(Math.abs(actual - expected) < floatCheckEpsilon, `Actual: ${actual}, Expected: ${expected}.`);
-}
-
 function makeCreator(creator: () => FakeView, action: (fakeView: FakeView) => void): () => FakeView {
-    return () => {
+    return (): FakeView => {
         const fakeView = creator();
 
         action(fakeView);
@@ -179,7 +179,7 @@ function saveState(
 ): SavedState {
     const referenceView = referenceViewCreator();
 
-    return (creator: () => FakeView, recursionDepth: number) => {
+    return (creator: () => FakeView, recursionDepth: number): void => {
         const fakeView = creator();
 
         referenceView.resize(fakeView.width, fakeView.height);
@@ -1122,25 +1122,25 @@ suite("Model", function (): void {
     });
 
     test("Create Fit Controller - Upscaling - Fit Horizontal", function (): void {
-        const creator = () => new FakeView(600, 400, 100, 10, 10, 1.1, 10, model.ZoomMode.Fit);
+        const creator = (): FakeView => new FakeView(600, 400, 100, 10, 10, 1.1, 10, model.ZoomMode.Fit);
 
         checkFitStateWithSavedZoom(creator, creator().zoom, testRecursionDepth);
     });
 
     test("Create Fit Controller - Upscaling - Fit Vertical", function (): void {
-        const creator = () => new FakeView(600, 400, 10, 100, 10, 1.1, 10, model.ZoomMode.Fit);
+        const creator = (): FakeView => new FakeView(600, 400, 10, 100, 10, 1.1, 10, model.ZoomMode.Fit);
 
         checkFitStateWithSavedZoom(creator, creator().zoom, testRecursionDepth);
     });
 
     test("Create Fit Controller - Downscaling - Fit Horizontal", function (): void {
-        const creator = () => new FakeView(600, 400, 1000, 100, 10, 1.1, 10, model.ZoomMode.Fit);
+        const creator = (): FakeView => new FakeView(600, 400, 1000, 100, 10, 1.1, 10, model.ZoomMode.Fit);
 
         checkFitStateWithSavedZoom(creator, creator().zoom, testRecursionDepth);
     });
 
     test("Create Fit Controller - Downscaling - Fit Vertical", function (): void {
-        const creator = () => new FakeView(600, 400, 100, 1000, 10, 1.1, 10, model.ZoomMode.Fit);
+        const creator = (): FakeView => new FakeView(600, 400, 100, 1000, 10, 1.1, 10, model.ZoomMode.Fit);
 
         checkFitStateWithSavedZoom(creator, creator().zoom, testRecursionDepth);
     });
@@ -1162,13 +1162,13 @@ suite("Model", function (): void {
     });
 
     test("Create AutoFit Controller - Fit Horizontal", function (): void {
-        const creator = () => new FakeView(600, 400, 581, 380, 10, 1.1, 10, model.ZoomMode.AutoFit);
+        const creator = (): FakeView => new FakeView(600, 400, 581, 380, 10, 1.1, 10, model.ZoomMode.AutoFit);
 
         checkAutoFitFitStateWithSavedZoom(creator, creator().zoom, testRecursionDepth);
     });
 
     test("Create AutoFit Controller - Fit Vertical", function (): void {
-        const creator = () => new FakeView(600, 400, 580, 381, 10, 1.1, 10, model.ZoomMode.AutoFit);
+        const creator = (): FakeView => new FakeView(600, 400, 580, 381, 10, 1.1, 10, model.ZoomMode.AutoFit);
 
         checkAutoFitFitStateWithSavedZoom(creator, creator().zoom, testRecursionDepth);
     });

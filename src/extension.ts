@@ -1,15 +1,15 @@
 import * as vscode from "vscode";
 import * as configuration from "./configuration";
 import * as engines from "./engines";
+import * as nodeUtilities from "./nodeUtilities";
 import { PreviewManager } from "./previewManager";
-import * as utilities from "./utilities";
 
 const previewCommand = "graphviz.showPreviewToSide";
 
 // Extension interfaces.
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
-    const previewHtml = await utilities.readFileAsync(context.asAbsolutePath("resources/preview.html"), "utf8");
+    const previewHtml = await nodeUtilities.readFileAsync(context.asAbsolutePath("resources/preview.html"), "utf8");
     const previewManager = new PreviewManager(context, previewHtml);
 
     context.subscriptions.push(

@@ -1,4 +1,6 @@
-import { Controller, IControllerArchive, IViewEventListener, ZoomMode } from "./controller";
+import { AppArchive } from "../messages";
+import { ensureValid } from "../utilities";
+import { Controller, ViewEventListener, ZoomMode } from "./controller";
 
 const theXmlParser = new DOMParser();
 
@@ -10,7 +12,7 @@ const theDefaultImage = rawParseSvg(
     '<svg xmlns="http://www.w3.org/2000/svg" width="100px" height="100px"></svg>'
 ).documentElement as Element as SVGSVGElement;
 
-export interface IAppEventListener extends IViewEventListener {
+export interface AppEventListener extends ViewEventListener {
     onImageChanged(image: SVGSVGElement): void;
     onStatusChanged(status: string | null): void;
 }
@@ -23,7 +25,7 @@ function parseSVG(image: string): SVGSVGElement | [SVGSVGElement | null, string]
         return rootElement;
     } else {
         const partialSvg = imageDocument.querySelector("svg");
-        const errorMessage = imageDocument.querySelector("parsererror>div")!.textContent!;
+        const errorMessage = ensureValid(ensureValid(imageDocument.querySelector("parsererror>div")).textContent);
 
         return [partialSvg, errorMessage];
     }
@@ -33,14 +35,8 @@ function measureImageSize(svg: SVGSVGElement): [number, number] {
     return [svg.width.baseVal.value, svg.height.baseVal.value];
 }
 
-interface IAppArchive {
-    image: string;
-    status: string | null;
-    controller: IControllerArchive;
-}
-
 export class App {
-    public static create(width: number, height: number, appEventListener: IAppEventListener): App {
+    public static create(width: number, height: number, appEventListener: AppEventListener): App {
         const [imageWidth, imageHeight] = measureImageSize(theDefaultImage);
 
         return new App(
@@ -61,7 +57,7 @@ export class App {
         );
     }
 
-    public static fromArchive(archive: IAppArchive, appEventListener: IAppEventListener): App {
+    public static fromArchive(archive: AppArchive, appEventListener: AppEventListener): App {
         return new App(
             archive.image,
             archive.status,
@@ -79,7 +75,7 @@ export class App {
         private imageValue: string,
         private status: string | null,
         private readonly controller: Controller,
-        private appEventListener: IAppEventListener
+        private appEventListener: AppEventListener
     ) {
     }
 
@@ -184,7 +180,7 @@ export class App {
         this.appEventListener.onStatusChanged(status);
     }
 
-    public serialize(): IAppArchive {
+    public serialize(): AppArchive {
         return {
             controller: this.controller.serialize(),
             image: this.image,

@@ -1,9 +1,11 @@
+import { ensureValid } from "./utilities";
+
 function createCancellationToken(): [Promise<void>, () => void] {
-    let resolver: () => void;
+    let resolver: (() => void) | undefined = undefined;
 
     const result = new Promise<void>((resolve) => resolver = resolve);
 
-    return [result, resolver!];
+    return [result, ensureValid<() => void>(resolver)]; // How to remove the type annotation?
 }
 
 export function createScheduler<TArgs extends any[], TResult, TError>(
@@ -16,7 +18,7 @@ export function createScheduler<TArgs extends any[], TResult, TError>(
     // The running task queue.
     const q = [] as Array<() => void>;
 
-    return async (...args: TArgs) => {
+    return async (...args: TArgs): Promise<void> => {
         const [cancelPromise, cancel] = createCancellationToken();
 
         if (q.length < maxConcurrentTasks) {
@@ -35,9 +37,9 @@ export function createScheduler<TArgs extends any[], TResult, TError>(
         try {
             const result = await executer(cancelPromise, ...args);
 
-            resolveAction = () => resolve(result);
+            resolveAction = (): void => resolve(result);
         } catch (error) {
-            resolveAction = () => reject(error);
+            resolveAction = (): void => reject(error);
         }
 
         // Get the index of the current task in the task queue.

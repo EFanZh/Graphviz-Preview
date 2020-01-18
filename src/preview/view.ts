@@ -16,7 +16,7 @@ function fit(
     }
 }
 
-export interface IView {
+export interface View {
     readonly width: number;
     readonly height: number;
     readonly contentWidth: number;
@@ -29,7 +29,7 @@ export interface IView {
     readonly isCenter: boolean;
 }
 
-export abstract class FixedView implements IView {
+export abstract class FixedView implements View {
     public abstract readonly zoom: number;
 
     protected constructor(
@@ -86,8 +86,8 @@ export abstract class FixedView implements IView {
     }
 }
 
-export interface IViewArchive {
-    type: "View";
+export interface ViewMetricsArchive {
+    type: "ViewMetrics";
     width: number;
     height: number;
     contentWidth: number;
@@ -98,21 +98,21 @@ export interface IViewArchive {
     zoom: number;
 }
 
-export class View extends FixedView {
+export class ViewMetrics extends FixedView {
     public static createFit(
         width: number,
         height: number,
         contentWidth: number,
         contentHeight: number,
         contentMargin: number
-    ): View {
+    ): ViewMetrics {
         const [x, y, zoom] = fit(width, height, contentWidth, contentHeight, contentMargin);
 
-        return new View(width, height, contentWidth, contentHeight, contentMargin, x, y, zoom);
+        return new ViewMetrics(width, height, contentWidth, contentHeight, contentMargin, x, y, zoom);
     }
 
-    public static fromArchive(archive: IViewArchive): View {
-        return new View(
+    public static fromArchive(archive: ViewMetricsArchive): ViewMetrics {
+        return new ViewMetrics(
             archive.width,
             archive.height,
             archive.contentWidth,
@@ -155,7 +155,7 @@ export class View extends FixedView {
         this.zoom = zoom;
     }
 
-    public serialize(): IViewArchive {
+    public serialize(): ViewMetricsArchive {
         return {
             contentHeight: this.contentHeight,
             contentMargin: this.contentMargin,
@@ -163,14 +163,14 @@ export class View extends FixedView {
             contentX: this.contentX,
             contentY: this.contentY,
             height: this.height,
-            type: "View",
+            type: "ViewMetrics",
             width: this.width,
             zoom: this.zoom
         };
     }
 }
 
-export interface IIdentityViewArchive {
+export interface IdentityViewArchive {
     type: "IdentityView";
     width: number;
     height: number;
@@ -200,7 +200,7 @@ export class IdentityView extends FixedView {
         );
     }
 
-    public static fromArchive(archive: IIdentityViewArchive): IdentityView {
+    public static fromArchive(archive: IdentityViewArchive): IdentityView {
         return new IdentityView(
             archive.width,
             archive.height,
@@ -226,8 +226,8 @@ export class IdentityView extends FixedView {
         super(width, height, contentWidth, contentHeight, contentMargin, contentX, contentY, false, true);
     }
 
-    public zoomTo(x: number, y: number, zoom: number): View {
-        return new View(
+    public zoomTo(x: number, y: number, zoom: number): ViewMetrics {
+        return new ViewMetrics(
             this.width,
             this.height,
             this.contentWidth,
@@ -239,7 +239,7 @@ export class IdentityView extends FixedView {
         );
     }
 
-    public serialize(): IIdentityViewArchive {
+    public serialize(): IdentityViewArchive {
         return {
             contentHeight: this.contentHeight,
             contentMargin: this.contentMargin,
@@ -253,7 +253,7 @@ export class IdentityView extends FixedView {
     }
 }
 
-export interface IFitViewArchive {
+export interface FitViewArchive {
     type: "FitView";
     width: number;
     height: number;
@@ -262,8 +262,8 @@ export interface IFitViewArchive {
     contentMargin: number;
 }
 
-export class FitView implements IView {
-    public static fromArchive(archive: IFitViewArchive): FitView {
+export class FitView implements View {
+    public static fromArchive(archive: FitViewArchive): FitView {
         return new FitView(
             archive.width,
             archive.height,
@@ -350,8 +350,8 @@ export class FitView implements IView {
         this.fit();
     }
 
-    public zoomTo(x: number, y: number, zoom: number): View {
-        return new View(
+    public zoomTo(x: number, y: number, zoom: number): ViewMetrics {
+        return new ViewMetrics(
             this.width,
             this.height,
             this.contentWidth,
@@ -363,8 +363,8 @@ export class FitView implements IView {
         );
     }
 
-    public moveTo(x: number, y: number): View {
-        return new View(
+    public moveTo(x: number, y: number): ViewMetrics {
+        return new ViewMetrics(
             this.width,
             this.height,
             this.contentWidth,
@@ -418,7 +418,7 @@ export class FitView implements IView {
         );
     }
 
-    public serialize(): IFitViewArchive {
+    public serialize(): FitViewArchive {
         return {
             contentHeight: this.contentHeight,
             contentMargin: this.contentMargin,
@@ -440,7 +440,7 @@ export class FitView implements IView {
     }
 }
 
-export interface IIdentityCenterViewArchive {
+export interface IdentityCenterViewArchive {
     type: "IdentityCenterView";
     width: number;
     height: number;
@@ -449,8 +449,8 @@ export interface IIdentityCenterViewArchive {
     contentMargin: number;
 }
 
-export class IdentityCenterView implements IView {
-    public static fromArchive(archive: IIdentityCenterViewArchive): IdentityCenterView {
+export class IdentityCenterView implements View {
+    public static fromArchive(archive: IdentityCenterViewArchive): IdentityCenterView {
         return new IdentityCenterView(
             archive.width,
             archive.height,
@@ -535,8 +535,8 @@ export class IdentityCenterView implements IView {
         );
     }
 
-    public zoomTo(x: number, y: number, zoom: number): View {
-        return new View(
+    public zoomTo(x: number, y: number, zoom: number): ViewMetrics {
+        return new ViewMetrics(
             this.width,
             this.height,
             this.contentWidth,
@@ -560,7 +560,7 @@ export class IdentityCenterView implements IView {
         return new FitView(this.width, this.height, width, height, this.contentMargin);
     }
 
-    public serialize(): IIdentityCenterViewArchive {
+    public serialize(): IdentityCenterViewArchive {
         return {
             contentHeight: this.contentHeight,
             contentMargin: this.contentMargin,

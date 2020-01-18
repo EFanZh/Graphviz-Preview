@@ -1,8 +1,8 @@
 import * as configuration from "../configuration";
 import * as dot from "./dot";
-import { IEngine } from "./engine";
+import { Engine } from "./engine";
 
-function getCurrentEngine(): IEngine {
+function getCurrentEngine(): Engine {
     const engineName = configuration.getNullableConfiguration("engine", "dot");
 
     switch (engineName) {
@@ -15,7 +15,7 @@ function getCurrentEngine(): IEngine {
 
 let currentEngineInstance = getCurrentEngine();
 
-export const currentEngine: IEngine = Object.freeze({
+export const currentEngine: Engine = Object.freeze({
     renderToSvg(source: string, workingDir: string, cancel: Promise<void>): Promise<string> {
         return currentEngineInstance.renderToSvg(source, workingDir, cancel);
     },

@@ -1,16 +1,16 @@
 language: node_js
 node_js:
-  - 10.11
+  - 12.4
 matrix:
     include:
       - os: linux
+        before_install:
+          - sudo apt-get install --no-install-recommends -y libsecret-1-0
         script: xvfb-run npm test
       - os: osx
         script: npm test
       - os: windows
         script: npm test
-    allow_failures:
-      - os: windows
-dist: xenial
+dist: bionic
 notifications:
     email: false

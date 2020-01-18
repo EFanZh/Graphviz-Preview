@@ -1,15 +1,4 @@
-import {
-    FitView,
-    FixedView,
-    IdentityCenterView,
-    IdentityView,
-    IFitViewArchive,
-    IIdentityCenterViewArchive,
-    IIdentityViewArchive,
-    IView,
-    IViewArchive,
-    View
-} from "./view";
+import { FitView, FitViewArchive, FixedView, IdentityCenterView, IdentityCenterViewArchive, IdentityView, IdentityViewArchive, View, ViewMetrics, ViewMetricsArchive } from "./view";
 
 const defaultNormalZoom = 2;
 
@@ -22,7 +11,7 @@ function hasEnoughSpace(
     return contentWidth < availableWidth && contentHeight < availableHeight;
 }
 
-function viewHasEnoughSpace(view: IView): boolean {
+function viewHasEnoughSpace(view: View): boolean {
     const contentMargin = view.contentMargin * 2;
 
     return hasEnoughSpace(
@@ -33,13 +22,13 @@ function viewHasEnoughSpace(view: IView): boolean {
     );
 }
 
-function viewHasEnoughSpaceWithContentSize(view: IView, contentWidth: number, contentHeight: number): boolean {
+function viewHasEnoughSpaceWithContentSize(view: View, contentWidth: number, contentHeight: number): boolean {
     const contentMargin = view.contentMargin * 2;
 
     return hasEnoughSpace(contentWidth, contentHeight, view.width - contentMargin, view.height - contentMargin);
 }
 
-function viewHasEnoughSpaceWithSize(view: IView, width: number, height: number): boolean {
+function viewHasEnoughSpaceWithSize(view: View, width: number, height: number): boolean {
     const contentMargin = view.contentMargin * 2;
 
     return hasEnoughSpace(view.contentWidth, view.contentHeight, width - contentMargin, height - contentMargin);
@@ -51,21 +40,21 @@ export const enum ZoomMode {
     AutoFit
 }
 
-interface IViewState {
-    readonly view: IView;
+interface ViewState {
+    readonly view: View;
     readonly zoomMode: ZoomMode;
 
     moveTo(x: number, y: number): FixedState;
-    resize(width: number, height: number): IViewState;
-    resizeContent(width: number, height: number): IViewState;
-    setZoomMode(zoomMode: ZoomMode): IViewState;
-    toggleOverview(x: number, y: number): IViewState;
+    resize(width: number, height: number): ViewState;
+    resizeContent(width: number, height: number): ViewState;
+    setZoomMode(zoomMode: ZoomMode): ViewState;
+    toggleOverview(x: number, y: number): ViewState;
     zoomTo(x: number, y: number, zoom: number): FixedNormalState;
 
     serialize(): StateArchive;
 }
 
-abstract class FixedState implements IViewState {
+abstract class FixedState implements ViewState {
     public static fromArchive(archive: FixedStateArchive): FixedState {
         switch (archive.type) {
             case "FixedNormalState":
@@ -91,7 +80,7 @@ abstract class FixedState implements IViewState {
                 savedZoom
             );
         } else {
-            return new FixedNormalState(View.createFit(width, height, contentWidth, contentHeight, contentMargin));
+            return new FixedNormalState(ViewMetrics.createFit(width, height, contentWidth, contentHeight, contentMargin));
         }
     }
 
@@ -128,28 +117,28 @@ abstract class FixedState implements IViewState {
         this.view.contentMargin = contentMargin;
     }
 
-    public abstract setZoomMode(zoomMode: ZoomMode): IViewState;
-    public abstract toggleOverview(x: number, y: number): IViewState;
+    public abstract setZoomMode(zoomMode: ZoomMode): ViewState;
+    public abstract toggleOverview(x: number, y: number): ViewState;
     public abstract zoomTo(x: number, y: number, zoom: number): FixedNormalState;
 
     public abstract serialize(): FixedStateArchive;
 }
 
-interface IFixedNormalStateArchive {
+interface FixedNormalStateArchive {
     type: "FixedNormalState";
-    view: IViewArchive;
+    view: ViewMetricsArchive;
 }
 
 class FixedNormalState extends FixedState {
-    public static fromArchive(archive: IFixedNormalStateArchive): FixedNormalState {
-        return new FixedNormalState(View.fromArchive(archive.view));
+    public static fromArchive(archive: FixedNormalStateArchive): FixedNormalState {
+        return new FixedNormalState(ViewMetrics.fromArchive(archive.view));
     }
 
-    public constructor(public readonly view: View) {
+    public constructor(public readonly view: ViewMetrics) {
         super();
     }
 
-    public setZoomMode(zoomMode: ZoomMode): IViewState {
+    public setZoomMode(zoomMode: ZoomMode): ViewState {
         switch (zoomMode) {
             case ZoomMode.Fixed:
                 return this;
@@ -170,7 +159,7 @@ class FixedNormalState extends FixedState {
         return this;
     }
 
-    public serialize(): IFixedNormalStateArchive {
+    public serialize(): FixedNormalStateArchive {
         return {
             type: "FixedNormalState",
             view: this.view.serialize()
@@ -178,14 +167,14 @@ class FixedNormalState extends FixedState {
     }
 }
 
-interface IFixed100PercentStateArchive {
+interface Fixed100PercentStateArchive {
     type: "Fixed100PercentState";
-    view: IIdentityViewArchive;
+    view: IdentityViewArchive;
     savedZoom: number;
 }
 
 class Fixed100PercentState extends FixedState {
-    public static fromArchive(archive: IFixed100PercentStateArchive): Fixed100PercentState {
+    public static fromArchive(archive: Fixed100PercentStateArchive): Fixed100PercentState {
         return new Fixed100PercentState(IdentityView.fromArchive(archive.view), archive.savedZoom);
     }
 
@@ -193,7 +182,7 @@ class Fixed100PercentState extends FixedState {
         super();
     }
 
-    public setZoomMode(zoomMode: ZoomMode): IViewState {
+    public setZoomMode(zoomMode: ZoomMode): ViewState {
         switch (zoomMode) {
             case ZoomMode.Fixed:
                 return this;
@@ -212,7 +201,7 @@ class Fixed100PercentState extends FixedState {
         return new FixedNormalState(this.view.zoomTo(x, y, zoom));
     }
 
-    public serialize(): IFixed100PercentStateArchive {
+    public serialize(): Fixed100PercentStateArchive {
         return {
             savedZoom: this.savedZoom,
             type: "Fixed100PercentState",
@@ -221,17 +210,17 @@ class Fixed100PercentState extends FixedState {
     }
 }
 
-type FixedStateArchive = IFixedNormalStateArchive | IFixed100PercentStateArchive;
+type FixedStateArchive = FixedNormalStateArchive | Fixed100PercentStateArchive;
 
-interface IFitStateArchive {
+interface FitStateArchive {
     type: "FitState";
-    view: IFitViewArchive;
+    view: FitViewArchive;
     savedState: FixedStateArchive | undefined;
     savedZoom: number;
 }
 
-class FitState implements IViewState {
-    public static fromArchive(archive: IFitStateArchive): FitState {
+class FitState implements ViewState {
+    public static fromArchive(archive: FitStateArchive): FitState {
         return new FitState(
             FitView.fromArchive(archive.view),
             archive.savedState === undefined ? undefined : FixedState.fromArchive(archive.savedState),
@@ -264,7 +253,7 @@ class FitState implements IViewState {
         return this;
     }
 
-    public setZoomMode(zoomMode: ZoomMode): IViewState {
+    public setZoomMode(zoomMode: ZoomMode): ViewState {
         switch (zoomMode) {
             case ZoomMode.Fixed:
                 if (this.savedState === undefined) {
@@ -302,7 +291,7 @@ class FitState implements IViewState {
         return new FixedNormalState(this.view.zoomTo(x, y, zoom));
     }
 
-    public serialize(): IFitStateArchive {
+    public serialize(): FitStateArchive {
         return {
             savedState: this.savedState === undefined ? undefined : this.savedState.serialize(),
             savedZoom: this.savedZoom,
@@ -312,7 +301,7 @@ class FitState implements IViewState {
     }
 }
 
-abstract class AutoFitState implements IViewState {
+abstract class AutoFitState implements ViewState {
     public static create(
         width: number,
         height: number,
@@ -354,8 +343,8 @@ abstract class AutoFitState implements IViewState {
     public abstract moveTo(x: number, y: number): FixedState;
     public abstract resize(width: number, height: number): AutoFitState;
     public abstract resizeContent(width: number, height: number): AutoFitState;
-    public abstract setZoomMode(zoomMode: ZoomMode): IViewState;
-    public abstract toggleOverview(x: number, y: number): IViewState;
+    public abstract setZoomMode(zoomMode: ZoomMode): ViewState;
+    public abstract toggleOverview(x: number, y: number): ViewState;
 
     public zoomTo(x: number, y: number, zoom: number): FixedNormalState {
         return new FixedNormalState(this.view.zoomTo(x, y, zoom));
@@ -364,15 +353,15 @@ abstract class AutoFitState implements IViewState {
     public abstract serialize(): AutoFitStateArchive;
 }
 
-interface IAutoFit100PercentStateArchive {
+interface AutoFit100PercentStateArchive {
     type: "AutoFit100PercentState";
-    view: IIdentityCenterViewArchive;
+    view: IdentityCenterViewArchive;
     savedState: FixedStateArchive | undefined;
     savedZoom: number;
 }
 
 class AutoFit100PercentState extends AutoFitState {
-    public static fromArchive(archive: IAutoFit100PercentStateArchive): AutoFit100PercentState {
+    public static fromArchive(archive: AutoFit100PercentStateArchive): AutoFit100PercentState {
         return new AutoFit100PercentState(
             IdentityCenterView.fromArchive(archive.view),
             archive.savedState === undefined ? undefined : FixedState.fromArchive(archive.savedState),
@@ -412,7 +401,7 @@ class AutoFit100PercentState extends AutoFitState {
         }
     }
 
-    public setZoomMode(zoomMode: ZoomMode): IViewState {
+    public setZoomMode(zoomMode: ZoomMode): ViewState {
         switch (zoomMode) {
             case ZoomMode.Fixed:
                 if (this.savedState === undefined) {
@@ -446,7 +435,7 @@ class AutoFit100PercentState extends AutoFitState {
         return new FixedNormalState(this.view.zoomTo(x, y, this.savedZoom));
     }
 
-    public serialize(): IAutoFit100PercentStateArchive {
+    public serialize(): AutoFit100PercentStateArchive {
         return {
             savedState: this.savedState === undefined ? undefined : this.savedState.serialize(),
             savedZoom: this.savedZoom,
@@ -456,15 +445,15 @@ class AutoFit100PercentState extends AutoFitState {
     }
 }
 
-interface IAutoFitFitStateArchive {
+interface AutoFitFitStateArchive {
     type: "AutoFitFitState";
-    view: IFitViewArchive;
+    view: FitViewArchive;
     savedState: FixedStateArchive | undefined;
     savedZoom: number;
 }
 
 class AutoFitFitState extends AutoFitState {
-    public static fromArchive(archive: IAutoFitFitStateArchive): AutoFitFitState {
+    public static fromArchive(archive: AutoFitFitStateArchive): AutoFitFitState {
         return new AutoFitFitState(
             FitView.fromArchive(archive.view),
             archive.savedState === undefined ? undefined : FixedState.fromArchive(archive.savedState),
@@ -512,7 +501,7 @@ class AutoFitFitState extends AutoFitState {
         }
     }
 
-    public setZoomMode(zoomMode: ZoomMode): IViewState {
+    public setZoomMode(zoomMode: ZoomMode): ViewState {
         switch (zoomMode) {
             case ZoomMode.Fixed:
                 if (this.savedState === undefined) {
@@ -546,7 +535,7 @@ class AutoFitFitState extends AutoFitState {
         return new Fixed100PercentState(this.view.toIdentity(x, y), this.view.zoom);
     }
 
-    public serialize(): IAutoFitFitStateArchive {
+    public serialize(): AutoFitFitStateArchive {
         return {
             savedState: this.savedState === undefined ? undefined : this.savedState.serialize(),
             savedZoom: this.savedZoom,
@@ -556,15 +545,15 @@ class AutoFitFitState extends AutoFitState {
     }
 }
 
-export interface IViewEventListener {
+export interface ViewEventListener {
     onZoomModeChanged(zoomMode: ZoomMode): void;
     onLayoutChanged(x: number, y: number, width: number, height: number, zoom: number): void;
 }
 
-type AutoFitStateArchive = IAutoFit100PercentStateArchive | IAutoFitFitStateArchive;
-type StateArchive = FixedStateArchive | IFitStateArchive | AutoFitStateArchive;
+type AutoFitStateArchive = AutoFit100PercentStateArchive | AutoFitFitStateArchive;
+type StateArchive = FixedStateArchive | FitStateArchive | AutoFitStateArchive;
 
-function stateFromArchive(archive: StateArchive): IViewState {
+function stateFromArchive(archive: StateArchive): ViewState {
     switch (archive.type) {
         case "FixedNormalState":
             return FixedNormalState.fromArchive(archive);
@@ -579,7 +568,7 @@ function stateFromArchive(archive: StateArchive): IViewState {
     }
 }
 
-export interface IControllerArchive {
+export interface ControllerArchive {
     state: StateArchive;
     zoomStep: number;
     offsetStep: number;
@@ -592,12 +581,12 @@ export class Controller {
         contentWidth: number,
         contentHeight: number,
         contentMargin: number,
-        viewEventListener: IViewEventListener,
+        viewEventListener: ViewEventListener,
         zoomStep: number,
         offsetStep: number,
         zoomMode: ZoomMode
     ): Controller {
-        let state: IViewState;
+        let state: ViewState;
 
         switch (zoomMode) {
             case ZoomMode.Fixed:
@@ -611,10 +600,12 @@ export class Controller {
                 );
                 break;
             case ZoomMode.Fit:
-                const view = new FitView(width, height, contentWidth, contentHeight, contentMargin);
+                {
+                    const view = new FitView(width, height, contentWidth, contentHeight, contentMargin);
 
-                state = new FitState(view, undefined, view.zoom);
-                break;
+                    state = new FitState(view, undefined, view.zoom);
+                    break;
+                }
             case ZoomMode.AutoFit:
                 state = AutoFitState.create(width, height, contentWidth, contentHeight, contentMargin);
                 break;
@@ -625,15 +616,15 @@ export class Controller {
         return new Controller(state, zoomStep, offsetStep, viewEventListener);
     }
 
-    public static fromArchive(archive: IControllerArchive, viewEventListener: IViewEventListener): Controller {
+    public static fromArchive(archive: ControllerArchive, viewEventListener: ViewEventListener): Controller {
         return new Controller(stateFromArchive(archive.state), archive.zoomStep, archive.offsetStep, viewEventListener);
     }
 
     public constructor(
-        private state: IViewState,
+        private state: ViewState,
         private readonly zoomStep: number,
         private readonly offsetStep: number,
-        private readonly viewEventListener: IViewEventListener
+        private readonly viewEventListener: ViewEventListener
     ) {
         this.notifyLayoutChanged();
         this.notifyZoomingModeChanged();
@@ -643,7 +634,7 @@ export class Controller {
         const offsetX = this.state.view.contentX - x;
         const offsetY = this.state.view.contentY - y;
 
-        return (x1, y1) => this.moveTo(offsetX + x1, offsetY + y1);
+        return (x1, y1): void => this.moveTo(offsetX + x1, offsetY + y1);
     }
 
     public makeCenter(): void {
@@ -741,7 +732,7 @@ export class Controller {
         this.zoomTo(view.width / 2, view.height / 2, this.state.view.zoom / this.zoomStep);
     }
 
-    public serialize(): IControllerArchive {
+    public serialize(): ControllerArchive {
         return {
             offsetStep: this.offsetStep,
             state: this.state.serialize(),

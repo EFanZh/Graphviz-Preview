@@ -1,9 +1,10 @@
 import { ExtensionRequest, ExtensionResponse, PreviewRequest, PreviewResponse } from "../messages";
-import { createMessenger, IMessagePort, IReceiveMessage, ISendMessage } from "../messenger";
+import { createMessenger, MessagePort, ReceiveMessage, SendMessage } from "../messenger";
+import { ensureValid } from "../utilities";
 import * as app from "./app";
 import * as controller from "./controller";
 
-declare var acquireVsCodeApi: () => { postMessage: (msg: any) => void };
+declare const acquireVsCodeApi: () => { postMessage: (msg: any) => void };
 
 function onReady(callback: () => void): void {
     if (document.readyState === "loading") {
@@ -16,25 +17,25 @@ function onReady(callback: () => void): void {
 onReady(() => {
     const vscode = acquireVsCodeApi();
 
-    const zoomElement = document.getElementById("zoom")!;
-    const identityElement = document.getElementById("identity")!;
-    const centerElement = document.getElementById("center")!;
+    const zoomElement = ensureValid(document.getElementById("zoom"));
+    const identityElement = ensureValid(document.getElementById("identity"));
+    const centerElement = ensureValid(document.getElementById("center"));
 
     const zoomModeFixedElement =
-        document.querySelector('input[name="zoom-mode"][value="fixed"]')! as HTMLInputElement;
+        ensureValid(document.querySelector('input[name="zoom-mode"][value="fixed"]')) as HTMLInputElement;
 
     const zoomModeFitElement =
-        document.querySelector('input[name="zoom-mode"][value="fit"]')! as HTMLInputElement;
+        ensureValid(document.querySelector('input[name="zoom-mode"][value="fit"]')) as HTMLInputElement;
 
     const zoomModeAutoFitElement =
-        document.querySelector('input[name="zoom-mode"][value="auto-fit"]')! as HTMLInputElement;
+        ensureValid(document.querySelector('input[name="zoom-mode"][value="auto-fit"]')) as HTMLInputElement;
 
-    const exportElement = document.getElementById("export")!;
-    const workspaceElement = document.getElementById("workspace")!;
-    const imageElement = document.getElementById("image")! as HTMLDivElement;
-    const statusElement = document.getElementById("status")!;
+    const exportElement = ensureValid(document.getElementById("export"));
+    const workspaceElement = ensureValid(document.getElementById("workspace"));
+    const imageElement = ensureValid(document.getElementById("image")) as HTMLDivElement;
+    const statusElement = ensureValid(document.getElementById("status"));
 
-    class AppEventListener implements app.IAppEventListener {
+    class MainAppEventListener implements app.AppEventListener {
         public onImageChanged(image: SVGSVGElement): void {
             imageElement.innerHTML = "";
             imageElement.appendChild(image);
@@ -69,14 +70,12 @@ onReady(() => {
     // Message handler.
 
     class ExtensionPort implements
-        IMessagePort<
-        ISendMessage<ExtensionRequest, PreviewResponse>, IReceiveMessage<ExtensionResponse, PreviewRequest>
-        > {
-        public send(message: ISendMessage<ExtensionRequest, PreviewResponse>): void {
+        MessagePort<SendMessage<ExtensionRequest, PreviewResponse>, ReceiveMessage<ExtensionResponse, PreviewRequest>> {
+        public send(message: SendMessage<ExtensionRequest, PreviewResponse>): void {
             vscode.postMessage(message);
         }
 
-        public onReceive(handler: (message: IReceiveMessage<ExtensionResponse, PreviewRequest>) => void): void {
+        public onReceive(handler: (message: ReceiveMessage<ExtensionResponse, PreviewRequest>) => void): void {
             window.addEventListener("message", (ev) => {
                 handler(ev.data);
             });
@@ -89,12 +88,12 @@ onReady(() => {
                 theApp = app.App.create(
                     workspaceElement.offsetWidth,
                     workspaceElement.offsetHeight,
-                    new AppEventListener()
+                    new MainAppEventListener()
                 );
                 registerEventListeners();
                 break;
             case "restore":
-                theApp = app.App.fromArchive(message.archive, new AppEventListener());
+                theApp = app.App.fromArchive(message.archive, new MainAppEventListener());
                 registerEventListeners();
 
                 // TODO: Is this really necessary?
@@ -244,13 +243,13 @@ onReady(() => {
             const [x, y] = getPointerPosition(ev);
             const handler = theApp.beginDrag(x, y);
 
-            const pointerMoveListener = (ev1: PointerEvent) => {
+            const pointerMoveListener = (ev1: PointerEvent): void => {
                 const [x1, y1] = getPointerPosition(ev1);
 
                 handler(x1, y1);
             };
 
-            const pointerUpListener = () => {
+            const pointerUpListener = (): void => {
                 workspaceElement.removeEventListener("pointermove", pointerMoveListener);
                 workspaceElement.removeEventListener("pointerup", pointerUpListener);
                 workspaceElement.releasePointerCapture(ev.pointerId);
