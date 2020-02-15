@@ -2,19 +2,26 @@
 
 ## [Unreleased]
 
+## [1.3.4] - 2020-02-15
+
+### Changed
+
+- [Content Security Policy](https://en.wikipedia.org/wiki/Content_Security_Policy) is applied to webview.
+
 ### Fixed
 
 - Fix zooming anchor position.
+- Fix keyboard confliction with control buttons.
 
 ## [1.3.3] - 2019-06-07
-
-### Fixed
-
-- Opening hyperlinks now works in the latest Visual Studio Code. (#19)
 
 ### Changed
 
 - Only show base name in the preview title. (#20)
+
+### Fixed
+
+- Opening hyperlinks now works in the latest Visual Studio Code. (#19)
 
 ## [1.3.2] - 2019-05-11
 
