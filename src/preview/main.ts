@@ -128,49 +128,6 @@ onReady(() => {
     function registerEventListeners(): void {
         // Window.
 
-        window.addEventListener("keydown", (ev) => {
-            switch (ev.key) {
-                case " ":
-                    theApp.toggleOverviewCenter();
-                    break;
-                case "_":
-                case "-":
-                    theApp.zoomOutCenter();
-                    break;
-                case "+":
-                case "=":
-                    theApp.zoomInCenter();
-                    break;
-                case "0":
-                    theApp.makeIdentity();
-                    break;
-                case "A":
-                case "ArrowLeft":
-                case "a":
-                    theApp.moveRight();
-                    break;
-                case "ArrowDown":
-                case "S":
-                case "s":
-                    theApp.moveUp();
-                    break;
-                case "ArrowRight":
-                case "D":
-                case "d":
-                    theApp.moveLeft();
-                    break;
-                case "ArrowUp":
-                case "W":
-                case "w":
-                    theApp.moveDown();
-                    break;
-                case "X":
-                case "x":
-                    theApp.makeCenter();
-                    break;
-            }
-        });
-
         window.addEventListener(
             "resize",
             () => theApp.resize(workspaceElement.offsetWidth, workspaceElement.offsetHeight)
@@ -214,6 +171,49 @@ onReady(() => {
         }));
 
         // Workspace element.
+
+        workspaceElement.addEventListener("keydown", (ev) => {
+            switch (ev.key) {
+                case " ":
+                    theApp.toggleOverviewCenter();
+                    break;
+                case "_":
+                case "-":
+                    theApp.zoomOutCenter();
+                    break;
+                case "+":
+                case "=":
+                    theApp.zoomInCenter();
+                    break;
+                case "0":
+                    theApp.makeIdentity();
+                    break;
+                case "A":
+                case "ArrowLeft":
+                case "a":
+                    theApp.moveRight();
+                    break;
+                case "ArrowDown":
+                case "S":
+                case "s":
+                    theApp.moveUp();
+                    break;
+                case "ArrowRight":
+                case "D":
+                case "d":
+                    theApp.moveLeft();
+                    break;
+                case "ArrowUp":
+                case "W":
+                case "w":
+                    theApp.moveDown();
+                    break;
+                case "X":
+                case "x":
+                    theApp.makeCenter();
+                    break;
+            }
+        });
 
         function getPointerPosition(event: MouseEvent): [number, number] {
             const boundingRect = workspaceElement.getBoundingClientRect();

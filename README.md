@@ -67,12 +67,12 @@ To set the `graphvizPreview.dotPath` option, go to File → Preference → Setti
 - [x] Add cancellation support in scheduler.
 - [ ] Support previewing source containing multiple graphs.
 - [ ] Design a better icon.
-- [ ] Apply [Content Security Policy](https://en.wikipedia.org/wiki/Content_Security_Policy) to webview.
+- [x] Apply [Content Security Policy](https://en.wikipedia.org/wiki/Content_Security_Policy) to webview.
 - [ ] Support specifying a command-line array for the “dotPath” configuration so that we can use a wrapper for the “dot”
       program.
 - [ ] Fix [`no-explicit-any`](https://github.com/typescript-eslint/typescript-eslint/blob/master/packages/eslint-plugin/docs/rules/no-explicit-any.md) errors.
 - [ ] Fix [`no-use-before-define`](https://github.com/typescript-eslint/typescript-eslint/blob/master/packages/eslint-plugin/docs/rules/no-use-before-define.md) errors.
-- [ ] Fix keyboard shortcut when toolbar buttons have focus.
+- [ ] Add focus indicator to preview controls.
 
 ## Known issues
 

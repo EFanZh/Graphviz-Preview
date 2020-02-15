@@ -1,3 +1,4 @@
+import * as crypto from "crypto";
 import * as path from "path";
 import * as vscode from "vscode";
 import * as engines from "./engines";
@@ -73,6 +74,15 @@ export class PreviewManager {
         }
     }
 
+    private getPreviewHtml(baseUrl: string, cspSource: string, nonce: string): string {
+        let previewHtml = this.previewContent.replace(/\{base-url\}/g, baseUrl);
+
+        previewHtml = previewHtml.replace(/\{csp-source\}/g, cspSource);
+        previewHtml = previewHtml.replace(/\{nonce\}/g, nonce);
+
+        return previewHtml;
+    }
+
     private async createPreview(document: vscode.TextDocument, column: vscode.ViewColumn): Promise<PreviewContext> {
         const documentDir = path.dirname(document.fileName);
         const documentDirUri = vscode.Uri.file(documentDir);
@@ -96,9 +106,10 @@ export class PreviewManager {
             }
         );
 
-        webviewPanel.webview.html = this.previewContent.replace(
-            /\{base-url\}/g,
-            uriToVscodeResource(documentDirUri)
+        webviewPanel.webview.html = this.getPreviewHtml(
+            uriToVscodeResource(documentDirUri),
+            webviewPanel.webview.cspSource,
+            crypto.randomBytes(32).toString('hex')
         );
 
         // Add bindings.
