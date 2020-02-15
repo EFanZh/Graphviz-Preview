@@ -109,7 +109,7 @@ export class PreviewManager {
         webviewPanel.webview.html = this.getPreviewHtml(
             uriToVscodeResource(documentDirUri),
             webviewPanel.webview.cspSource,
-            crypto.randomBytes(32).toString('hex')
+            crypto.randomBytes(32).toString("hex")
         );
 
         // Add bindings.
