@@ -59,13 +59,13 @@
 - Add a button to open preview to the source editor if current editor’s language is
   [DOT](https://en.wikipedia.org/wiki/DOT_(graph_description_language)).
 
-### Fixed
-
-- Remove extra paddings within the `<img>` element.
-
 ### Changed
 
 - The focus is preserved when preview is opened.
+
+### Fixed
+
+- Remove extra paddings within the `<img>` element.
 
 ## [1.1.0] - 2018-05-12
 
