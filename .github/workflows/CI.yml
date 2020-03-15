@@ -10,7 +10,7 @@ jobs:
                 node-version: 12.8.1
           - run: npm ci
           - if: runner.os == 'Linux'
-            run: npm test
+            run: xvfb-run npm test
           - if: runner.os != 'Linux'
             run: npm test
         strategy:
