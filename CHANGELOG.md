@@ -4,7 +4,7 @@
 
 ## [1.4.0] - 2020-04-04
 
-# Added
+### Added
 
 - Support `dotPath` configuration that is relative to the workspace path. (#16)
 
