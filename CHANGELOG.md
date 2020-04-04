@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [1.4.0] - 2020-04-04
+
+# Added
+
+- Support `dotPath` configuration that is relative to the workspace path. (#16)
+
 ## [1.3.4] - 2020-02-15
 
 ### Changed
@@ -124,7 +130,8 @@
 
 - Initial release.
 
-[Unreleased]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.3.4...master
+[Unreleased]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.4.0...master
+[1.4.0]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.3.4...v1.4.0
 [1.3.4]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.3.3...v1.3.4
 [1.3.3]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.3.2...v1.3.3
 [1.3.2]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.3.1...v1.3.2

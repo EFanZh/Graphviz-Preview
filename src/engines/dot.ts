@@ -1,7 +1,18 @@
 import * as path from "path";
+import * as vscode from "vscode";
 import * as configuration from "../configuration";
 import * as nodeUtilities from "../nodeUtilities";
 import { Engine } from "./engine";
+
+function normalizeDotExecutable(dot: string, workingDir: string): string {
+    if (path.basename(dot) == dot) {
+        return dot;
+    } else {
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+
+        return path.resolve(workspaceFolders === undefined ? workingDir : workspaceFolders[0].uri.fsPath, dot);
+    }
+}
 
 export function getEngine(): Engine {
     const dot = configuration.getNullableConfiguration<string>("dotPath", "dot");
@@ -19,9 +30,11 @@ export function getEngine(): Engine {
 
     return Object.freeze({
         async renderToSvg(source: string, workingDir: string, cancel: Promise<void>): Promise<string> {
+            const normalizedDot = normalizeDotExecutable(dot, workingDir);
+
             try {
                 const [exitCode, stdout, stderr] = await nodeUtilities.runChildProcess(
-                    dot,
+                    normalizedDot,
                     args,
                     workingDir,
                     source,
@@ -35,7 +48,7 @@ export function getEngine(): Engine {
                 }
             } catch (error) {
                 if (error.code === "ENOENT") {
-                    throw new Error(`Program not found: “${dot}”.\nPlease check your configuration.`);
+                    throw new Error(`Program not found: “${normalizedDot}”.\nPlease check your configuration.`);
                 } else {
                     throw error;
                 }
