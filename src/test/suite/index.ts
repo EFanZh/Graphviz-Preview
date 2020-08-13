@@ -6,7 +6,7 @@ export function run(): Promise<void> {
     const mocha = new Mocha({
         timeout: 120000,
         ui: "tdd",
-        useColors: true // TODO: Deprecated, use `color` instead.
+        color: true
     });
 
     const testsRoot = path.resolve(__dirname, "..");
