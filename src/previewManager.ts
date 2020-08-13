@@ -22,10 +22,6 @@ class PreviewPort implements
     }
 }
 
-function uriToVscodeResource(uri: vscode.Uri): string {
-    return uri.with({ scheme: "vscode-resource" }).toString(true);
-}
-
 interface PreviewContext {
     readonly webviewPanel: vscode.WebviewPanel;
     readonly updatePreview: () => void;
@@ -38,7 +34,7 @@ export class PreviewManager {
 
     public constructor(context: vscode.ExtensionContext, template: string) {
         this.previewDirUri = vscode.Uri.file(context.asAbsolutePath("out/preview"));
-        this.previewContent = template.replace(/\{preview-dir\}/g, uriToVscodeResource(this.previewDirUri));
+        this.previewContent = template;
     }
 
     public async showPreviewToSide(editor: vscode.TextEditor): Promise<void> {
@@ -74,10 +70,11 @@ export class PreviewManager {
         }
     }
 
-    private getPreviewHtml(baseUrl: string, cspSource: string, nonce: string): string {
-        let previewHtml = this.previewContent.replace(/\{base-url\}/g, baseUrl);
+    private getPreviewHtml(webview: vscode.Webview, baseUrl: vscode.Uri, nonce: string): string {
+        let previewHtml = this.previewContent.replace(/\{base-url\}/g, webview.asWebviewUri(baseUrl).toString());
 
-        previewHtml = previewHtml.replace(/\{csp-source\}/g, cspSource);
+        previewHtml = previewHtml.replace(/\{preview-dir\}/g, webview.asWebviewUri(this.previewDirUri).toString());
+        previewHtml = previewHtml.replace(/\{csp-source\}/g, webview.cspSource);
         previewHtml = previewHtml.replace(/\{nonce\}/g, nonce);
 
         return previewHtml;
@@ -107,8 +104,8 @@ export class PreviewManager {
         );
 
         webviewPanel.webview.html = this.getPreviewHtml(
-            uriToVscodeResource(documentDirUri),
-            webviewPanel.webview.cspSource,
+            webviewPanel.webview,
+            documentDirUri,
             crypto.randomBytes(32).toString("hex")
         );
 
