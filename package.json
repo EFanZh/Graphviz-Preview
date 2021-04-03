@@ -47,23 +47,21 @@
             "properties": {
                 "graphvizPreview.dotPath": {
                     "description": "The path of the dot program.",
-                    "type": [
-                        "string",
-                        "null"
-                    ],
-                    "default": null
+                    "type": "string",
+                    "default": "dot"
+                },
+                "graphvizPreview.dotExtraArgs": {
+                    "description": "Extra arguments for the dot program.",
+                    "type": "array",
+                    "default": []
                 },
                 "graphvizPreview.engine": {
                     "description": "The layout engine to use.",
-                    "type": [
-                        "string",
-                        "null"
-                    ],
+                    "type": "string",
                     "enum": [
-                        "dot",
-                        null
+                        "dot"
                     ],
-                    "default": null
+                    "default": "dot"
                 }
             }
         },
@@ -97,19 +95,19 @@
     ],
     "devDependencies": {
         "@types/glob": "^7.1.3",
-        "@types/mocha": "^8.0.2",
-        "@types/node": "^12.8.1",
-        "@types/vscode": "^1.47.0",
-        "@typescript-eslint/eslint-plugin": "^3.9",
-        "@typescript-eslint/parser": "^3.9",
-        "concurrently": "^5.3.0",
-        "eslint": "^7.6",
+        "@types/mocha": "^8.2.2",
+        "@types/node": "^12.18.3",
+        "@types/vscode": "^1.55.0",
+        "@typescript-eslint/eslint-plugin": "^4.20",
+        "@typescript-eslint/parser": "^4.20",
+        "concurrently": "^6.0.0",
+        "eslint": "^7.23",
         "glob": "^7.1.6",
-        "mocha": "^8.1.1",
-        "typescript": "^3.9.7",
-        "vscode-test": "^1.4.0",
-        "webpack": "^4.44.1",
-        "webpack-cli": "^3.3.12"
+        "mocha": "^8.3.2",
+        "typescript": "^4.2.3",
+        "vscode-test": "^1.5.2",
+        "webpack": "^5.30.0",
+        "webpack-cli": "^4.6.0"
     },
     "scripts": {
         "vscode:prepublish": "npm run lint && npm run compile",

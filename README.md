@@ -17,18 +17,18 @@ You can install this extension from the
 ### Open preview
 
 Open the [Command Palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette) (usually by
-pressing <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd>), then select “Graphviz: Open Preview to the Side”.
+pressing `Ctrl` + `Shift` + `P`), then select “Graphviz: Open Preview to the Side”.
 
 ### Manipulate preview
 
-| Action           | Gesture                                                                                                                                       |
-| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| Zoom in          | Mouse wheel up / <kbd>+</kbd>                                                                                                                 |
-| Zoom out         | Mouse wheel down / <kbd>-</kbd>                                                                                                               |
-| Toggle 100% zoom | Mouse double click / <kbd>Space</kbd>                                                                                                         |
-| Pan              | Mouse drag / <kbd>Left</kbd> / <kbd>Right</kbd> / <kbd>Up</kbd> / <kbd>Down</kbd> / <kbd>A</kbd> / <kbd>D</kbd> / <kbd>W</kbd> / <kbd>S</kbd> |
-| Zoom to 100%     | <kbd>0</kbd>                                                                                                                                  |
-| Move to center   | <kbd>X</kbd>                                                                                                                                  |
+| Action           | Gesture                                                               |
+| ---------------- | --------------------------------------------------------------------- |
+| Zoom in          | Mouse wheel up / `+`                                                  |
+| Zoom out         | Mouse wheel down / `-`                                                |
+| Toggle 100% zoom | Mouse double click / `Space`                                          |
+| Pan              | Mouse drag / `Left` / `Right` / `Up` / `Down` / `A` / `D` / `W` / `S` |
+| Zoom to 100%     | `0`                                                                   |
+| Move to center   | `X`                                                                   |
 
 There are three zooming modes: **Fixed**, **Fit** and **Auto Fit**.
 
@@ -43,10 +43,11 @@ To export the generated graph, click the “Export” button on the top right co
 
 ## Configuration
 
-| Configuration             | Type               | Description                                                                                                                                   |
-| ------------------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `graphvizPreview.dotPath` | `string` \| `null` | `null` means to use the “dot” program in your `PATH` environment variable, or a `string` value to indicate the “dot” program you want to use. |
-| `graphvizPreview.engine`  | `"dot"` \| `null`  | The layout engine to use. `null` means to use the “dot” layout engine. Currently, only the “dot” engine is supported.                         |
+| Configuration                  | Type       | Description                                                              |
+| ------------------------------ | ---------- | ------------------------------------------------------------------------ |
+| `graphvizPreview.dotPath`      | `string`   | Path to the “dot” executable.                                            |
+| `graphvizPreview.dotExtraArgs` | `string[]` | Extra arguments passed to the “dot” executable.                          |
+| `graphvizPreview.engine`       | `"dot"`    | The layout engine to use. Currently, only the “dot” engine is supported. |
 
 Make sure the extension can find the “dot” program. You can set `graphvizPreview.dotPath` option to the path of the dot
 executable, or make sure the directory containing the dot program is in your `PATH` environment variable.
@@ -69,7 +70,7 @@ To set the `graphvizPreview.dotPath` option, go to File → Preference → Setti
 - [ ] Support previewing source containing multiple graphs.
 - [ ] Design a better icon.
 - [x] Apply [Content Security Policy](https://en.wikipedia.org/wiki/Content_Security_Policy) to webview.
-- [ ] Support specifying a command-line array for the “dotPath” configuration so that we can use a wrapper for the “dot”
+- [x] Support specifying a command-line array for the “dotPath” configuration so that we can use a wrapper for the “dot”
       program.
 - [ ] Fix [`no-explicit-any`](https://github.com/typescript-eslint/typescript-eslint/blob/master/packages/eslint-plugin/docs/rules/no-explicit-any.md) errors.
 - [ ] Fix [`no-use-before-define`](https://github.com/typescript-eslint/typescript-eslint/blob/master/packages/eslint-plugin/docs/rules/no-use-before-define.md) errors.

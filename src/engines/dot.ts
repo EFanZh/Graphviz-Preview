@@ -15,8 +15,9 @@ function normalizeDotExecutable(dot: string, workingDir: string): string {
 }
 
 export function getEngine(): Engine {
-    const dot = configuration.getNullableConfiguration<string>("dotPath", "dot");
-    const args = ["-T", "svg"];
+    const dot = configuration.getDotPath();
+    const extraArgs = configuration.getDotExtraArgs();
+    const args = [...extraArgs, "-T", "svg"];
 
     const imageFormatMap: { [key: string]: string | undefined } = {
         ".PDF": "pdf",
@@ -63,7 +64,7 @@ export function getEngine(): Engine {
                 } else {
                     return nodeUtilities.runChildProcess(
                         dot,
-                        ["-T", format, "-o", filePath],
+                        [...extraArgs, "-T", format, "-o", filePath],
                         workingDir,
                         source
                     ).then((value) => {

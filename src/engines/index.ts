@@ -3,13 +3,13 @@ import * as dot from "./dot";
 import { Engine } from "./engine";
 
 function getCurrentEngine(): Engine {
-    const engineName = configuration.getNullableConfiguration("engine", "dot");
+    const engine = configuration.getEngine();
 
-    switch (engineName) {
+    switch (engine) {
         case "dot":
             return dot.getEngine();
         default:
-            throw new Error(`Unsupported engine: “${engineName}”.`);
+            throw new Error(`Unsupported engine: “${engine}”.`);
     }
 }
 
