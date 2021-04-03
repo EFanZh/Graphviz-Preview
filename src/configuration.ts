@@ -1,10 +1,20 @@
 import * as vscode from "vscode";
+import { WorkspaceConfiguration } from "vscode";
 
 export const sectionName = "graphvizPreview";
 
-export function getNullableConfiguration<T>(name: string, defaultValue: T): T {
-    const configuration = vscode.workspace.getConfiguration(sectionName);
-    const value = configuration.get<null | T>(name);
+function getConfiguration(): WorkspaceConfiguration {
+    return vscode.workspace.getConfiguration(sectionName);
+}
 
-    return value ? value : defaultValue;
+export function getDotPath(): string {
+    return getConfiguration().get<string>("dotPath", "dot");
+}
+
+export function getDotExtraArgs(): string[] {
+    return getConfiguration().get<string[]>("dotExtraArgs", []);
+}
+
+export function getEngine(): string {
+    return getConfiguration().get<string>("engine", "dot");
 }

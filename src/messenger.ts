@@ -28,7 +28,7 @@ type ResponseMessage<T> = ResponseSuccessMessage<T> | ResponseFailureMessage;
 export type SendMessage<TRequest1, TResponse2> = RequsetMessage<TRequest1> | ResponseMessage<TResponse2>;
 export type ReceiveMessage<TResponse1, TRequest2> = ResponseMessage<TResponse1> | RequsetMessage<TRequest2>;
 
-type Resolver<T> = (value?: T | PromiseLike<T>) => void;
+type Resolver<T> = (value: T | PromiseLike<T>) => void;
 type Rejector = (reason?: string) => void;
 
 export function createMessenger<TRequest1, TResponse1, TRequest2, TResponse2>(
