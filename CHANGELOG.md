@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [1.5.0] - 2020-04-04
+
+### Added
+
+- Add `dotExtraArgs` configuration for customizing the behavior of the “dot” layout engine.
+
 ## [1.4.0] - 2020-04-04
 
 ### Added
@@ -56,7 +62,7 @@
 ### Fixed
 
 - Support showing external image. (#13)
-- Fix showing unicode characters. (#15)
+- Fix showing Unicode characters. (#15)
 
 ## [1.2.0] - 2018-06-12
 
@@ -130,7 +136,8 @@
 
 - Initial release.
 
-[Unreleased]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.4.0...master
+[Unreleased]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.5.0...master
+[1.5.0]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.3.4...v1.4.0
 [1.3.4]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.3.3...v1.3.4
 [1.3.3]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.3.2...v1.3.3

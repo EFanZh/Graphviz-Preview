@@ -12,6 +12,11 @@ An extension for Visual Studio Code to preview Graphviz (DOT) files.
 You can install this extension from the
 [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=EFanZh.graphviz-preview).
 
+This extension requires [Graphviz](https://graphviz.org/) to be installed. Also, make sure that the extension can find
+the “dot” executable provided by Graphviz. Either make sure the directory containing the “dot” executable exists in the
+`PATH` or `Path` environment variable, or specify the path of the “dot” executable with `graphvizPreview.dotPath`
+configuration.
+
 ## Usage
 
 ### Open preview
@@ -84,5 +89,5 @@ To set the `graphvizPreview.dotPath` option, go to File → Preference → Setti
 ## FAQ
 
 - Q: How do I change the layout engine?
-  - A: Graphviz Preview doesn’t support changing the default layout engine for now, but you can add `layout = <engine>`
-    to your source code which has the same effect.
+  - A: Set `graphvizPreview.dotExtraArgs` configuration to `["-Glayout=<ENGINE>"]`, where `<ENGINE>` is the desired
+    layout engine.
