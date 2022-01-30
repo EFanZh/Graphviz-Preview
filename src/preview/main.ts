@@ -105,7 +105,7 @@ onReady(() => {
                 } else {
                     try {
                         theApp.setImage(message.image);
-                    } catch (error) {
+                    } catch (error: any) {
                         theApp.setStatus(error.toString());
                     }
                 }

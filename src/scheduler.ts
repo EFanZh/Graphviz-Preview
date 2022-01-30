@@ -38,7 +38,7 @@ export function createScheduler<TArgs extends any[], TResult, TError>(
             const result = await executer(cancelPromise, ...args);
 
             resolveAction = (): void => resolve(result);
-        } catch (error) {
+        } catch (error: any) {
             resolveAction = (): void => reject(error);
         }
 
