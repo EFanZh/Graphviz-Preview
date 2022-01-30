@@ -47,7 +47,7 @@ export function getEngine(): Engine {
                 } else {
                     throw new Error(stderr.trim());
                 }
-            } catch (error) {
+            } catch (error: any) {
                 if (error.code === "ENOENT") {
                     throw new Error(`Program not found: “${normalizedDot}”.\nPlease check your configuration.`);
                 } else {

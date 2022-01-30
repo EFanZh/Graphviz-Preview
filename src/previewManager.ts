@@ -118,7 +118,7 @@ export class PreviewManager {
                     case "export":
                         try {
                             await this.exportImage(document.getText(), message.image, documentDir);
-                        } catch (error) {
+                        } catch (error: any) {
                             await vscode.window.showErrorMessage(error.message);
                         }
 
