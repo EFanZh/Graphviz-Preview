@@ -83,9 +83,6 @@
             }
         ]
     },
-    "activationEvents": [
-        "onCommand:graphviz.showPreviewToSide"
-    ],
     "badges": [
         {
             "url": "https://img.shields.io/github/workflow/status/EFanZh/Graphviz-Preview/CI/master",

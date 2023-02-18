@@ -1,6 +1,6 @@
 # Graphviz Preview
 
-[![.github/workflows/CI.yml](https://img.shields.io/github/workflow/status/EFanZh/Graphviz-Preview/CI/master)](https://github.com/EFanZh/Graphviz-Preview/actions?query=workflow%3A.github%2Fworkflows%2FCI.yml)
+[![CI](https://github.com/EFanZh/Graphviz-Preview/actions/workflows/CI.yml/badge.svg)](https://github.com/EFanZh/Graphviz-Preview/actions/workflows/CI.yml)
 [![Bors enabled](https://img.shields.io/badge/bors-enabled-brightgreen)](https://app.bors.tech/repositories/23758)
 
 An extension for Visual Studio Code to preview Graphviz (DOT) files.
