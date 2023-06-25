@@ -4,9 +4,22 @@
 
 ## [Unreleased]
 
-- Uses editor color theme.
+## [1.6.1] - 2023-06-25
+
+### Fixed
+
+- Fix change log.
+
+## [1.6.0] - 2023-06-25
+
+### Added
+
 - Supports previewing documents that contains multiple graphs.
 - “Center” and “100%” button reflects current layout state.
+
+### Changed
+
+- Uses editor color theme.
 
 ## [1.5.0] - 2020-04-04
 
@@ -142,17 +155,19 @@
 
 - Initial release.
 
-[Unreleased]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.5.0...master
-[1.5.0]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.4.0...v1.5.0
-[1.4.0]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.3.4...v1.4.0
-[1.3.4]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.3.3...v1.3.4
-[1.3.3]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.3.2...v1.3.3
-[1.3.2]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.3.1...v1.3.2
-[1.3.1]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.3.0...v1.3.1
-[1.3.0]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.2.0...v1.3.0
-[1.2.0]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.1.0...v1.2.0
-[1.1.0]: https://github.com/EFanZh/Graphviz-Preview/compare/v1.0.0...v1.1.0
-[1.0.0]: https://github.com/EFanZh/Graphviz-Preview/compare/v0.0.4...v1.0.0
-[0.0.4]: https://github.com/EFanZh/Graphviz-Preview/compare/v0.0.3...v0.0.4
-[0.0.3]: https://github.com/EFanZh/Graphviz-Preview/compare/v0.0.2...v0.0.3
-[0.0.2]: https://github.com/EFanZh/Graphviz-Preview/compare/v0.0.1...v0.0.2
+[Unreleased]: https://github.com/EFanZh/Graphviz-Preview/compare/1.6.1...master
+[1.6.1]: https://github.com/EFanZh/Graphviz-Preview/compare/1.6.0...1.6.1
+[1.6.0]: https://github.com/EFanZh/Graphviz-Preview/compare/1.5.0...1.6.0
+[1.5.0]: https://github.com/EFanZh/Graphviz-Preview/compare/1.4.0...1.5.0
+[1.4.0]: https://github.com/EFanZh/Graphviz-Preview/compare/1.3.4...1.4.0
+[1.3.4]: https://github.com/EFanZh/Graphviz-Preview/compare/1.3.3...1.3.4
+[1.3.3]: https://github.com/EFanZh/Graphviz-Preview/compare/1.3.2...1.3.3
+[1.3.2]: https://github.com/EFanZh/Graphviz-Preview/compare/1.3.1...1.3.2
+[1.3.1]: https://github.com/EFanZh/Graphviz-Preview/compare/1.3.0...1.3.1
+[1.3.0]: https://github.com/EFanZh/Graphviz-Preview/compare/1.2.0...1.3.0
+[1.2.0]: https://github.com/EFanZh/Graphviz-Preview/compare/1.1.0...1.2.0
+[1.1.0]: https://github.com/EFanZh/Graphviz-Preview/compare/1.0.0...1.1.0
+[1.0.0]: https://github.com/EFanZh/Graphviz-Preview/compare/0.0.4...1.0.0
+[0.0.4]: https://github.com/EFanZh/Graphviz-Preview/compare/0.0.3...0.0.4
+[0.0.3]: https://github.com/EFanZh/Graphviz-Preview/compare/0.0.2...0.0.3
+[0.0.2]: https://github.com/EFanZh/Graphviz-Preview/compare/0.0.1...0.0.2
