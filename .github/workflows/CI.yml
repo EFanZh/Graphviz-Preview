@@ -1,26 +1,74 @@
 name: CI
 on:
-    push:
-        branches:
-          - master
-          - staging
-          - trying
-    pull_request:
-        branches:
-          - master
+  - push
+  - pull_request
 jobs:
+    coverage:
+        runs-on: ubuntu-latest
+        steps:
+          - uses: actions/checkout@v3
+          - uses: actions/setup-node@v3
+            with:
+                node-version-file: .node-version
+          - run: npm ci
+          - run: npm run coverage-ci
+          - uses: codecov/codecov-action@v3
+            with:
+                files: coverage/lcov.info
+    format:
+        runs-on: ${{ matrix.os }}
+        steps:
+          - uses: actions/checkout@v3
+          - uses: actions/setup-node@v3
+            with:
+                node-version-file: .node-version
+          - run: npm ci
+          - run: npm run check-format
+        strategy:
+            matrix:
+                os:
+                  - macOS-latest
+                  - ubuntu-latest
+                  - windows-latest
+    lint:
+        runs-on: ${{ matrix.os }}
+        steps:
+          - uses: actions/checkout@v3
+          - uses: actions/setup-node@v3
+            with:
+                node-version-file: .node-version
+          - run: npm ci
+          - run: npm run lint
+        strategy:
+            matrix:
+                os:
+                  - macOS-latest
+                  - ubuntu-latest
+                  - windows-latest
+    package:
+        runs-on: ${{ matrix.os }}
+        steps:
+          - uses: actions/checkout@v3
+          - uses: actions/setup-node@v3
+            with:
+                node-version-file: .node-version
+          - run: npm ci
+          - run: npm run package
+        strategy:
+            matrix:
+                os:
+                  - macOS-latest
+                  - ubuntu-latest
+                  - windows-latest
     test:
         runs-on: ${{ matrix.os }}
         steps:
-          - uses: actions/checkout@v2
-          - uses: actions/setup-node@v1
+          - uses: actions/checkout@v3
+          - uses: actions/setup-node@v3
             with:
-                node-version: 14
+                node-version-file: .node-version
           - run: npm ci
-          - if: runner.os == 'Linux'
-            run: xvfb-run npm test
-          - if: runner.os != 'Linux'
-            run: npm test
+          - run: npm test
         strategy:
             matrix:
                 os:

@@ -1,0 +1,13 @@
+// See <https://www.typescriptlang.org/tsconfig>.
+{
+    "compilerOptions": {
+        "lib": ["DOM"],
+        "module": "ESNext"
+    },
+    "extends": "../../tsconfig.json",
+    "references": [
+        {
+            "path": "../shared"
+        }
+    ]
+}

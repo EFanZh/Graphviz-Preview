@@ -1,8 +1,5 @@
-.vscode/**
-.vscode-test/**
-out/test/**
-src/**
-.gitignore
-tsconfig.json
-tslint.json
-webpack.config.js
+**
+!dist/
+!resources/
+!CHANGELOG.md
+!LICENSE

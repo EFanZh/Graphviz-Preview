@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Preview</title>
+        <meta http-equiv="Content-Security-Policy" content="{csp}" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <base href="{base-uri}" />
+        <script src="{extension-uri}/dist/webview.js" nonce="{nonce}" defer></script>
+        <style nonce="{nonce}">
+            html,
+            body {
+                height: 100%;
+            }
+
+            body {
+                display: flex;
+                flex-direction: column;
+                margin: 0;
+                padding: 0;
+            }
+
+            nav {
+                align-items: baseline;
+                background: var(--vscode-editorWidget-background);
+                box-shadow: var(--vscode-widget-shadow) 0 0 16px;
+                display: flex;
+                overflow: auto;
+                user-select: none;
+                white-space: nowrap;
+                z-index: 1;
+            }
+
+            menu {
+                align-items: baseline;
+                display: flex;
+                gap: 0.375em;
+                list-style: none;
+                margin: 0;
+                padding: 0.375em;
+            }
+
+            nav > :first-child,
+            nav > :last-child {
+                flex: 1;
+            }
+
+            nav > :last-child {
+                justify-content: flex-end;
+            }
+
+            button,
+            label {
+                background: transparent;
+                border: 1px solid var(--vscode-editorWidget-border);
+                box-sizing: border-box;
+                color: inherit;
+                display: inline-block;
+                font: inherit;
+                padding: 0.125em 0.375em;
+                text-align: center;
+            }
+
+            label > input[type="checkbox"],
+            label > input[type="radio"] {
+                display: none;
+            }
+
+            button:not(:disabled):hover,
+            label:not(:has(:disabled)):hover {
+                background: var(--vscode-toolbar-hoverBackground);
+            }
+
+            button:not(:disabled):active,
+            label:not(:has(:disabled)):has(> input:checked) {
+                background-color: var(--vscode-inputOption-activeBackground);
+                border-color: var(--vscode-inputOption-activeBorder);
+                color: var(--vscode-inputOption-activeForeground);
+            }
+
+            button:disabled,
+            label:has(:disabled) {
+                color: var(--vscode-disabledForeground);
+            }
+
+            pre {
+                font-family: var(--vscode-editor-font-family);
+            }
+
+            #--graphviz-preview-workspace {
+                align-items: center;
+                cursor: crosshair;
+                display: flex;
+                flex: 1;
+                justify-content: center;
+                outline: none;
+                overflow: hidden;
+                position: relative;
+                user-select: none;
+            }
+
+            #--graphviz-preview-workspace:active {
+                cursor: grabbing;
+            }
+
+            #--graphviz-preview-workspace:has(> :last-child:not(:empty)) {
+                pointer-events: none;
+            }
+
+            #--graphviz-preview-image {
+                background: center conic-gradient(white 25%, lightgray 25% 50%, white 50% 75%, lightgray 75%);
+                background-size: 24px 24px;
+                box-shadow: var(--vscode-widget-shadow) 0 0 16px;
+                flex-shrink: 0;
+                position: relative;
+            }
+
+            #--graphviz-preview-image > :first-child {
+                display: block;
+                width: 100%;
+                height: 100%;
+            }
+
+            #--graphviz-preview-preview-status {
+                align-items: center;
+                background-color: rgba(0, 0, 0, 0.9);
+                display: flex;
+                height: 100%;
+                justify-content: center;
+                position: absolute;
+                width: 100%;
+            }
+
+            #--graphviz-preview-preview-status:empty {
+                display: none;
+            }
+        </style>
+    </head>
+    <body>
+        <nav>
+            <menu>
+                <li id="--graphviz-preview-scale-status"></li>
+            </menu>
+            <menu>
+                <li>
+                    <label title="Toggle center position"><input id="--graphviz-preview-is-center" type="checkbox" />Center</label>
+                </li>
+                <li>
+                    <label title="Toggle 100% scale"><input id="--graphviz-preview-is-identity" type="checkbox" />100 %</label>
+                </li>
+                <li></li>
+                <li>
+                    <label title="Switch to fixed scale mode"><input name="--graphviz-preview-scale-mode" type="radio" value="fixed" />Fixed</label>
+                </li>
+                <li>
+                    <label title="Switch to fit scale mode"><input name="--graphviz-preview-scale-mode" type="radio" value="fit" />Fit</label>
+                </li>
+                <li>
+                    <label title="Switch to auto fit scale mode"><input name="--graphviz-preview-scale-mode" type="radio" value="auto-fit" />Auto Fit</label>
+                </li>
+            </menu>
+            <menu>
+                <li id="--graphviz-preview-page-status"></li>
+                <li><button id="--graphviz-preview-previous-page" title="Previous graph">&lt;</button></li>
+                <li><button id="--graphviz-preview-next-page" title="Next graph">&gt;</button></li>
+                <li></li>
+                <li><button id="--graphviz-preview-export" title="Export graph">Export</button></li>
+            </menu>
+        </nav>
+        <main id="--graphviz-preview-workspace">
+            <div id="--graphviz-preview-image"></div>
+            <pre id="--graphviz-preview-preview-status"></pre>
+        </main>
+    </body>
+</html>

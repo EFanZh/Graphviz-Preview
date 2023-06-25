@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="420" baseProfile="full" version="1.1">
+    <style>
+        text {
+            dominant-baseline: middle;
+            font-family: Consolas;
+            font-size: 50px;
+            text-anchor: middle;
+        }
+    </style>
+    <defs>
+        <rect id="panel" y="70" width="180" height="280" />
+        <ellipse id="node" cx="310" rx="55" ry="35" fill="white" stroke="black" stroke-width="10" />
+    </defs>
+    <rect y="50" width="420" height="320" fill="#7accc8" />
+    <use href="#panel" x="20" fill="#ebebeb" />
+    <text x="110" y="210">a -&gt; b</text>
+    <use href="#panel" x="220" fill="#d7d7d7" />
+    <use href="#node" y="130" />
+    <text x="310" y="130">a</text>
+    <use href="#node" y="290" />
+    <text x="310" y="290">b</text>
+    <path d="M 305,165 h 10 v 55 h 10 l -15,35 l -15,-35 h10 z" />
+</svg>

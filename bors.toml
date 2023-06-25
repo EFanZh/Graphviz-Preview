@@ -1,8 +1,0 @@
-status = [
-    "test (macOS-latest)",
-    "test (ubuntu-latest)",
-    "test (windows-latest)"
-]
-
-delete_merged_branches = true
-use_squash_merge = true

@@ -1,37 +1,25 @@
 {
-    "extends": [
-        "eslint:recommended",
-        "plugin:@typescript-eslint/eslint-recommended",
-        "plugin:@typescript-eslint/recommended"
-    ],
-    "ignorePatterns": [
-        "/target/"
-    ],
+    "root": true,
+    "extends": ["plugin:@typescript-eslint/recommended"],
     "parser": "@typescript-eslint/parser",
-    "plugins": [
-        "@typescript-eslint"
-    ],
+    "plugins": ["@typescript-eslint"],
     "rules": {
-        "@typescript-eslint/no-use-before-define": "off",
-        "@typescript-eslint/no-explicit-any": "off",
-        "no-multi-spaces": "error",
+        "@typescript-eslint/explicit-member-accessibility": "warn",
+        "no-multi-spaces": "warn",
         "no-multiple-empty-lines": [
-            "error",
+            "warn",
             {
                 "max": 1
             }
         ],
-        "padded-blocks": [
-            "error",
-            "never"
-        ],
+        "padded-blocks": ["warn", "never"],
         "quotes": [
-            "error",
+            "warn",
             "double",
             {
                 "avoidEscape": true
             }
         ],
-        "semi": "error"
+        "semi": "warn"
     }
 }
