@@ -1,0 +1,9 @@
+// See <https://www.typescriptlang.org/tsconfig>.
+{
+    "extends": "../../tsconfig.json",
+    "references": [
+        {
+            "path": "../shared"
+        }
+    ]
+}

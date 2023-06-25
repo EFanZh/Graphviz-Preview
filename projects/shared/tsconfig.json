@@ -1,0 +1,7 @@
+// See <https://www.typescriptlang.org/tsconfig>.
+{
+    "compilerOptions": {
+        "composite": true
+    },
+    "extends": "../../tsconfig.json"
+}

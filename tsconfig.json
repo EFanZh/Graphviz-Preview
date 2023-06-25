@@ -1,19 +1,12 @@
+// See <https://www.typescriptlang.org/tsconfig>.
 {
     "compilerOptions": {
-        "forceConsistentCasingInFileNames": true,
-        "lib": [
-            "dom",
-            "es2020"
-        ],
-        "module": "commonjs",
-        "noFallthroughCasesInSwitch": true,
-        "noImplicitReturns": true,
-        "noUnusedLocals": true,
-        "noUnusedParameters": true,
+        "lib": ["ESNext"],
+        "module": "CommonJS",
+        "moduleResolution": "nodenext",
         "outDir": "out",
-        "rootDir": "src",
         "sourceMap": true,
-        "strict": true,
-        "target": "es2020"
-    }
+        "target": "ESNext"
+    },
+    "extends": "@tsconfig/strictest/tsconfig.json"
 }

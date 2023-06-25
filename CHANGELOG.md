@@ -1,6 +1,12 @@
 # Changelog
 
+<!-- markdownlint-disable no-duplicate-header -->
+
 ## [Unreleased]
+
+- Uses editor color theme.
+- Supports previewing documents that contains multiple graphs.
+- “Center” and “100%” button reflects current layout state.
 
 ## [1.5.0] - 2020-04-04
 
@@ -23,7 +29,7 @@
 ### Fixed
 
 - Fix zooming anchor position.
-- Fix keyboard confliction with control buttons.
+- Fix keyboard conflict with control buttons.
 
 ## [1.3.3] - 2019-06-07
 
