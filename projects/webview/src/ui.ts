@@ -185,7 +185,7 @@ export class Ui implements UiView {
 
                     function pointerUpHandler(this: HTMLElement) {
                         this.removeEventListener("pointermove", pointerMoveHandler);
-                        this.removeEventListener("lostpointercapture", pointerMoveHandler);
+                        this.removeEventListener("lostpointercapture", pointerUpHandler);
                     }
 
                     this.addEventListener("pointermove", pointerMoveHandler);
