@@ -172,6 +172,20 @@ export class Ui implements UiView {
         });
 
         workspaceElement.addEventListener("pointerdown", function (ev) {
+            // Skip hyper links.
+
+            let target = ev.target;
+
+            while (target instanceof Element) {
+                if (target instanceof SVGAElement || target instanceof HTMLAnchorElement) {
+                    return;
+                }
+
+                target = target.parentElement;
+            }
+
+            // Drag events.
+
             if (ev.button === 0) {
                 const startPosition = getMousePosition(this, ev);
                 const innerMoveHandler = controller.startDrag(startPosition.x, startPosition.y);
