@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+## [1.6.2] - 2023-07-01
+
+### Fixed
+
+- Fix hyperlinks in preview window.
+
 ## [1.6.1] - 2023-06-25
 
 ### Fixed
@@ -15,7 +21,7 @@
 ### Added
 
 - Supports previewing documents that contains multiple graphs.
-- “Center” and “100%” button reflects current layout state.
+- “Center” and “100 %” button reflects current layout state.
 
 ### Changed
 
@@ -155,7 +161,8 @@
 
 - Initial release.
 
-[Unreleased]: https://github.com/EFanZh/Graphviz-Preview/compare/1.6.1...master
+[Unreleased]: https://github.com/EFanZh/Graphviz-Preview/compare/1.6.2...master
+[1.6.2]: https://github.com/EFanZh/Graphviz-Preview/compare/1.6.1...1.6.2
 [1.6.1]: https://github.com/EFanZh/Graphviz-Preview/compare/1.6.0...1.6.1
 [1.6.0]: https://github.com/EFanZh/Graphviz-Preview/compare/1.5.0...1.6.0
 [1.5.0]: https://github.com/EFanZh/Graphviz-Preview/compare/1.4.0...1.5.0

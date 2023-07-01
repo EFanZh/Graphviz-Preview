@@ -4,7 +4,7 @@
 
 - Update version number.
 - Run `npm update`.
-- Update change log.
+- Update change log and tag links.
 - Push to master.
 - Run `vsce publish`.
 - Add release tag.
