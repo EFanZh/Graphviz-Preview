@@ -4,17 +4,23 @@
 
 ## [Unreleased]
 
+## [1.6.3] - 2023-10-22
+
+### Fixed
+
+- Fixes error message text color contrast.
+
 ## [1.6.2] - 2023-07-01
 
 ### Fixed
 
-- Fix hyperlinks in preview window.
+- Fixes hyperlinks in preview window.
 
 ## [1.6.1] - 2023-06-25
 
 ### Fixed
 
-- Fix change log.
+- Fixes change log.
 
 ## [1.6.0] - 2023-06-25
 
@@ -31,13 +37,13 @@
 
 ### Added
 
-- Add `dotExtraArgs` configuration for customizing the behavior of the “dot” layout engine.
+- Adds `dotExtraArgs` configuration for customizing the behavior of the “dot” layout engine.
 
 ## [1.4.0] - 2020-04-04
 
 ### Added
 
-- Support `dotPath` configuration that is relative to the workspace path. (#16)
+- Supports `dotPath` configuration that is relative to the workspace path. (#16)
 
 ## [1.3.4] - 2020-02-15
 
@@ -47,8 +53,8 @@
 
 ### Fixed
 
-- Fix zooming anchor position.
-- Fix keyboard conflict with control buttons.
+- Fixes zooming anchor position.
+- Fixes keyboard conflict with control buttons.
 
 ## [1.3.3] - 2019-06-07
 
@@ -68,32 +74,32 @@
 
 ### Changed
 
-- Rename “Show Preview” to “Open Preview to the Side”.
-- Prepare to support opening hyperlinks in preview.
+- Renames “Show Preview” to “Open Preview to the Side”.
+- Prepares to support opening hyperlinks in preview.
 
 ## [1.3.1] - 2019-03-23
 
 ### Fixed
 
-- Report error if fail to export image. (#18)
-- Fix internal state when toggling 100% zoom.
+- Reports error if fail to export image. (#18)
+- Fixes internal state when toggling 100% zoom.
 
 ## [1.3.0] - 2018-09-16
 
 ### Added
 
-- Support exporting image of formats other than SVG. Currently, PDF and PNG support are added. (#14)
+- Supports exporting image of formats other than SVG. Currently, PDF and PNG support are added. (#14)
 
 ### Fixed
 
-- Support showing external image. (#13)
-- Fix showing Unicode characters. (#15)
+- Supports showing external image. (#13)
+- Fixes showing Unicode characters. (#15)
 
 ## [1.2.0] - 2018-06-12
 
 ### Added
 
-- Add a button to open preview to the source editor if current editor’s language is
+- Adds a button to open preview to the source editor if current editor’s language is
   [DOT](https://en.wikipedia.org/wiki/DOT_(graph_description_language)).
 
 ### Changed
@@ -102,27 +108,27 @@
 
 ### Fixed
 
-- Remove extra paddings within the `<img>` element.
+- Removes extra paddings within the `<img>` element.
 
 ## [1.1.0] - 2018-05-12
 
 ### Added
 
-- Add cancellation support for the layout engine interface.
+- Adds cancellation support for the layout engine interface.
 
 ### Changed
 
-- Refactored the scheduler. Currently at most 4 layout engine instances are allowed to run concurrently. Now you should
+- Refactors the scheduler. Currently at most 4 layout engine instances are allowed to run concurrently. Now you should
   notice editing source file updates the preview more smoothly.
 
 ## [1.0.0] - 2018-05-04
 
 ### Added
 
-- Add a button to export generated graph.
+- Adds a button to export generated graph.
 - User can now use mouse and keyboard to zoom and pan preview.
-- Add shadow effect to preview.
-- Add some unit tests.
+- Adds shadow effect to preview.
+- Adds some unit tests.
 - Reports error if the source is invalid.
 - The configuration change takes effect immediately.
 
@@ -134,26 +140,26 @@
 
 ### Fixed
 
-- Preserve zooming mode when source changes.
-- Make sure the preview consistent with source by using a scheduler.
+- Preserves zooming mode when source changes.
+- Makes sure the preview consistent with source by using a scheduler.
 
 ## [0.0.4] - 2018-03-04
 
 ### Changed
 
-- Fix font color not distinct from background.
+- Fixes font color not distinct from background.
 
 ## [0.0.3] - 2017-07-19
 
 ### Changed
 
-- Fix 100% zooming mode can’t scroll to view all generated image.
+- Fixes 100% zooming mode can’t scroll to view all generated image.
 
 ## [0.0.2] - 2017-07-16
 
 ### Added
 
-- Add an icon.
+- Adds an icon.
 
 ## 0.0.1 - 2017-07-16
 
@@ -161,7 +167,8 @@
 
 - Initial release.
 
-[Unreleased]: https://github.com/EFanZh/Graphviz-Preview/compare/1.6.2...master
+[Unreleased]: https://github.com/EFanZh/Graphviz-Preview/compare/1.6.3...master
+[1.6.3]: https://github.com/EFanZh/Graphviz-Preview/compare/1.6.2...1.6.3
 [1.6.2]: https://github.com/EFanZh/Graphviz-Preview/compare/1.6.1...1.6.2
 [1.6.1]: https://github.com/EFanZh/Graphviz-Preview/compare/1.6.0...1.6.1
 [1.6.0]: https://github.com/EFanZh/Graphviz-Preview/compare/1.5.0...1.6.0
