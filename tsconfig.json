@@ -1,9 +1,9 @@
 // See <https://www.typescriptlang.org/tsconfig>.
 {
     "compilerOptions": {
+        "isolatedModules": false,
         "lib": ["ESNext"],
-        "module": "CommonJS",
-        "moduleResolution": "nodenext",
+        "module": "NodeNext",
         "outDir": "out",
         "sourceMap": true,
         "target": "ESNext"

@@ -1,6 +1,6 @@
 {
     "name": "graphviz-preview",
-    "version": "1.6.2",
+    "version": "1.6.3",
     "publisher": "EFanZh",
     "engines": {
         "vscode": "^1.79.0"
@@ -93,7 +93,7 @@
         "@types/mocha": "10",
         "@types/vscode": "1",
         "@types/vscode-webview": "1",
-        "@typescript-eslint/eslint-plugin": "5",
+        "@typescript-eslint/eslint-plugin": "6",
         "mocha": "10",
         "nyc": "15",
         "ts-loader": "9",
