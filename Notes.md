@@ -6,6 +6,7 @@
 - Run `npm update`.
 - Update change log and tag links.
 - Push to master.
+- Pull master.
 - Run `vsce publish`.
 - Add release tag.
 
