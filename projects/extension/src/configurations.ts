@@ -1,9 +1,17 @@
 import { Engine } from "./engines";
 import * as dot from "./engines/dot";
-import { WorkspaceConfiguration } from "vscode";
+import { WorkspaceConfiguration, window, workspace } from "vscode";
 
 function getDotPath(configuration: WorkspaceConfiguration): string {
-    return configuration.get("graphvizPreview.dotPath", "dot");
+    let dotPath = configuration.get("graphvizPreview.dotPath", "dot");
+
+    if (dotPath.includes("${workspaceFolder}") && window.activeTextEditor) {
+        let workspaceFolder = workspace.getWorkspaceFolder(window.activeTextEditor.document.uri);
+        let workspaceFolderPath = workspaceFolder?.uri.fsPath || "";
+        dotPath = dotPath.replace("${workspaceFolder}", workspaceFolderPath);
+    }
+
+    return dotPath
 }
 
 function getDotExtraArgs(configuration: WorkspaceConfiguration): string[] {
@@ -24,7 +32,7 @@ export class Configuration {
         public readonly dotPath: string,
         public readonly dotExtraArgs: string[],
         public readonly engine: Engine,
-    ) {}
+    ) { }
 
     public static fromWorkspaceConfiguration(configuration: WorkspaceConfiguration): Configuration {
         const dotPath = getDotPath(configuration);
