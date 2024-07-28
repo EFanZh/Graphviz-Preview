@@ -1,8 +1,12 @@
 # Changelog
 
-<!-- markdownlint-disable no-duplicate-header -->
+<!-- markdownlint-disable no-duplicate-heading -->
 
 ## [Unreleased]
+
+### Added
+
+- Supports variable substitution in some configurations.
 
 ## [1.6.4] - 2023-11-13
 
