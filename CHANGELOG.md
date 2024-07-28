@@ -4,7 +4,13 @@
 
 ## [Unreleased]
 
-## [1.6.5] - 2024-07-28
+## [1.7.1] - 2024-07-28
+
+### Fixed
+
+- Fix version in change log.
+
+## [1.7.0] - 2024-07-28
 
 ### Added
 
@@ -179,8 +185,9 @@
 
 - Initial release.
 
-[Unreleased]: https://github.com/EFanZh/Graphviz-Preview/compare/1.6.5...master
-[1.6.5]: https://github.com/EFanZh/Graphviz-Preview/compare/1.6.4...1.6.5
+[Unreleased]: https://github.com/EFanZh/Graphviz-Preview/compare/1.7.1...master
+[1.7.1]: https://github.com/EFanZh/Graphviz-Preview/compare/1.7.0...1.7.1
+[1.7.0]: https://github.com/EFanZh/Graphviz-Preview/compare/1.6.4...1.7.0
 [1.6.4]: https://github.com/EFanZh/Graphviz-Preview/compare/1.6.3...1.6.4
 [1.6.3]: https://github.com/EFanZh/Graphviz-Preview/compare/1.6.2...1.6.3
 [1.6.2]: https://github.com/EFanZh/Graphviz-Preview/compare/1.6.1...1.6.2
