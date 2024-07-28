@@ -121,8 +121,8 @@ export class PreviewState implements ChannelClient<ExtensionRequest, ExtensionRe
             return `Error: ${reason}`;
         }
 
-        const configuration = this.context.configuration;
         const document = this.document;
+        const configuration = this.context.configuration.resolve(document);
 
         // Lock task parameters.
 

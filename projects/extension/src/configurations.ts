@@ -1,6 +1,7 @@
 import { Engine } from "./engines";
 import * as dot from "./engines/dot";
-import { WorkspaceConfiguration } from "vscode";
+import * as utilities from "./utilities";
+import { TextDocument, workspace, WorkspaceConfiguration } from "vscode";
 
 function getDotPath(configuration: WorkspaceConfiguration): string {
     return configuration.get("graphvizPreview.dotPath", "dot");
@@ -20,7 +21,7 @@ function getEngine(configuration: WorkspaceConfiguration): Engine {
 }
 
 export class Configuration {
-    public constructor(
+    private constructor(
         public readonly dotPath: string,
         public readonly dotExtraArgs: string[],
         public readonly engine: Engine,
@@ -32,5 +33,21 @@ export class Configuration {
         const engine = getEngine(configuration);
 
         return new Configuration(dotPath, dotExtraArgs, engine);
+    }
+
+    // TODO: Use a new type for resolved configuration?
+    public resolve(document: TextDocument): Configuration {
+        const resolve = (s: string) =>
+            utilities.resolveVariables(s, (key) => {
+                switch (key) {
+                    case "workspaceFolder": {
+                        return workspace.getWorkspaceFolder(document.uri)?.uri?.fsPath;
+                    }
+                }
+
+                return undefined;
+            });
+
+        return new Configuration(resolve(this.dotPath), this.dotExtraArgs.map(resolve), this.engine);
     }
 }
