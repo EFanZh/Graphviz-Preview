@@ -1,5 +1,7 @@
 const placeholderRegex = /\$\{([^{}]+)\}/g;
 
+// TODO: Use `Promise.withResolvers` when possible:
+// <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/withResolvers>.
 export function createPromise<T>(): [Promise<T>, (value: T) => void, (reason: unknown) => void] {
     let resolve: (value: T) => void;
     let reject: (reason: unknown) => void;

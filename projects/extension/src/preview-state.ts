@@ -19,6 +19,7 @@ import type { TextDocument, Webview, WebviewPanel } from "vscode";
 import { Uri, window, ViewColumn, workspace } from "vscode";
 
 const previewType = "graphviz.preview";
+const webviewPlaceholder = /\{([^{}]+)\}/g;
 
 function getPreviewTitle(document: TextDocument) {
     return `Preview: ${path.basename(document.fileName)}`;
@@ -31,19 +32,20 @@ function setWebviewHtml(context: Context, document: TextDocument, webview: Webvi
     const csp = `default-src 'none'; img-src ${cspSource}; script-src ${cspSource}; style-src 'unsafe-inline';`;
     const extensionUri = webview.asWebviewUri(context.extensionContext.extensionUri).toString();
 
-    webview.html = context.webviewTemplate.replaceAll(/\{[^\s{}]+\}/g, (key) => {
+    webview.html = context.webviewTemplate.replace(webviewPlaceholder, (fallback, key) => {
         switch (key) {
-            case "{base-uri}":
+            case "base-uri":
                 return baseUri;
-            case "{csp}":
+            case "csp":
                 return csp;
-            case "{extension-uri}":
+            case "extension-uri":
                 return extensionUri;
-            case "{nonce}":
+            case "nonce":
                 return nonce;
             default:
-                return key;
         }
+
+        return fallback;
     });
 }
 
