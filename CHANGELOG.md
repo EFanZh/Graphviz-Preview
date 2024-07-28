@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [1.6.5] - 2024-07-28
+
 ### Added
 
 - Supports variable substitution in some configurations.
@@ -177,7 +179,8 @@
 
 - Initial release.
 
-[Unreleased]: https://github.com/EFanZh/Graphviz-Preview/compare/1.6.4...master
+[Unreleased]: https://github.com/EFanZh/Graphviz-Preview/compare/1.6.5...master
+[1.6.5]: https://github.com/EFanZh/Graphviz-Preview/compare/1.6.4...1.6.5
 [1.6.4]: https://github.com/EFanZh/Graphviz-Preview/compare/1.6.3...1.6.4
 [1.6.3]: https://github.com/EFanZh/Graphviz-Preview/compare/1.6.2...1.6.3
 [1.6.2]: https://github.com/EFanZh/Graphviz-Preview/compare/1.6.1...1.6.2
