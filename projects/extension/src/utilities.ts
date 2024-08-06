@@ -1,4 +1,4 @@
-const placeholderRegex = /\$\{([^{}]+)\}/g;
+const resolverRegexReplacer = RegExp.prototype[Symbol.replace].bind(/\$\{([^{}]+)\}/g);
 
 // TODO: Use `Promise.withResolvers` when possible:
 // <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/withResolvers>.
@@ -16,7 +16,7 @@ export function createPromise<T>(): [Promise<T>, (value: T) => void, (reason: un
 }
 
 export function resolveVariables(s: string, resolve: (key: string) => string | undefined): string {
-    return s.replace(placeholderRegex, (fallback, key) => {
+    return resolverRegexReplacer(s, (fallback, key) => {
         const candidate = resolve(key);
 
         return candidate === undefined ? fallback : candidate;

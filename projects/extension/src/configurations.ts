@@ -4,11 +4,11 @@ import * as utilities from "./utilities";
 import { TextDocument, workspace, WorkspaceConfiguration } from "vscode";
 
 function getDotPath(configuration: WorkspaceConfiguration): string {
-    return configuration.get("graphvizPreview.dotPath", "dot");
+    return String(configuration.get("graphvizPreview.dotPath", "dot"));
 }
 
 function getDotExtraArgs(configuration: WorkspaceConfiguration): string[] {
-    return configuration.get("graphvizPreview.dotExtraArgs", []);
+    return configuration.get("graphvizPreview.dotExtraArgs", []).map(String);
 }
 
 function getEngine(configuration: WorkspaceConfiguration): Engine {
