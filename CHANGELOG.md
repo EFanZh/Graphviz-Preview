@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+## [1.7.2] - 2024-08-07
+
+### Fixed
+
+- Try to fix `e.replace` is not a function error. (#79)
+
 ## [1.7.1] - 2024-07-28
 
 ### Fixed
@@ -185,7 +191,8 @@
 
 - Initial release.
 
-[Unreleased]: https://github.com/EFanZh/Graphviz-Preview/compare/1.7.1...master
+[Unreleased]: https://github.com/EFanZh/Graphviz-Preview/compare/1.7.2...master
+[1.7.2]: https://github.com/EFanZh/Graphviz-Preview/compare/1.7.1...1.7.2
 [1.7.1]: https://github.com/EFanZh/Graphviz-Preview/compare/1.7.0...1.7.1
 [1.7.0]: https://github.com/EFanZh/Graphviz-Preview/compare/1.6.4...1.7.0
 [1.6.4]: https://github.com/EFanZh/Graphviz-Preview/compare/1.6.3...1.6.4
