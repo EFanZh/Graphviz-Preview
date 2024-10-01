@@ -1,22 +1,18 @@
-import { Channel } from "../../shared/src/channel";
-import type { ChannelMessage } from "../../shared/src/channel";
-import type { ChannelClient } from "../../shared/src/channel";
-import type { ExtensionRequest, ExtensionResponse } from "../../shared/src/extension-api";
-import { ExtensionCommand } from "../../shared/src/extension-api";
-import type {
-    UpdatePreviewRequest,
-    UpdatePreviewResponse,
-    WebviewRequest,
-    WebviewResponse,
+import { Channel, type ChannelClient, type ChannelMessage } from "../../shared/src/channel";
+import { ExtensionCommand, type ExtensionRequest, type ExtensionResponse } from "../../shared/src/extension-api";
+import { type TextDocument, Uri, ViewColumn, type Webview, type WebviewPanel, window, workspace } from "vscode";
+import {
+    type UpdatePreviewRequest,
+    type UpdatePreviewResponse,
+    WebviewCommand,
+    type WebviewRequest,
+    type WebviewResponse,
 } from "../../shared/src/webview-api";
-import { WebviewCommand } from "../../shared/src/webview-api";
-import type { Context } from "./preview-manager";
+import { type Context } from "./preview-manager";
 import { Scheduler } from "./scheduler";
-import * as crypto from "crypto";
-import * as os from "os";
-import * as path from "path";
-import type { TextDocument, Webview, WebviewPanel } from "vscode";
-import { Uri, window, ViewColumn, workspace } from "vscode";
+import crypto from "crypto";
+import os from "os";
+import path from "path";
 
 const previewType = "graphviz.preview";
 const webviewPlaceholder = /\{([^{}]+)\}/g;
@@ -81,9 +77,7 @@ function createWebviewPanel(context: Context, document: TextDocument): WebviewPa
 }
 
 export class PreviewState implements ChannelClient<ExtensionRequest, ExtensionResponse, WebviewRequest> {
-    private readonly channel: Channel<ExtensionRequest, ExtensionResponse, WebviewRequest, WebviewResponse> =
-        new Channel();
-
+    private readonly channel = new Channel<ExtensionRequest, ExtensionResponse, WebviewRequest, WebviewResponse>();
     private readonly scheduler = new Scheduler(os.cpus().length); // TODO: Use `os.availableParallelism()`.
 
     private constructor(

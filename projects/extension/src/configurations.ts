@@ -1,7 +1,7 @@
-import { Engine } from "./engines";
 import * as dot from "./engines/dot";
 import * as utilities from "./utilities";
-import { TextDocument, workspace, WorkspaceConfiguration } from "vscode";
+import { type TextDocument, type WorkspaceConfiguration, workspace } from "vscode";
+import { type Engine } from "./engines";
 
 function getDotPath(configuration: WorkspaceConfiguration): string {
     return String(configuration.get("graphvizPreview.dotPath", "dot"));
@@ -41,7 +41,7 @@ export class Configuration {
             utilities.resolveVariables(s, (key) => {
                 switch (key) {
                     case "workspaceFolder": {
-                        return workspace.getWorkspaceFolder(document.uri)?.uri?.fsPath;
+                        return workspace.getWorkspaceFolder(document.uri)?.uri.fsPath;
                     }
                 }
 

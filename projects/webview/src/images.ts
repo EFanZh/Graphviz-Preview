@@ -1,4 +1,4 @@
-import { Image, ImageType } from "../../shared/src/images";
+import { type Image, ImageType } from "../../shared/src/images";
 
 const domParser = new DOMParser();
 

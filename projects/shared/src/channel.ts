@@ -73,7 +73,7 @@ export class Channel<IncomingRequest, OutgoingResponse, OutgoingRequest, Incomin
 
         client.receive(data).then(
             (value) => sendResponse({ type: ResponseType.Resolve, value }),
-            (reason) => sendResponse({ type: ResponseType.Reject, reason }),
+            (reason: unknown) => sendResponse({ type: ResponseType.Reject, reason }),
         );
     }
 

@@ -1,22 +1,28 @@
-import { Channel, ChannelClient, ChannelMessage } from "../../shared/src/channel";
-import type { ExtensionRequest, ExtensionResponse, SaveImageRequest } from "../../shared/src/extension-api";
-import { ExtensionCommand } from "../../shared/src/extension-api";
-import type { UpdatePreviewRequest, WebviewRequest, WebviewResponse } from "../../shared/src/webview-api";
-import { WebviewCommand } from "../../shared/src/webview-api";
-import { ParsedImage } from "./images";
 import * as images from "./images";
-import { Size, Position } from "./layout";
 import { AutoLayout, LayoutState } from "./layout-state";
+import { Channel, type ChannelClient, type ChannelMessage } from "../../shared/src/channel";
+import {
+    ExtensionCommand,
+    type ExtensionRequest,
+    type ExtensionResponse,
+    type SaveImageRequest,
+} from "../../shared/src/extension-api";
+import { Position, Size } from "./layout";
+import {
+    type UpdatePreviewRequest,
+    WebviewCommand,
+    type WebviewRequest,
+    type WebviewResponse,
+} from "../../shared/src/webview-api";
+import { type ParsedImage } from "./images";
 import { ScaleMode } from "./layout-view";
-import type { UiView } from "./ui-view";
+import { type UiView } from "./ui-view";
 
 const scaleStep = 1.2;
 const offsetStep = 10;
 
 export class Controller implements ChannelClient<WebviewRequest, WebviewResponse, ExtensionRequest> {
-    private readonly channel: Channel<WebviewRequest, WebviewResponse, ExtensionRequest, ExtensionResponse> =
-        new Channel();
-
+    private readonly channel = new Channel<WebviewRequest, WebviewResponse, ExtensionRequest, ExtensionResponse>();
     private parsedImages: ParsedImage[] = [];
     private currentImageIndex = 0;
     private layoutState?: LayoutState;
@@ -140,7 +146,7 @@ export class Controller implements ChannelClient<WebviewRequest, WebviewResponse
         const layoutState = this.layoutState;
 
         if (layoutState !== undefined) {
-            const position = layoutState.getImagePosition() || new Position(0, 0);
+            const position = layoutState.getImagePosition() ?? new Position(0, 0);
 
             f(position);
 
@@ -179,7 +185,7 @@ export class Controller implements ChannelClient<WebviewRequest, WebviewResponse
 
         if (layoutState !== undefined) {
             const currentScale = layoutState.getImageScale();
-            const newScale = f(currentScale === null ? 1 : currentScale);
+            const newScale = f(currentScale ?? 1);
 
             layoutState.setScale(this.uiView, newScale);
         }
@@ -190,7 +196,7 @@ export class Controller implements ChannelClient<WebviewRequest, WebviewResponse
 
         if (layoutState !== undefined) {
             const currentScale = layoutState.getImageScale();
-            const newScale = f(currentScale === null ? 1 : currentScale);
+            const newScale = f(currentScale ?? 1);
 
             layoutState.setScaleAt(this.uiView, x, y, newScale);
         }

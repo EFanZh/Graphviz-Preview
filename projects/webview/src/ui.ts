@@ -1,8 +1,8 @@
-import type { Controller } from "./controller";
-import type { ParsedImage } from "./images";
-import { Size } from "./layout";
+import { type Controller } from "./controller";
+import { type ParsedImage } from "./images";
 import { ScaleMode } from "./layout-view";
-import type { UiView } from "./ui-view";
+import { Size } from "./layout";
+import { type UiView } from "./ui-view";
 
 const workspacePadding = 32;
 
@@ -19,7 +19,7 @@ export class Ui implements UiView {
     public constructor(
         private readonly window: Window,
         private readonly headElement: HTMLHeadElement,
-        private readonly stylesheetElements: HTMLLinkElement[],
+        private readonly styleSheetElements: HTMLLinkElement[],
         private readonly previousPageButton: HTMLButtonElement,
         private readonly nextPageButton: HTMLButtonElement,
         private readonly pageStatusElement: HTMLElement,
@@ -42,6 +42,7 @@ export class Ui implements UiView {
     public setupEventHandlers(controller: Controller) {
         // Window.
 
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         this.window.addEventListener("message", (ev) => controller.receiveMessage(ev.data));
 
         // Page switching buttons.
@@ -274,7 +275,7 @@ export class Ui implements UiView {
     }
 
     public setImageScale(scale: number): void {
-        this.scaleStatusElement.innerText = `${Math.round(scale * 10000) / 100} %`;
+        this.scaleStatusElement.innerText = `${(scale * 100).toFixed(2)} %`;
     }
 
     // ============================================= UI view interface ============================================== //
@@ -287,7 +288,7 @@ export class Ui implements UiView {
     }
 
     public setImage(currentPage: number, totalPages: number, image: ParsedImage): void {
-        function needToUpdateStylesheets(
+        function needToUpdateStyleSheets(
             oldElements: readonly HTMLLinkElement[],
             newElements: readonly HTMLLinkElement[],
         ): boolean {
@@ -314,20 +315,20 @@ export class Ui implements UiView {
         this.pageStatusElement.innerText = `${currentPage} / ${totalPages}`;
         this.exportButton.disabled = totalPages !== 1;
 
-        // Replace stylesheets.
+        // Replace style sheets.
 
         const newStyleSheetElements = image.styleSheetElements;
 
-        if (needToUpdateStylesheets(this.stylesheetElements, newStyleSheetElements)) {
-            for (const element of this.stylesheetElements.splice(
+        if (needToUpdateStyleSheets(this.styleSheetElements, newStyleSheetElements)) {
+            for (const element of this.styleSheetElements.splice(
                 0,
-                this.stylesheetElements.length,
+                this.styleSheetElements.length,
                 ...newStyleSheetElements,
             )) {
                 element.remove();
             }
 
-            this.headElement.append(...this.stylesheetElements);
+            this.headElement.append(...this.styleSheetElements);
         }
 
         // Replace image.

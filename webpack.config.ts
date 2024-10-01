@@ -1,5 +1,5 @@
-import * as path from "path";
-import type { Configuration } from "webpack";
+import { type Configuration } from "webpack";
+import path from "path";
 
 const baseConfig: Configuration = {
     mode: "none",
@@ -46,11 +46,12 @@ const extensionConfig: Configuration = {
     },
 };
 
-const previewConfig: Configuration = {
+const webviewConfig: Configuration = {
     ...baseConfig,
     entry: {
         webview: "./projects/webview/src/main.ts",
     },
+    devtool: "inline-source-map",
 };
 
-module.exports = [extensionConfig, previewConfig];
+module.exports = [extensionConfig, webviewConfig];

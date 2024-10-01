@@ -1,7 +1,7 @@
-import { Size } from "../src/layout";
 import { AutoLayout, FixedLayout, LayoutState } from "../src/layout-state";
 import { type LayoutView, ScaleMode } from "../src/layout-view";
-import * as assert from "assert";
+import { Size } from "../src/layout";
+import assert from "assert";
 
 interface ViewDump {
     isCenter: boolean | undefined;

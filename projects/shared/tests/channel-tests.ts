@@ -1,5 +1,7 @@
-import { Channel, ChannelClient, ChannelMessage } from "../src/channel";
-import * as assert from "assert";
+import { Channel, type ChannelClient, type ChannelMessage } from "../src/channel";
+import assert from "assert";
+
+/* eslint-disable @typescript-eslint/prefer-promise-reject-errors */
 
 interface A {
     type: "A";
@@ -24,8 +26,7 @@ interface D {
 class TestChannel<IncomingRequest, OutgoingResponse, OutgoingRequest, IncomingResponse>
     implements ChannelClient<IncomingRequest, OutgoingResponse, OutgoingRequest>
 {
-    private readonly channel: Channel<IncomingRequest, OutgoingResponse, OutgoingRequest, IncomingResponse> =
-        new Channel();
+    private readonly channel = new Channel<IncomingRequest, OutgoingResponse, OutgoingRequest, IncomingResponse>();
 
     public constructor(
         private readonly sender: (data: ChannelMessage<OutgoingRequest, OutgoingResponse>) => void,
@@ -53,12 +54,12 @@ class TestChannel<IncomingRequest, OutgoingResponse, OutgoingRequest, IncomingRe
 
 describe("Channel tests", () => {
     it("Communication tests", async () => {
-        const alice: TestChannel<A, B, C, D> = new TestChannel(
+        const alice = new TestChannel<A, B, C, D>(
             (data) => bob.receiveMessage(data),
             (data) => Promise.resolve({ type: "B", value: data.value * 10 }),
         );
 
-        const bob: TestChannel<C, D, A, B> = new TestChannel(
+        const bob = new TestChannel<C, D, A, B>(
             (data) => alice.receiveMessage(data),
             (data) => Promise.resolve({ type: "D", value: data.value * 100 }),
         );
@@ -70,12 +71,12 @@ describe("Channel tests", () => {
     });
 
     it("Rejection tests", async () => {
-        const alice: TestChannel<A, B, C, D> = new TestChannel(
+        const alice = new TestChannel<A, B, C, D>(
             (data) => bob.receiveMessage(data),
             (data) => Promise.reject({ type: "B", value: data.value * 10 }),
         );
 
-        const bob: TestChannel<C, D, A, B> = new TestChannel(
+        const bob = new TestChannel<C, D, A, B>(
             (data) => alice.receiveMessage(data),
             (data) => Promise.reject({ type: "D", value: data.value * 100 }),
         );

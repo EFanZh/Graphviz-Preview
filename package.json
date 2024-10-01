@@ -91,16 +91,17 @@
         }
     ],
     "devDependencies": {
-        "@trivago/prettier-plugin-sort-imports": "4",
         "@tsconfig/strictest": "2",
+        "@types/eslint__js": "8",
         "@types/mocha": "10",
         "@types/vscode": "1",
         "@types/vscode-webview": "1",
-        "@typescript-eslint/eslint-plugin": "7",
         "mocha": "10",
         "nyc": "17",
+        "prettier": "3",
         "ts-loader": "9",
         "ts-node": "10",
+        "typescript-eslint": "8",
         "webpack-cli": "5"
     },
     "scripts": {
@@ -109,8 +110,8 @@
         "coverage": "nyc --reporter=html --reporter=text mocha",
         "coverage-ci": "nyc --reporter=lcov mocha",
         "format": "prettier --write .",
-        "lint": "eslint --max-warnings 0 --ext ts projects",
-        "package": "webpack --devtool hidden-source-map --mode production",
+        "lint": "eslint --max-warnings=0 projects",
+        "package": "webpack --devtool hidden-nosources-source-map --mode production",
         "test": "mocha",
         "vscode:prepublish": "npm run package",
         "watch": "webpack --watch",

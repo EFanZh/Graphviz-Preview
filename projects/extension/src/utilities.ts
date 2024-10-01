@@ -16,9 +16,9 @@ export function createPromise<T>(): [Promise<T>, (value: T) => void, (reason: un
 }
 
 export function resolveVariables(s: string, resolve: (key: string) => string | undefined): string {
-    return resolverRegexReplacer(s, (fallback, key) => {
+    return resolverRegexReplacer(s, (fallback, key: string) => {
         const candidate = resolve(key);
 
-        return candidate === undefined ? fallback : candidate;
+        return candidate ?? fallback;
     });
 }
