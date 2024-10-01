@@ -13,6 +13,7 @@ function getScaleModeRadioButton(value: string): HTMLInputElement {
     return document.querySelector(`input[name="${idPrefix}scale-mode"][value="${value}"]`) as HTMLInputElement;
 }
 
+const headElement = document.head;
 const previousPageButton = $("previous-page") as HTMLButtonElement;
 const nextPageButton = $("next-page") as HTMLButtonElement;
 const pageStatusElement = $("page-status");
@@ -29,6 +30,8 @@ const previewStatusElement = $("preview-status");
 
 const ui = new Ui(
     window,
+    headElement,
+    [],
     previousPageButton,
     nextPageButton,
     pageStatusElement,
