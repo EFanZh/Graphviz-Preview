@@ -18,6 +18,8 @@ function getMousePosition(element: Element, event: MouseEvent) {
 export class Ui implements UiView {
     public constructor(
         private readonly window: Window,
+        private readonly headElement: HTMLHeadElement,
+        private readonly stylesheetElements: HTMLLinkElement[],
         private readonly previousPageButton: HTMLButtonElement,
         private readonly nextPageButton: HTMLButtonElement,
         private readonly pageStatusElement: HTMLElement,
@@ -285,10 +287,51 @@ export class Ui implements UiView {
     }
 
     public setImage(currentPage: number, totalPages: number, image: ParsedImage): void {
+        function needToUpdateStylesheets(
+            oldElements: readonly HTMLLinkElement[],
+            newElements: readonly HTMLLinkElement[],
+        ): boolean {
+            let i = 0;
+
+            for (;;) {
+                const lhs = oldElements[i];
+                const rhs = newElements[i];
+
+                if (lhs === undefined) {
+                    return rhs !== undefined;
+                }
+
+                if (rhs === undefined || lhs.outerHTML !== rhs.outerHTML) {
+                    return true;
+                }
+
+                i++;
+            }
+        }
+
         this.previousPageButton.disabled = currentPage < 2;
         this.nextPageButton.disabled = currentPage >= totalPages;
         this.pageStatusElement.innerText = `${currentPage} / ${totalPages}`;
         this.exportButton.disabled = totalPages !== 1;
+
+        // Replace stylesheets.
+
+        const newStyleSheetElements = image.styleSheetElements;
+
+        if (needToUpdateStylesheets(this.stylesheetElements, newStyleSheetElements)) {
+            for (const element of this.stylesheetElements.splice(
+                0,
+                this.stylesheetElements.length,
+                ...newStyleSheetElements,
+            )) {
+                element.remove();
+            }
+
+            this.headElement.append(...this.stylesheetElements);
+        }
+
+        // Replace image.
+
         this.imageElement.replaceChildren(image.asNode());
 
         if (this.workspaceElement.tabIndex <= 0) {

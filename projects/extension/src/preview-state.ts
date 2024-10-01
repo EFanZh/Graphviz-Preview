@@ -29,7 +29,7 @@ function setWebviewHtml(context: Context, document: TextDocument, webview: Webvi
     const baseUri = webview.asWebviewUri(document.uri).toString();
     const cspSource = webview.cspSource;
     const nonce = crypto.randomBytes(32).toString("base64");
-    const csp = `default-src 'none'; img-src ${cspSource}; script-src ${cspSource}; style-src 'unsafe-inline';`;
+    const csp = `default-src 'none'; img-src ${cspSource}; script-src ${cspSource}; style-src ${cspSource} 'nonce-${nonce}';`;
     const extensionUri = webview.asWebviewUri(context.extensionContext.extensionUri).toString();
 
     webview.html = context.webviewTemplate.replace(webviewPlaceholder, (fallback, key) => {
