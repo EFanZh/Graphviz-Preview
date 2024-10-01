@@ -1,5 +1,5 @@
 import * as utilities from "../src/utilities";
-import * as assert from "assert";
+import assert from "assert";
 
 describe("Variable resolver tests", () => {
     it("No replacement if no placeholder", () => {

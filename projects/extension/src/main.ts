@@ -1,6 +1,5 @@
+import { type ExtensionContext, commands, workspace } from "vscode";
 import { PreviewManager } from "./preview-manager";
-import { commands, workspace } from "vscode";
-import type { ExtensionContext } from "vscode";
 
 const previewCommand = "graphviz.showPreviewToSide";
 

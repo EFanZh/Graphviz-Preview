@@ -1,5 +1,5 @@
+import { type LayoutView, ScaleMode } from "./layout-view";
 import { Position, Size } from "./layout";
-import { LayoutView, ScaleMode } from "./layout-view";
 
 // Scaling formula:
 //

@@ -1,7 +1,7 @@
-import { Image, ImageType } from "../../../shared/src/images";
-import { Configuration } from "../configurations";
-import * as child_process from "child_process";
-import * as path from "path";
+import { type Image, ImageType } from "../../../shared/src/images";
+import { type Configuration } from "../configurations";
+import child_process from "child_process";
+import path from "path";
 import { window } from "vscode";
 
 const splitRegex = /(?=<\?xml )/;

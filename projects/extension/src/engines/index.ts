@@ -1,5 +1,5 @@
-import { Image } from "../../../shared/src/images";
-import { Configuration } from "../configurations";
+import { type Configuration } from "../configurations";
+import { type Image } from "../../../shared/src/images";
 
 export interface Engine {
     render(

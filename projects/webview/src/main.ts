@@ -10,7 +10,8 @@ function $(id: string): HTMLElement {
 }
 
 function getScaleModeRadioButton(value: string): HTMLInputElement {
-    return document.querySelector(`input[name="${idPrefix}scale-mode"][value="${value}"]`) as HTMLInputElement;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return document.querySelector(`input[name="${idPrefix}scale-mode"][value="${value}"]`)!;
 }
 
 const headElement = document.head;
@@ -49,6 +50,7 @@ const ui = new Ui(
 
 ui.initialize();
 
+// eslint-disable-next-line @typescript-eslint/unbound-method
 const controller = new Controller(ui, vscode.postMessage);
 
 ui.setupEventHandlers(controller);

@@ -1,4 +1,4 @@
-import type { Image } from "./images";
+import { type Image } from "./images";
 
 export const enum WebviewCommand {
     UpdatePreview,

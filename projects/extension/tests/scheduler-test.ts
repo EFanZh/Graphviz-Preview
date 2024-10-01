@@ -1,6 +1,6 @@
-import { Scheduler } from "../src/scheduler";
 import * as utilities from "../src/utilities";
-import * as assert from "assert";
+import { Scheduler } from "../src/scheduler";
+import assert from "assert";
 
 const enum EventType {
     Resolve,
@@ -60,7 +60,7 @@ class TestScheduler {
         return result;
     }
 
-    public get events(): ReadonlyArray<SchedulerEvent> {
+    public get events(): readonly SchedulerEvent[] {
         return this.events_;
     }
 

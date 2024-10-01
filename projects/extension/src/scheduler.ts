@@ -64,7 +64,7 @@ export class Scheduler {
         const startTaskFn: StartTaskFn = (onCancel, onComplete) =>
             taskFn(onCancel).then(
                 (value) => onComplete(() => resolve(value)),
-                (reason) => onComplete(() => reject(reason)),
+                (reason: unknown) => onComplete(() => reject(reason)),
             );
 
         if (this.queue.length < this.maxRunningTasks) {

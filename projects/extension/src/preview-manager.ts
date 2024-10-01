@@ -1,9 +1,8 @@
+import { type ExtensionContext, type TextDocument, type TextDocumentChangeEvent, window, workspace } from "vscode";
 import { Configuration } from "./configurations";
 import { PreviewState } from "./preview-state";
-import * as fs from "fs/promises";
-import * as path from "path";
-import type { ExtensionContext, TextDocument, TextDocumentChangeEvent } from "vscode";
-import { window, workspace } from "vscode";
+import fs from "fs/promises";
+import path from "path";
 
 export class Context {
     public constructor(
@@ -14,7 +13,7 @@ export class Context {
 }
 
 export class PreviewManager {
-    private readonly previewStates: WeakMap<TextDocument, PreviewState> = new WeakMap();
+    private readonly previewStates = new WeakMap<TextDocument, PreviewState>();
 
     public constructor(private readonly context: Context) {}
 
@@ -53,7 +52,7 @@ export class PreviewManager {
         const document = window.activeTextEditor?.document;
 
         if (document !== undefined) {
-            this.getOrCreatePreviewState(document)?.onPreviewCommand();
+            this.getOrCreatePreviewState(document).onPreviewCommand();
         }
     }
 
