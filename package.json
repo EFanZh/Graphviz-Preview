@@ -1,9 +1,9 @@
 {
     "name": "graphviz-preview",
-    "version": "1.7.2",
+    "version": "1.7.3",
     "publisher": "EFanZh",
     "engines": {
-        "vscode": "^1.79.0"
+        "vscode": "^1.93.0"
     },
     "license": "MIT",
     "displayName": "Graphviz Preview",
