@@ -1,6 +1,6 @@
 {
     "name": "graphviz-preview",
-    "version": "1.7.3",
+    "version": "1.7.4",
     "publisher": "EFanZh",
     "engines": {
         "vscode": "^1.93.0"
