@@ -32,23 +32,45 @@ export function render(
     const dotExtraArgs = configuration.dotExtraArgs;
 
     return new Promise((resolve, reject) => {
+        // Configure output buffers.
+
         const stdoutBuffers: Buffer[] = [];
         const stderrBuffers: Buffer[] = [];
+
+        const getError = () => new Error(concatBuffers(stderrBuffers));
+        const resolveWithStdout = () => resolve(parseDocuments(concatBuffers(stdoutBuffers)));
+        const rejectWithStderr = () => reject(getError());
+        const rejectWithError = (error: Error) => reject(stderrBuffers.length === 0 ? error : getError());
+
+        // Configure process event handlers.
+
         const process = child_process.spawn(dotPath, ["-T", "svg", ...dotExtraArgs], { cwd });
 
         onCancel(process.kill.bind(process));
 
-        process.stdout.on("data", stdoutBuffers.push.bind(stdoutBuffers));
-        process.stderr.on("data", stderrBuffers.push.bind(stderrBuffers));
-        process.on("error", reject);
+        process.on("error", rejectWithError);
 
         process.on("exit", (code) => {
-            if (code === 0) {
-                resolve(parseDocuments(concatBuffers(stdoutBuffers)));
+            const [output, handler] = code === 0 ? [stdout, resolveWithStdout] : [stderr, rejectWithStderr];
+
+            if (output.closed) {
+                handler();
             } else {
-                reject(new Error(concatBuffers(stderrBuffers)));
+                output.on("close", handler);
             }
         });
+
+        // Configure stream event handlers.
+
+        const { stderr, stdout } = process;
+
+        stdout.on("data", stdoutBuffers.push.bind(stdoutBuffers));
+        stdout.on("error", rejectWithError);
+
+        stderr.on("data", stderrBuffers.push.bind(stderrBuffers));
+        stderr.on("error", rejectWithError);
+
+        // Begin to feed data to the process.
 
         process.stdin.end(source);
     });

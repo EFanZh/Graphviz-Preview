@@ -24,6 +24,7 @@ export default [
             "@typescript-eslint/require-await": "off", // Temporary.
             "@typescript-eslint/restrict-plus-operands": "off", // Temporary.
             "@typescript-eslint/restrict-template-expressions": "off", // Temporary.
+            eqeqeq: "warn",
             "no-duplicate-imports": "warn",
             "no-multi-spaces": "warn",
             "no-multiple-empty-lines": [
@@ -42,6 +43,7 @@ export default [
             ],
             semi: "warn",
             "sort-imports": "warn",
+            "no-useless-assignment": "warn",
         },
     },
 ];
