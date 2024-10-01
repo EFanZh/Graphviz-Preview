@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+## [1.7.3] - 2024-10-01
+
+### Fixed
+
+- Supports external style sheets. (#82)
+
 ## [1.7.2] - 2024-08-07
 
 ### Fixed
@@ -191,7 +197,8 @@
 
 - Initial release.
 
-[Unreleased]: https://github.com/EFanZh/Graphviz-Preview/compare/1.7.2...master
+[Unreleased]: https://github.com/EFanZh/Graphviz-Preview/compare/1.7.3...master
+[1.7.3]: https://github.com/EFanZh/Graphviz-Preview/compare/1.7.2...1.7.3
 [1.7.2]: https://github.com/EFanZh/Graphviz-Preview/compare/1.7.1...1.7.2
 [1.7.1]: https://github.com/EFanZh/Graphviz-Preview/compare/1.7.0...1.7.1
 [1.7.0]: https://github.com/EFanZh/Graphviz-Preview/compare/1.6.4...1.7.0
