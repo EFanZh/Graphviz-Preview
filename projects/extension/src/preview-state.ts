@@ -78,7 +78,7 @@ function createWebviewPanel(context: Context, document: TextDocument): WebviewPa
 
 export class PreviewState implements ChannelClient<ExtensionRequest, ExtensionResponse, WebviewRequest> {
     private readonly channel = new Channel<ExtensionRequest, ExtensionResponse, WebviewRequest, WebviewResponse>();
-    private readonly scheduler = new Scheduler(os.cpus().length); // TODO: Use `os.availableParallelism()`.
+    private readonly scheduler = new Scheduler(os.availableParallelism());
 
     private constructor(
         private readonly context: Context,

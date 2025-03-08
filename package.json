@@ -3,7 +3,7 @@
     "version": "1.7.5",
     "publisher": "EFanZh",
     "engines": {
-        "vscode": "^1.93.0"
+        "vscode": "^1.98.0"
     },
     "license": "MIT",
     "displayName": "Graphviz Preview",
