@@ -4,7 +4,7 @@ import path from "path";
 const baseConfig: Configuration = {
     mode: "none",
     output: {
-        path: path.resolve(__dirname, "dist"),
+        path: path.join(import.meta.dirname, "dist"),
         filename: "[name].js",
     },
     module: {
@@ -54,4 +54,4 @@ const webviewConfig: Configuration = {
     devtool: "inline-source-map",
 };
 
-module.exports = [extensionConfig, webviewConfig];
+export default [extensionConfig, webviewConfig];

@@ -179,7 +179,16 @@ class Controller {
 
         assert.deepStrictEqual(this.view, checkView);
 
-        return { ...this.view };
+        return {
+            isCenter: this.view.isCenter,
+            isIdentity: this.view.isIdentity,
+            scaleMode: this.view.scaleMode,
+            imageX: this.view.imageX,
+            imageY: this.view.imageY,
+            imageDisplayWidth: this.view.imageDisplayWidth,
+            imageDisplayHeight: this.view.imageDisplayHeight,
+            imageScale: this.view.imageScale,
+        };
     }
 }
 
