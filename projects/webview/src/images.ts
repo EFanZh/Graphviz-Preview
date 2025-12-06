@@ -33,7 +33,7 @@ export class ParsedSvgImage implements ParsedImage {
 
         if (!(documentElement instanceof SVGSVGElement)) {
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            throw new Error(documentElement.querySelector("parsererror")!.textContent!);
+            throw new Error(documentElement.querySelector("parsererror")!.textContent);
         }
 
         // Parse style sheets.

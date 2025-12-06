@@ -4,7 +4,7 @@ import { type TextDocument, type WorkspaceConfiguration, workspace } from "vscod
 import { type Engine } from "./engines";
 
 function getDotPath(configuration: WorkspaceConfiguration): string {
-    return String(configuration.get("graphvizPreview.dotPath", "dot"));
+    return configuration.get("graphvizPreview.dotPath", "dot");
 }
 
 function getDotExtraArgs(configuration: WorkspaceConfiguration): string[] {
