@@ -53,8 +53,7 @@ export interface ChannelReceiver<IncomingRequest, OutgoingResponse> {
 }
 
 export interface ChannelClient<IncomingRequest, OutgoingResponse, OutgoingRequest>
-    extends ChannelSender<OutgoingResponse, OutgoingRequest>,
-        ChannelReceiver<IncomingRequest, OutgoingResponse> {}
+    extends ChannelSender<OutgoingResponse, OutgoingRequest>, ChannelReceiver<IncomingRequest, OutgoingResponse> {}
 
 export class Channel<IncomingRequest, OutgoingResponse, OutgoingRequest, IncomingResponse> {
     private readonly pendingTasks = new Map<

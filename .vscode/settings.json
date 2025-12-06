@@ -1,6 +1,9 @@
 {
+    "cSpell.words": [
+        "Graphviz",
+    ],
     "files.exclude": {
-        "node_modules": true
+        "node_modules": true,
     },
     "search.exclude": {
         "dist": true,

@@ -23,9 +23,11 @@ interface D {
     value: number;
 }
 
-class TestChannel<IncomingRequest, OutgoingResponse, OutgoingRequest, IncomingResponse>
-    implements ChannelClient<IncomingRequest, OutgoingResponse, OutgoingRequest>
-{
+class TestChannel<IncomingRequest, OutgoingResponse, OutgoingRequest, IncomingResponse> implements ChannelClient<
+    IncomingRequest,
+    OutgoingResponse,
+    OutgoingRequest
+> {
     private readonly channel = new Channel<IncomingRequest, OutgoingResponse, OutgoingRequest, IncomingResponse>();
 
     public constructor(
