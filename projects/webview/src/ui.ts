@@ -302,7 +302,7 @@ export class Ui implements UiView {
                     return rhs !== undefined;
                 }
 
-                if (rhs === undefined || lhs.outerHTML !== rhs.outerHTML) {
+                if (lhs.outerHTML !== rhs?.outerHTML) {
                     return true;
                 }
 
