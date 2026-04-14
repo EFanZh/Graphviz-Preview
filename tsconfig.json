@@ -5,8 +5,10 @@
         "lib": ["ESNext"],
         "module": "NodeNext",
         "outDir": "out",
+        "rootDir": ".",
         "sourceMap": true,
-        "target": "ESNext"
+        "target": "ESNext",
+        "types": ["mocha", "node", "vscode", "vscode-webview"]
     },
     "extends": "@tsconfig/strictest/tsconfig.json"
 }
