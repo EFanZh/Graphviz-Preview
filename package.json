@@ -97,7 +97,7 @@
         "@types/mocha": "10",
         "@types/vscode": "1",
         "@types/vscode-webview": "1",
-        "mocha": "11",
+        "mocha": "12",
         "nyc": "18",
         "prettier": "3",
         "ts-loader": "9",
