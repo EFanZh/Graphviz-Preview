@@ -93,7 +93,7 @@
     "devDependencies": {
         "@eslint/js": "10",
         "@tsconfig/strictest": "2",
-        "@types/eslint__js": "8",
+        "@types/eslint__js": "9",
         "@types/mocha": "10",
         "@types/vscode": "1",
         "@types/vscode-webview": "1",
